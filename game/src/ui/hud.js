@@ -7,7 +7,18 @@ import { radioInfo } from '../audio/radioStations.js';
 import { dlg } from '../story/dialogue.js';
 import { CAST } from '../story/characters.js';
 import { drawPortrait } from './portraits.js';
-import { drawMinimap } from './minimap.js';
+import { drawMinimap, gpsTarget } from './minimap.js';
+
+const wpV = { x: 0, y: 0, z: 0 };
+// Screen-space waypoint diamond with distance over the GPS target (clamped to the screen edges).
+function updateWaypoint() {
+  const t = G.mode === 'play' ? gpsTarget() : null, el = $('waypoint'); if (!t) { el.style.display = 'none'; return; }
+  const v = G.camera.position.clone().set(t.x, 5, t.z).project(G.camera), behind = v.z > 1; let x = (v.x * 0.5 + 0.5) * innerWidth, y = (0.5 - v.y * 0.5) * innerHeight;
+  if (behind) { x = innerWidth - x; y = innerHeight - 90; }
+  x = Math.max(40, Math.min(innerWidth - 40, x)); y = Math.max(70, Math.min(innerHeight - 90, y));
+  el.style.display = 'block'; el.style.transform = `translate(${x.toFixed(0)}px, ${y.toFixed(0)}px)`; el.classList.toggle('start', t.kind === 'start');
+  set('wpDist', `${Math.round(Math.hypot(t.x - G.p.x, t.z - G.p.z))} m`);
+}
 
 const $ = (id) => document.getElementById(id); let lastWho = null, polT = 0, cache = {};
 const set = (id, v) => { if (cache[id] !== v) { cache[id] = v; $(id).textContent = v; } };
@@ -39,5 +50,6 @@ export function updateHud(dt) {
   const tl = G.toasts.map((t) => `<div class="toast ${t.kind}">${t.text}</div>`).join(''); if (cache.tl !== tl) { cache.tl = tl; $('toasts').innerHTML = tl; }
   for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter((t) => t.t > 0);
   G.hudRate += dt; if (G.hudRate > 0.04) { G.hudRate = 0; drawMinimap($('minimap')); }
+  updateWaypoint();
 }
 export const showHud = (on) => show('hud', on);

@@ -5,6 +5,7 @@ import { N, RW, HALF, SEA_X, MAP_BOUNDS as B, lineCoord } from '../core/config.j
 import { blocks, nearestLine, districtAt } from '../world/cityLayout.js';
 import { copCars } from '../police/policeDispatch.js';
 import { missionTargets } from '../missions/missionRunner.js';
+import { rig } from '../camera/cameraRig.js';
 
 export const Q = 2; let bg;
 export const hex = (n) => '#' + n.toString(16).padStart(6, '0');
@@ -68,7 +69,7 @@ export function gpsRoute(p, t) {
   return pts;
 }
 export function drawMinimap(canvas) {
-  const g = canvas.getContext('2d'), s = canvas.width, c = s / 2, p = G.p, k = 1.05, cd = G.camera.getWorldDirection(new G.camera.position.constructor()), yaw = Math.atan2(cd.x, cd.z);
+  const g = canvas.getContext('2d'), s = canvas.width, c = s / 2, p = G.p, k = 1.05, yaw = rig.yaw;
   const th = Math.PI - yaw; g.clearRect(0, 0, s, s); g.save(); g.beginPath(); g.arc(c, c, c, 0, 7); g.clip(); g.fillStyle = '#10142a'; g.fillRect(0, 0, s, s);
   g.translate(c, c); g.rotate(-th); g.scale(k, k); g.translate(-p.x, -p.z); const b = mapBackground(); g.drawImage(b, B.x0, B.z0, b.width / Q, b.height / Q);
   const t = gpsTarget();

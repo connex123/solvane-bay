@@ -19,6 +19,7 @@ import { rig } from '../camera/cameraRig.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
 import { seedSave } from '../save/saveGame.js';
+import { addMarker } from '../missions/markers.js';
 
 function clearTraffic() { for (const c of G.cars.slice()) if (c.kind === 'traffic' || c.kind === 'parked') removeCar(c); for (const a of G.actors.slice()) removeActor(a); }
 function fakeMission(idx, stageIdx, text, timer) {
@@ -30,22 +31,23 @@ function typed() { dlg.t = 99; }
 // Cover: eastbound down the palm boulevard toward the sea and the setting sun, three SBPD cruisers closing in.
 function chase(api) {
   const p = G.p, z0 = lineCoord(3); clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 520; G.radio = 1; api.showHud(true);
-  const car = createCar('veloce', -8, z0 + LANE, Math.PI / 2, 'parked', 0xe8203c); enterCar(car); car.speed = 41.5; car.vx = 41.5; car.vz = 0; car.input.throttle = 1; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
+  const car = createCar('veloce', -8, z0 + LANE, Math.PI / 2, 'parked', 0xd01020); enterCar(car); car.speed = 41.5; car.vx = 41.5; car.vz = 0; car.input.throttle = 1; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
   const cop = (x, z, h, vx, ai) => { const c = spawnCop(x, z, h, ai); c.vx = vx; c.speed = Math.abs(vx); c.ai = ai; c.heading = h; return c; };
   cop(-8.9, z0 + LANE - 2.25, Math.PI / 2 + 0.1, 40.5, 'RAMMING'); cop(-7.4, z0 + LANE + 3.1, Math.PI / 2 - 0.12, 40, 'PURSUIT'); cop(16, z0 - 1.2, -Math.PI / 2 + 0.35, 30, 'PURSUIT');
   cop(64, z0 - LANE, -Math.PI / 2, 26, 'ARRIVING'); cop(104, z0 - LANE - 0.2, -Math.PI / 2, 24, 'ARRIVING');
   const tc = (key, x, dir, col) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.nav.spd = 11; return c; };
-  tc('hawke', 30, 1, 0x222831); tc('tupelo', 82, 1, 0xf6c21c); tc('marlin', 24, -1, 0x2f7fd8); tc('cadia', 58, -1, 0x2fb89a); tc('rumble', 8, -1, 0x8fd3c8); tc('pico', 46, 1, 0xff8a3d); tc('marlin', 120, -1, 0xf0f0f0);
-  [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 3, x, s, d); if (i % 3 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  tc('hawke', 30, 1, 0x222831); tc('tupelo', 82, 1, 0xf6c21c); tc('marlin', 24, -1, 0x2f7fd8); tc('cadia', 58, -1, 0x2fb89a); tc('rumble', 8, -1, 0x8fd3c8); tc('pico', 46, 1, 0xff8a3d); tc('marlin', 120, -1, 0xf0f0f0); tc('hawke', 36, -1, 0xe9c46a); tc('pico', 72, -1, 0xc3a6e0); tc('tupelo', 96, -1, 0xf6c21c);
+  [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1], [2, 1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 3, x, s, d); if (i % 3 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
   G.heli = createHeli(40, z0 - 7); G.heli.y = 18; G.heli.mesh.position.set(G.heli.x, 18, G.heli.z); G.heli.mesh.rotation.set(0.1, -Math.PI / 2 - 0.4, -0.14); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x + 1, car.z); G.shotLock = true;
-  setStars(4); G.wanted.heat = 4.3; fakeMission(5, 3, 'Escape the SBPD, then reach the Alder Hills safehouse', 87);
+  addMarker({ x: 150, z: z0 + LANE, kind: 'obj', label: 'Safehouse', color: 0xffd23c, auto: false }); setStars(4); G.wanted.heat = 4.3; fakeMission(5, 3, 'Escape the SBPD, then reach the Alder Hills safehouse', 87);
   say([{ who: 'sol', text: 'Left at the next light, Nico! I can hear that chopper from here. Stay off the brakes!' }]); typed();
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; }
   updateSirens(0.1);
   car.mesh.rotation.z = -0.025; const cz = z0 + LANE - 1.1;
   smoke(-11.5, 1, cz - 0.6, 0x8a8580); smoke(-12.6, 1.3, cz - 0.9, 0x9a948c); sparks(-7.6, 0.7, cz, 34); sparks(-8.4, 0.55, cz, 18); sparks(-9.5, 0.4, cz - 0.4, 10);
   particle({ x: -7.8, y: 0.75, z: cz, life: 1, size: 3.2, color: 0xffc070, add: true });
-  rig.mode = 'auto'; rig.yaw = Math.PI / 2; G.shotCam = { d: 10.5, h: 2.7, ly: 2.3, ahead: 30, fov: 60, roll: 0.035 };
+  rig.mode = 'auto'; rig.yaw = Math.PI / 2; G.shotCam = { d: 8.6, h: 2.45, ly: 2.0, ahead: 30, fov: 58, roll: 0.035 };
+  const rim = new THREE.PointLight(0xffe0c0, 60, 14, 1.6); rim.position.set(car.x - 3.5, 3.2, car.z - 2.5); G.scene.add(rim);
   finish(api); }
 function onfoot(api) {
   const p = G.p, z0 = lineCoord(7); clearTraffic(); G.mode = 'play'; G.clock = 17.3; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
