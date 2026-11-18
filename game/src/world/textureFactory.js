@@ -6,33 +6,72 @@ export function canvasTex(w, h, draw, repeat = true) {
   if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 const noise = (g, w, h, n, a) => { for (let i = 0; i < n; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,255,255'},${Math.random() * a})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } };
+// Stucco facade: art-deco floor bands, framed windows reflecting a blue-to-peach sky, sills and recessed shadow.
+// The texture is near-white so the per-building vertex colour tints it into the pastel palette.
 export function facadeMaps() {
   let s = 7; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
-  const lit = []; for (let k = 0; k < 16; k++) lit.push(r() < 0.45);
-  const win = (g, i, j) => { const x = 16 + i * 60, y = 22 + j * 60; return [x, y, 40, 40]; };
-  const map = canvasTex(256, 256, (g) => {
-    g.fillStyle = '#f2ede4'; g.fillRect(0, 0, 256, 256); noise(g, 256, 256, 900, 0.06);
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
-      const [x, y, w, h] = win(g, i, j); const gr = g.createLinearGradient(x, y, x + w, y + h);
-      gr.addColorStop(0, '#79a2c8'); gr.addColorStop(1, '#2c3f5e'); g.fillStyle = gr; g.fillRect(x, y, w, h);
-      g.fillStyle = 'rgba(255,255,255,0.25)'; g.beginPath(); g.moveTo(x, y + h); g.lineTo(x + 14, y); g.lineTo(x + 24, y); g.lineTo(x + 6, y + h); g.fill();
-      g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(x - 3, y + h, w + 6, 4);
+  const lit = []; for (let k = 0; k < 32; k++) lit.push(r() < 0.4);
+  const win = (i, j) => [24 + i * 128, 34 + j * 128, 80, 74];
+  const map = canvasTex(512, 512, (g) => {
+    g.fillStyle = '#fbf8f2'; g.fillRect(0, 0, 512, 512); noise(g, 512, 512, 2600, 0.05);
+    for (let j = 0; j < 4; j++) {
+      const y = j * 128; g.fillStyle = 'rgba(255,255,255,0.9)'; g.fillRect(0, y, 512, 12); // cornice band
+      g.fillStyle = 'rgba(60,40,30,0.16)'; g.fillRect(0, y + 12, 512, 3); g.fillRect(0, y + 118, 512, 2); g.fillRect(0, y + 123, 512, 2); // deco pin-lines
+      for (let i = 0; i < 4; i++) {
+        const [x, wy, w, h] = win(i, j);
+        g.fillStyle = 'rgba(70,50,40,0.28)'; g.fillRect(x - 6, wy - 6, w + 12, h + 14); // recess shadow
+        g.fillStyle = '#ffffff'; g.fillRect(x - 4, wy - 4, w + 8, h + 8); // frame
+        const gr = g.createLinearGradient(x, wy, x, wy + h); gr.addColorStop(0, '#3d79b8'); gr.addColorStop(0.55, '#8fc3ea'); gr.addColorStop(0.62, '#f3c9a0'); gr.addColorStop(1, '#5a6c88');
+        g.fillStyle = gr; g.fillRect(x, wy, w, h);
+        g.fillStyle = 'rgba(255,255,255,0.35)'; g.beginPath(); g.moveTo(x, wy + h); g.lineTo(x + 26, wy); g.lineTo(x + 44, wy); g.lineTo(x + 12, wy + h); g.fill();
+        g.fillStyle = '#ffffff'; g.fillRect(x + w / 2 - 2, wy, 4, h); g.fillRect(x, wy + h * 0.38, w, 3); // mullions
+        g.fillStyle = '#fffaf0'; g.fillRect(x - 8, wy + h + 4, w + 16, 7); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(x - 8, wy + h + 11, w + 16, 3); // sill
+      }
     }
   });
-  const em = canvasTex(256, 256, (g) => {
-    g.fillStyle = '#000'; g.fillRect(0, 0, 256, 256);
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) if (lit[j * 4 + i]) { const [x, y, w, h] = win(g, i, j); g.fillStyle = r() < 0.3 ? '#ffb060' : '#ffe6a8'; g.fillRect(x, y, w, h); }
+  const em = canvasTex(512, 512, (g) => {
+    g.fillStyle = '#000'; g.fillRect(0, 0, 512, 512);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) if (lit[j * 4 + i]) { const [x, y, w, h] = win(i, j); g.fillStyle = r() < 0.3 ? '#ffb060' : '#ffe6a8'; g.fillRect(x, y, w, h); }
   });
-  return { map, em };
+  // Glass curtain wall for the downtown towers: mullion grid, panels catching sky and sun at different angles.
+  const glass = canvasTex(512, 512, (g) => {
+    for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) {
+      const x = i * 64, y = j * 64, t = r(), gr = g.createLinearGradient(x, y, x + 64, y + 64);
+      gr.addColorStop(0, t < 0.2 ? '#ffe2c0' : '#bfe0ff'); gr.addColorStop(1, t < 0.6 ? '#4f86c0' : '#79a8d8'); g.fillStyle = gr; g.fillRect(x, y, 64, 64);
+    }
+    const sh = g.createLinearGradient(0, 0, 512, 512); sh.addColorStop(0, 'rgba(255,255,255,0)'); sh.addColorStop(0.45, 'rgba(255,240,220,0.35)'); sh.addColorStop(0.55, 'rgba(255,255,255,0)'); g.fillStyle = sh; g.fillRect(0, 0, 512, 512);
+    g.fillStyle = '#eef2f6'; for (let k = 0; k <= 8; k++) { g.fillRect(k * 64 - 2, 0, 4, 512); g.fillRect(0, k * 64 - 3, 512, 6); }
+  });
+  const glassEm = canvasTex(512, 512, (g) => { g.fillStyle = '#000'; g.fillRect(0, 0, 512, 512); for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) if (r() < 0.3) { g.fillStyle = r() < 0.5 ? '#ffd9a0' : '#fff0d0'; g.fillRect(i * 64 + 3, j * 64 + 4, 58, 56); } });
+  return { map, em, glass, glassEm };
 }
 export function asphaltTex(lines = true) {
-  return canvasTex(256, 256, (g) => {
-    g.fillStyle = '#4a4a54'; g.fillRect(0, 0, 256, 256); noise(g, 256, 256, 2500, 0.1);
+  return canvasTex(512, 512, (g) => {
+    g.fillStyle = '#6b6c72'; g.fillRect(0, 0, 512, 512); noise(g, 512, 512, 9000, 0.09);
+    g.fillStyle = 'rgba(40,40,46,0.18)'; for (let k = 0; k < 6; k++) g.fillRect(Math.random() * 512, 0, 30 + Math.random() * 90, 512);
+    g.fillStyle = 'rgba(30,30,36,0.35)'; g.fillRect(0, 150, 512, 34); g.fillRect(0, 330, 512, 34); // tyre-worn lanes
     if (!lines) return;
-    g.fillStyle = '#f0f0e8'; g.fillRect(0, 14, 256, 3); g.fillRect(0, 239, 256, 3);
-    g.fillStyle = '#f3c63c'; g.fillRect(0, 120, 256, 3); g.fillRect(0, 133, 256, 3);
-    g.fillStyle = 'rgba(255,255,255,0.55)'; for (let k = 0; k < 2; k++) g.fillRect(k * 128 + 8, 68, 56, 3), g.fillRect(k * 128 + 8, 186, 56, 3);
+    g.fillStyle = '#fbfbf4'; g.fillRect(0, 26, 512, 6); g.fillRect(0, 480, 512, 6);
+    g.fillStyle = '#ffd23c'; g.fillRect(0, 243, 512, 6); g.fillRect(0, 263, 512, 6);
+    g.fillStyle = '#f4f4ec'; for (let k = 0; k < 2; k++) g.fillRect(k * 256 + 16, 136, 120, 5), g.fillRect(k * 256 + 16, 372, 120, 5);
   });
+}
+export const tileTex = () => canvasTex(128, 128, (g) => {
+  g.fillStyle = '#e9e1d2'; g.fillRect(0, 0, 128, 128);
+  for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) { const v = 222 + Math.floor(Math.random() * 22); g.fillStyle = `rgb(${v},${v - 8},${v - 22})`; g.fillRect(i * 32 + 1, j * 32 + 1, 30, 30); }
+  noise(g, 128, 128, 500, 0.06);
+});
+// Billboard artwork for our own in-world brands: gradient sky panel, sun stripes, headline and tagline.
+export function adTexture(head, tag, c1, c2) {
+  return canvasTex(512, 256, (g) => {
+    const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = gr; g.fillRect(0, 0, 512, 256);
+    g.fillStyle = 'rgba(255,240,200,0.9)'; g.beginPath(); g.arc(400, 150, 70, Math.PI, 0); g.fill();
+    g.fillStyle = c2; for (let k = 0; k < 4; k++) g.fillRect(320, 112 + k * 12, 160, 4 + k);
+    g.fillStyle = '#ffffff'; g.font = 'bold 64px Arial Black, Arial, sans-serif'; g.textBaseline = 'top'; g.shadowColor = 'rgba(0,0,0,0.35)'; g.shadowBlur = 8; g.fillText(head, 26, 36, 360);
+    g.font = 'bold 26px Arial, sans-serif'; g.fillText(tag, 28, 128, 300); g.shadowBlur = 0;
+    g.fillStyle = 'rgba(255,255,255,0.95)'; g.fillRect(0, 214, 512, 42); g.fillStyle = c2; g.font = 'bold 22px Arial, sans-serif'; g.fillText('SOLVANE BAY', 28, 224);
+    g.strokeStyle = '#ffffff'; g.lineWidth = 10; g.strokeRect(5, 5, 502, 246);
+  }, false);
 }
 export const sandTex = () => canvasTex(128, 128, (g) => { g.fillStyle = '#e8d4a2'; g.fillRect(0, 0, 128, 128); noise(g, 128, 128, 1200, 0.12); });
 export const waterTex = () => canvasTex(256, 256, (g) => {

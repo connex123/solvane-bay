@@ -30,7 +30,7 @@ vec3 toSRGB(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.0
 void main(){
   vec2 d = vUv - 0.5; float r2 = dot(d, d);
   vec3 col;
-  if (uFringe > 0.001) { vec2 off = d * uFringe * r2 * 0.09;
+  if (uFringe > 0.001) { vec2 off = d * uFringe * r2 * 0.035;
     col = vec3(texture2D(tScene, vUv + off).r, texture2D(tScene, vUv).g, texture2D(tScene, vUv - off).b); }
   else col = texture2D(tScene, vUv).rgb;
   vec3 bloom = texture2D(tB1, vUv).rgb * 0.5 + texture2D(tB2, vUv).rgb * 0.8 + texture2D(tB3, vUv).rgb * 1.1;
