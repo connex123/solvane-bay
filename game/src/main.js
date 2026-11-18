@@ -25,7 +25,8 @@ import { stepGame } from './core/simulation.js';
 import { handlers, startGame, toTitle } from './core/gameFlow.js';
 import { startLoop } from './core/gameLoop.js';
 import { exposeDebugState } from './core/debugState.js';
-import { runShot, runSelfTest } from './shots/screenshotScenes.js';
+import { runShot } from './shots/screenshotScenes.js';
+import { runSelfTest } from './shots/selfTest.js';
 
 const params = new URLSearchParams(location.search), shotName = params.get('shot'), selftest = params.has('selftest');
 window.addEventListener('error', (e) => console.error('CONSOLE_ERROR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
