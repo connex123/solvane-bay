@@ -82,6 +82,12 @@ export async function runSelfTest(api) {
     crime('killcop'); crime('killcop'); for (let i = 0; i < 600; i++) api.stepGame(0.016);
     if (G.cars.filter((c) => c.kind === 'cop').length < 1) throw new Error('no police spawned');
     input.keys.delete('KeyW'); startMission(MISSIONS[0]); for (let i = 0; i < 60; i++) api.stepGame(0.016); api.updateHud(0.016); api.renderFrame();
-    if (!G.mission || Number.isNaN(G.p.x)) throw new Error('mission/NaN'); document.title = 'SELFTEST PASS';
+    if (!G.mission || Number.isNaN(G.p.x)) throw new Error('mission/NaN');
+    // more systems: on-foot shooting, heli at 5 stars, steal-stage completion, map, radio, shop, wasted
+    input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear(); G.p.car = G.p.car; if (G.p.car) { G.p.car.speed = 0; G.p.car.vx = 0; G.p.car.vz = 0; input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear(); }
+    G.p.weapon = 1; input.left = true; for (let i = 0; i < 120; i++) { input.leftPressed = i % 10 === 0; api.stepGame(0.016); } input.left = false;
+    crime('killcop'); crime('killcop'); crime('killcop'); crime('explosion'); crime('explosion'); for (let i = 0; i < 400; i++) api.stepGame(0.016);
+    api.showScreen('cityMap'); api.showScreen('shop'); api.showScreen('pause'); api.handlers.resume(); G.hooks.playerDown('WASTED'); for (let i = 0; i < 260; i++) api.stepGame(0.016);
+    if (G.mode !== 'play') throw new Error('did not respawn: ' + G.mode); document.title = 'SELFTEST PASS';
   } catch (e) { console.error('CONSOLE_ERROR selftest ' + (e.stack || e)); document.title = 'SELFTEST FAIL ' + e.message; }
 }
