@@ -1,0 +1,22 @@
+.screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+#title { justify-content: flex-start; background: linear-gradient(90deg, rgba(20, 8, 40, 0.82) 0%, rgba(20, 8, 40, 0.35) 45%, transparent 70%); }
+.tbox { margin-left: 90px; } .kicker { font-size: 13px; letter-spacing: 5px; color: #ffb347; font-weight: 700; }
+#title h1 { font-size: 104px; margin: 4px 0 0; line-height: 0.95; letter-spacing: 6px; font-weight: 900; font-style: italic; text-shadow: 0 4px 0 #ff4fd8, 0 8px 30px rgba(255, 90, 140, 0.6); }
+#title h1 span { color: #ffd23c; } .sub { font-size: 18px; color: #f0e6ff; margin: 8px 0 28px; letter-spacing: 1px; }
+.menu { display: flex; flex-direction: column; gap: 10px; width: 300px; }
+.menu button, .panel button { background: rgba(14, 12, 28, 0.78); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 10px; padding: 12px 18px; font-size: 17px; font-weight: 700; text-align: left; letter-spacing: 1px; transition: all 0.12s; }
+.menu button:hover, .panel button:hover { background: linear-gradient(90deg, #ff9a3c, #ff4fd8); border-color: transparent; transform: translateX(6px); } .menu button:disabled { opacity: 0.35; pointer-events: none; }
+.tfoot { position: absolute; bottom: 22px; left: 90px; font-size: 13px; color: #e8e0ff; text-shadow: 0 1px 4px #000; }
+#pause, #controls, #settings, #shop, #dead { background: rgba(10, 6, 24, 0.7); }
+.panel { background: rgba(20, 14, 40, 0.92); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 16px; padding: 26px 34px; min-width: 340px; display: flex; flex-direction: column; gap: 12px; } .panel.wide { min-width: 640px; }
+.panel h2 { margin: 0 0 6px; letter-spacing: 4px; color: #ffb347; } .panel label { display: flex; justify-content: space-between; gap: 20px; font-weight: 600; }
+.keys { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 30px; font-size: 14px; } .keys div { display: flex; gap: 10px; } .keys b { background: #2a2250; border-radius: 6px; padding: 2px 8px; min-width: 56px; text-align: center; font-size: 12px; }
+#shopList .item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); } #shopList button { padding: 6px 14px; font-size: 14px; }
+#cityMap { background: radial-gradient(ellipse at 30% 20%, #3a2056, #0e0a1c); gap: 22px; justify-content: center; }
+.mapframe { background: rgba(14, 12, 28, 0.9); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 12px 14px; } .maphead { display: flex; justify-content: space-between; align-items: baseline; } .maphead h2 { margin: 0 0 8px; letter-spacing: 3px; color: #ffb347; font-size: 18px; } .maphead span { font-size: 12px; color: #bdb8d4; }
+#mapCanvas { border-radius: 10px; display: block; }
+#mapSide { width: 300px; display: flex; flex-direction: column; gap: 10px; } #mapSide .card { padding: 10px 14px; font-size: 13px; } #mapSide h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: 2px; color: #ffb347; }
+.mrow { display: flex; gap: 8px; align-items: center; padding: 3px 0; } .mrow .st { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: #444; } .mrow.done .st { background: #3fbf6a; } .mrow.next .st { background: #ffd23c; color: #111; } .mrow.locked { opacity: 0.45; }
+.leg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; } .leg i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.slot { padding: 6px 8px; border: 1px dashed rgba(255, 255, 255, 0.3); border-radius: 8px; font-size: 12px; }
+.deadbox { text-align: center; } #deadTitle { font-size: 120px; margin: 0; letter-spacing: 10px; color: #ff3a55; text-shadow: 0 6px 0 #400; font-style: italic; } #deadSub { font-size: 20px; color: #f0e6ff; }

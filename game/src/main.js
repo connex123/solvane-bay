@@ -1,134 +1,122 @@
-// Boot and the one loop: input is read every frame, the world advances in fixed 1/60 s steps
-// (several in a slow frame, none in a fast one), and the renderer paints what is there. The game
-// moves between four screens: title, play, paused and game over.
-//
-// ?seed=N fixes the falling pattern. ?shot=start|play|end (with &seed=N) stages that scene
-// instead of running the loop, paints it twice and sets window.__shotReady for a screenshot.
-import { BEST_KEY, LIVES, STEP } from './config.js';
-import { createRandom } from './random.js';
-import { createWorld, EVENT_HIT, EVENT_OVER } from './world.js';
-import { ACTION_CONFIRM, ACTION_PAUSE, createInput } from './input.js';
-import { createRenderer, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE } from './render.js';
-import { stageShot } from './shots.js';
+// Boot and game loop for SOLVANE BAY: builds the city, wires systems together, runs the frame loop and game flow.
+import * as THREE from 'three';
+import { G, notify } from './core/gameState.js';
+import { seedRandom, rnd } from './core/random.js';
+import { initInput, input, pressed, requestLock, releaseLock, endFrame } from './core/input.js';
+import { buildLayout } from './world/cityLayout.js';
+import { facadeMaps } from './world/textureFactory.js';
+import { createSky } from './world/skyAndLighting.js';
+import { buildBeachAndSea, animateSea } from './world/beachAndSea.js';
+import { buildRoads } from './world/roadNetwork.js';
+import { buildCity } from './world/buildingFactory.js';
+import { buildProps } from './world/propsFactory.js';
+import { initEffects, updateEffects, updateSirens } from './combat/effects.js';
+import { createPlayer, updatePlayer, exitCar } from './characters/playerController.js';
+import { stepCar, carCollisions, removeCar, damageCar } from './vehicles/carPhysics.js';
+import { updateTraffic, populateParked, spawnTrafficNear } from './vehicles/trafficSystem.js';
+import { updateActors, maintainPeds, hitActor, spawnPedsNear, removeActor } from './characters/pedestrianSystem.js';
+import { crime, updateWanted, setStars } from './police/wantedSystem.js';
+import { updatePolice } from './police/policeDispatch.js';
+import { updateHeli } from './police/helicopterUnit.js';
+import { updateMarkers } from './missions/markers.js';
+import { updateMission, refreshStartMarker, failMission } from './missions/missionRunner.js';
+import { initSideActivities, updateSide, RESPAWN } from './missions/sideActivities.js';
+import { HOME } from './missions/storyMissions.js';
+import { say, updateDialogue, clearDialogue } from './story/dialogue.js';
+import { updateCamera, rig } from './camera/cameraRig.js';
+import { updateHud, showHud } from './ui/hud.js';
+import { initMenus, showScreen, hideScreens, showDead } from './ui/menus.js';
+import { initAudio, sfx } from './audio/soundEngine.js';
+import { cycleRadio, updateRadio } from './audio/radioStations.js';
+import { saveGame, readSave, applySave } from './save/saveGame.js';
+import { runShot, runSelfTest } from './shots/screenshotScenes.js';
 
-/** The longest frame the loop catches up on; a longer stall (a hidden tab) is dropped, not replayed. */
-const MAX_FRAME = 0.25;
+const params = new URLSearchParams(location.search), shotName = params.get('shot'), selftest = params.has('selftest');
+let renderer, sky, pedT = 0;
+window.addEventListener('error', (e) => console.error('CONSOLE_ERROR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
+window.addEventListener('unhandledrejection', (e) => console.error('CONSOLE_ERROR ' + e.reason));
 
-const params = new URLSearchParams(window.location.search);
-const shot = params.get('shot');
-const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
-const seed = Number.isInteger(seedParam) ? seedParam : Math.floor(Math.random() * 4294967296);
-
-const canvas = document.getElementById('game');
-const status = document.getElementById('status');
-const world = createWorld(createRandom(seed));
-const renderer = createRenderer(canvas);
-
-function readBest() {
-  try {
-    return Number.parseInt(window.localStorage.getItem(BEST_KEY) ?? '0', 10) || 0;
-  } catch {
-    return 0;
-  }
+function hurtPlayer(d) { const p = G.p; if (p.car) { damageCar(p.car, d * 3); return; } const a = Math.min(p.armor, d * 0.7); p.armor -= a; p.hp -= d - a; G.shake = Math.max(G.shake, 0.25); }
+function playerDown(kind) {
+  if (G.mode !== 'play') return; G.mode = 'dead'; G.deadT = 0; G.deadKind = kind; failMission(kind.toLowerCase()); clearDialogue();
+  const fee = Math.min(Math.floor(G.money), Math.max(100, Math.round(G.money * 0.05))); G.fee = fee; releaseLock();
+  showDead(kind, kind === 'BUSTED' ? `The SBPD took $${fee} and your freedom for a night.` : `Hospital bills: $${fee}. Nico wakes up in Crown Medical.`);
 }
-
-function saveBest(value) {
-  try {
-    window.localStorage.setItem(BEST_KEY, String(value));
-  } catch {
-    // Storage can be off (private windows): the best score then lasts this visit only.
-  }
+function respawn() {
+  const p = G.p, at = G.deadKind === 'BUSTED' ? RESPAWN.police : RESPAWN.hospital; G.money -= G.fee; if (p.car) exitCar(true);
+  p.x = at.x; p.z = at.z; p.hp = 100; p.armor = 0; p.yaw = 0; p.hidden = false; p.mesh.visible = true; G.cam.yaw = Math.PI; setStars(0);
+  for (const c of G.cars.filter((c) => c.kind === 'cop')) removeCar(c); for (const a of G.actors.filter((a) => a.kind === 'cop')) removeActor(a);
+  G.mode = 'play'; hideScreens(); showHud(true); requestLock(); refreshStartMarker();
 }
+G.hooks = { hitActor, crime, hurtPlayer, playerDown, openShop: () => { G.mode = 'pause'; releaseLock(); showScreen('shop'); }, onEnterCar: () => {} };
 
-function runShot(name) {
-  const scene = stageShot(name, world);
-  let painted = 0;
-  function paint() {
-    renderer.draw(world.state, scene.screen, scene.best);
-    painted += 1;
-    if (painted < 2) requestAnimationFrame(paint);
-    else window.__shotReady = true;
-  }
-  requestAnimationFrame(paint);
+function resetWorld() {
+  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
+  setStars(0); G.clock = 17.6; if (p.car) exitCar(true); p.x = HOME.x; p.z = HOME.z; p.yaw = Math.PI / 2; G.cam.yaw = Math.PI / 2; G.cam.pitch = 0.2; p.mesh.visible = true; p.hidden = false; clearDialogue();
 }
-
-function runGame() {
-  const input = createInput(canvas);
-  let screen = SCREEN_TITLE;
-  let best = readBest();
-  let accumulator = 0;
-  let last = performance.now();
-
-  // Screen readers (and anyone watching the page's text) hear the screen changes and each hit.
-  function announce(message) {
-    status.textContent = message;
-  }
-
-  function startGame() {
-    world.reset();
-    accumulator = 0;
-    screen = SCREEN_PLAY;
-    announce(`Playing. ${LIVES} lives.`);
-  }
-
-  function endGame() {
-    screen = SCREEN_OVER;
-    if (world.state.score > best) {
-      best = world.state.score;
-      saveBest(best);
-    }
-    announce(`Game over. Score ${world.state.score}. Best ${best}.`);
-  }
-
-  function handleActions() {
-    const actions = input.takeActions();
-    if (actions & ACTION_CONFIRM && (screen === SCREEN_TITLE || screen === SCREEN_OVER)) startGame();
-    else if (actions & ACTION_PAUSE && screen === SCREEN_PLAY) {
-      screen = SCREEN_PAUSED;
-      announce('Paused.');
-    } else if (actions & (ACTION_PAUSE | ACTION_CONFIRM) && screen === SCREEN_PAUSED) {
-      screen = SCREEN_PLAY;
-      announce('Playing.');
-    }
-  }
-
-  function step() {
-    if (screen === SCREEN_TITLE) {
-      world.step(STEP, 0, true);
-      return;
-    }
-    const events = world.step(STEP, input.direction(), false);
-    if (events & EVENT_OVER) endGame();
-    else if (events & EVENT_HIT) announce(world.state.lives === 1 ? 'Hit. 1 life left.' : `Hit. ${world.state.lives} lives left.`);
-  }
-
-  function frame(now) {
-    requestAnimationFrame(frame);
-    accumulator += Math.min((now - last) / 1000, MAX_FRAME);
-    last = now;
-    handleActions();
-    if (screen === SCREEN_TITLE || screen === SCREEN_PLAY) {
-      while (accumulator >= STEP && (screen === SCREEN_TITLE || screen === SCREEN_PLAY)) {
-        step();
-        accumulator -= STEP;
-      }
-    } else {
-      accumulator = 0;
-    }
-    renderer.draw(world.state, screen, best);
-  }
-
-  // Leaving the tab pauses a running game rather than letting blocks fall unseen.
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && screen === SCREEN_PLAY) {
-      screen = SCREEN_PAUSED;
-      announce('Paused.');
-    }
-  });
-
-  announce('Block Dodger. Press Space or click to start.');
-  requestAnimationFrame(frame);
+function startGame(load) {
+  initAudio(); resetWorld(); if (load) { const s = readSave(); if (s) applySave(s); }
+  G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); requestLock(); refreshStartMarker();
+  say([{ who: 'dex', text: load ? 'Back in the Bay, Nico? Gold marker, Club Velvet. Let us get to work.' : 'Welcome to Solvane Bay, Nico. Walk into the gold marker outside Club Velvet and we will talk work.' }]);
 }
+function toTitle() { G.mode = 'title'; rig.mode = 'aerial'; showHud(false); showScreen('title'); releaseLock(); G.mission = null; clearDialogue(); }
+function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; hideScreens(); requestLock(); } }
+const handlers = {
+  new: () => startGame(false), continue: () => startGame(true), controls: () => { G.prevScreen = G.mode; showScreen('controls'); }, settings: () => showScreen('settings'),
+  back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
+  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); requestLock(); },
+};
 
-if (shot) runShot(shot);
-else runGame();
+export function stepGame(dt) {
+  const p = G.p; G.time += dt;
+  if (G.mode === 'play') {
+    G.clock = (G.clock + dt / 60) % 24; updatePlayer(dt); updateDialogue(dt);
+  }
+  if (G.mode === 'play' || G.mode === 'title' || G.mode === 'dead') {
+    updateTraffic(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateActors(dt);
+    pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); }
+  }
+  if (G.mode === 'play') {
+    const cd = updatePolice(dt); updateWanted(dt, cd); updateHeli(dt); updateMarkers(dt); updateMission(dt); updateSide(dt);
+    if (p.hp <= 0) playerDown('WASTED');
+    const c = p.car; sfx.engine(!!c && !c.dead, c ? c.speed : 0, c ? c.input.throttle : 0);
+    let near = 999; for (const k of G.cars) if (k.kind === 'cop' && !k.dead) near = Math.min(near, Math.hypot(k.x - p.x, k.z - p.z)); sfx.siren(G.wanted.stars > 0 ? Math.max(0, 1 - near / 120) : 0);
+    updateRadio();
+  } else sfx.engine(false, 0, 0);
+  if (G.mode === 'dead') { G.deadT += dt; if (G.deadT > 3.6) respawn(); }
+  updateEffects(dt); updateSirens(G.time); animateSea(G.time);
+}
+function keys() {
+  if (pressed('Escape')) { if (G.mode === 'play') pause(true); else if (G.mode === 'pause') { if (!document.getElementById('cityMap').classList.contains('hidden') || !document.getElementById('pause').classList.contains('hidden')) pause(false); else showScreen('pause'); } }
+  if (pressed('KeyM') && (G.mode === 'play')) { G.mode = 'pause'; showScreen('cityMap'); releaseLock(); } else if (pressed('KeyM') && G.mode === 'pause' && !document.getElementById('cityMap').classList.contains('hidden')) pause(false);
+  if (pressed('KeyR') && G.mode === 'play') { cycleRadio(); sfx.click(); }
+  if (G.mode === 'play' && !input.locked && input.leftPressed && document.getElementById('dialog').classList.contains('hidden')) requestLock();
+}
+export function renderFrame(snap) {
+  const focus = G.p; if (G.mode === 'title') { const a = 0.35 + G.time * 0.015; Object.assign(rig.aerial, { x: Math.cos(a) * 430, y: 140, z: Math.sin(a) * 430, tx: 0, ty: 10, tz: 0 }); }
+  updateCamera(0.016, !!snap); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : focus, G.camera); renderer.render(G.scene, G.camera);
+}
+let last = 0;
+function frame(t) {
+  requestAnimationFrame(frame); const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t; keys(); stepGame(dt);
+  if (G.mode === 'title') { G.p.x = 0; G.p.z = 0; }
+  updateCamera(dt, false); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); renderer.render(G.scene, G.camera);
+  if (G.mode !== 'title') updateHud(dt); endFrame();
+}
+async function boot() {
+  const canvas = document.getElementById('game'); G.seed = +params.get('seed') || 1; const rng = seedRandom(G.seed);
+  renderer = G.renderer = new THREE.WebGLRenderer({ canvas, antialias: !shotName, preserveDrawingBuffer: !!shotName, powerPreference: 'high-performance' }); renderer.setPixelRatio(shotName ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(shotName ? 1280 : innerWidth, shotName ? 800 : innerHeight);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
+  const scene = G.scene = new THREE.Scene(); const camera = G.camera = new THREE.PerspectiveCamera(60, shotName ? 1.6 : innerWidth / innerHeight, 0.5, 1800); scene.add(camera);
+  if (!shotName) addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+  initInput(canvas); input.onUnlock = () => { if (G.mode === 'play') pause(true); };
+  buildLayout(rng); const tex = { facade: facadeMaps() };
+  sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); initEffects(scene);
+  createPlayer(); populateParked(40); initSideActivities(); initMenus(handlers);
+  for (let k = 0; k < 18; k++) spawnTrafficNear(0, 0, 20, 280); for (let k = 0; k < 22; k++) spawnPedsNear(0, 0, 10, 250);
+  const api = { stepGame, renderFrame, startGame, showScreen, showHud, updateHud, handlers };
+  if (shotName) { await runShot(shotName, api); return; }
+  if (selftest) { await runSelfTest(api); return; }
+  toTitle(); requestAnimationFrame(frame);
+}
+boot().catch((e) => { console.error('CONSOLE_ERROR boot ' + (e.stack || e)); document.title = 'BOOT_FAIL ' + e.message; });
