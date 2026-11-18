@@ -30,10 +30,11 @@ import { initMenus, showScreen, hideScreens, showDead } from './ui/menus.js';
 import { initAudio, sfx } from './audio/soundEngine.js';
 import { cycleRadio, updateRadio } from './audio/radioStations.js';
 import { saveGame, readSave, applySave } from './save/saveGame.js';
+import { createPostProcessing } from './render/postProcessing.js';
 import { runShot, runSelfTest } from './shots/screenshotScenes.js';
 
 const params = new URLSearchParams(location.search), shotName = params.get('shot'), selftest = params.has('selftest');
-let renderer, sky, pedT = 0;
+let renderer, sky, post = null, pedT = 0;
 window.addEventListener('error', (e) => console.error('CONSOLE_ERROR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
 window.addEventListener('unhandledrejection', (e) => console.error('CONSOLE_ERROR ' + e.reason));
 
@@ -97,7 +98,15 @@ function keys() {
 }
 export function renderFrame(snap) {
   const focus = G.p; if (G.mode === 'title') { const o = Math.sin(G.time * 0.05) * 60; Object.assign(rig.aerial, { x: 190 + o, y: 120, z: 390, tx: 150 + o * 0.5, ty: 0, tz: -70 }); }
-  updateCamera(0.016, !!snap); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : focus, G.camera); renderer.render(G.scene, G.camera); screenFx();
+  updateCamera(0.016, !!snap); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : focus, G.camera); draw(); screenFx();
+}
+// Draw through the bloom/tone-mapping pipeline when enabled; plain renderer output is the fallback.
+function draw() {
+  if (post && G.settings.post !== false) {
+    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; post.params.fringe = G.mode === 'play' ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; post.params.exposure = G.exposure || 1.25; post.render(G.scene, G.camera, G.time); return; }
+    catch (e) { console.warn('post-processing disabled: ' + e.message); post = null; }
+  }
+  renderer.setRenderTarget(null); renderer.render(G.scene, G.camera);
 }
 function screenFx() {
   const sp = G.mode === 'play' && G.p.car ? Math.abs(G.p.car.speed) : 0; speedEl.style.opacity = String(Math.max(0, Math.min(0.85, (sp - 18) / 30)));
@@ -108,7 +117,7 @@ let last = 0;
 function frame(t) {
   requestAnimationFrame(frame); const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t; keys(); stepGame(dt);
   if (G.mode === 'title') { G.p.x = 0; G.p.z = 0; }
-  updateCamera(dt, false); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); renderer.render(G.scene, G.camera);
+  updateCamera(dt, false); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); draw();
   if (G.mode !== 'title') updateHud(dt); endFrame();
 }
 async function boot() {
@@ -116,7 +125,9 @@ async function boot() {
   renderer = G.renderer = new THREE.WebGLRenderer({ canvas, antialias: !shotName, preserveDrawingBuffer: !!shotName, powerPreference: 'high-performance' }); renderer.setPixelRatio(shotName ? 1 : Math.min(devicePixelRatio, 1.5)); renderer.setSize(shotName ? 1280 : innerWidth, shotName ? 800 : innerHeight);
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
   const scene = G.scene = new THREE.Scene(); const camera = G.camera = new THREE.PerspectiveCamera(60, shotName ? 1.6 : innerWidth / innerHeight, 0.5, 1800); scene.add(camera);
-  if (!shotName) addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+  if (!shotName) addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); post?.setSize(renderer.getDrawingBufferSize(new THREE.Vector2()).x, renderer.getDrawingBufferSize(new THREE.Vector2()).y); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+  try { post = createPostProcessing(renderer, { samples: 4 }); } catch (e) { console.warn('post-processing unavailable: ' + e.message); post = null; }
+  G.settings.post = params.get('post') !== '0';
   initInput(canvas); input.onUnlock = () => { if (G.mode === 'play') pause(true); };
   buildLayout(rng); const tex = { facade: facadeMaps() };
   sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); initEffects(scene);

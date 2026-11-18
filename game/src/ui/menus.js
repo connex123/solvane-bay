@@ -15,6 +15,7 @@ export function initMenus(handlers) {
   $('keysList').innerHTML = KEYS.map(([k, t]) => `<div><b>${k}</b>${t}</div>`).join('');
   document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => { sfx.click(); handlers[b.dataset.act]?.(); }));
   $('setVol').addEventListener('input', (e) => setVolume(+e.target.value)); $('setSens').addEventListener('input', (e) => { G.settings.sens = +e.target.value; });
+  $('setFx').addEventListener('change', (e) => { G.settings.post = e.target.value === '1'; });
 }
 export function showScreen(id) {
   ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = readSave(); $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop();
