@@ -17,6 +17,7 @@ import { dlg, say } from '../story/dialogue.js';
 import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters } from '../combat/effects.js';
 import { rig } from '../camera/cameraRig.js';
 import { seedSave } from '../save/saveGame.js';
+import { addMarker } from '../missions/markers.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
 
@@ -42,9 +43,16 @@ function chase(api) {
   say([{ who: 'sol', text: 'Left at the next light, Nico! I can hear that chopper from here. Stay off the brakes!' }]); typed();
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; }
   car.mesh.rotation.z = -0.025; const ram = G.cars.find((c) => c.ai === 'RAMMING'); ram.mesh.rotation.z = 0.03;
-  const sx = X + 0.5, sz = z0 + 0.74; sparks(sx, 0.6, sz, 30); sparks(sx + 0.3, 0.5, sz, 18); particle({ x: sx, y: 0.6, z: sz - 0.3, life: 1, size: 0.9, color: 0xffb050, add: true });
+  const sx = X - 0.6, sz = z0 + 0.6; sparks(sx, 0.45, sz, 14);
+  const bm = addMarker({ x: X + 64, z: z0 + 10.5, kind: 'obj', label: 'SAFEHOUSE', auto: false }); bm.mesh.scale.set(0.8, 0.75, 0.8); bm.mesh.children[0].material = new THREE.MeshBasicMaterial({ color: 0xffb81c, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }); // objective beacon down the boulevard
+  // golden rim + fill from behind the camera so the VELOCE GT reads as saturated glossy red against the low sun
+  const rim = new THREE.DirectionalLight(0xffd2a8, 2.2); rim.position.set(X - 14, 6, z0 - 3); rim.target = car.mesh; G.scene.add(rim);
+  const fill = new THREE.PointLight(0xff9a70, 30, 9, 2); fill.position.set(X - 4.5, 1.6, z0 + 2.6); G.scene.add(fill);
+  const bm2 = car.mesh.userData.bodyMesh; if (bm2) { bm2.material = bm2.material.clone(); bm2.material.envMapIntensity = 0.3; bm2.material.metalness = 0.1; bm2.material.clearcoat = 0.55; bm2.material.color.setHex(0xe0081e); }
+  if (G.post) { G.post.params.bloom.value = 0.4; G.post.threshold.value = 2.1; }
+  [[X + 22, -1, 1], [X + 30, 1, -1], [X + 44, -1, -1], [X + 56, 1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 6, x, s, d); animateWalk(a.mesh, i * 1.9, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
   smoke(X - 2.6, 0.5, z0 + 2.4, 0x9a948c); smoke(X - 3.4, 0.7, z0 + 1.2, 0x8a847c); smoke(X - 5.5, 0.5, z0 - 0.4, 0x9a948c);
-  rig.mode = 'auto'; rig.yaw = Math.PI / 2; rig.shot = { pos: [X - 10.2, 2.05, z0 + 1.9], look: [X + 30, 2.25, z0 + 1.0], fov: 60, roll: -0.035 };
+  rig.mode = 'auto'; rig.yaw = Math.PI / 2; rig.shot = { pos: [X - 8.2, 1.85, z0 + 2.3], look: [X + 30, 2.1, z0 + 1.0], fov: 58, roll: -0.035 };
   finish(api); }
 function onfoot(api) {
   const p = G.p, z0 = lineCoord(7); clearTraffic(); G.mode = 'play'; G.clock = 17.3; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
