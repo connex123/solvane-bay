@@ -116,7 +116,7 @@ function build(key) {
 }
 
 // SBPD livery: navy lower panel, teal sweep, shield badge and lettering, drawn on a canvas decal.
-let liveryTex = null, hoodTex = null;
+let liveryTex = null, hoodTex = null, rearTex = null;
 function livery() {
   liveryTex = liveryTex || canvasTex(512, 128, (g) => {
     g.clearRect(0, 0, 512, 128); g.fillStyle = '#16264a'; g.beginPath(); g.moveTo(0, 70); g.lineTo(512, 50); g.lineTo(512, 128); g.lineTo(0, 128); g.fill();
@@ -153,6 +153,8 @@ export function buildCarMesh(key, tint) {
     const sideLit = new THREE.MeshLambertMaterial({ map: lv.side, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
     for (const sx of [-1, 1]) { const d = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.72), sideLit); d.position.set(sx * (t.wid / 2 + 0.035), 0.66, 0.1); d.rotation.y = sx * Math.PI / 2; grp.add(d); }
     const hood = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.0), new THREE.MeshLambertMaterial({ map: lv.hood, transparent: true, depthWrite: false })); hood.rotation.x = -Math.PI / 2 + 0.06; hood.position.set(0, 0.965, 1.55); grp.add(hood);
+    rearTex = rearTex || canvasTex(256, 80, (g) => { g.fillStyle = '#16264a'; g.fillRect(0, 0, 256, 80); g.fillStyle = '#1fb5b0'; g.fillRect(0, 62, 256, 8); g.fillStyle = '#ffffff'; g.font = 'bold 44px Arial Black, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SBPD', 128, 32); }, false);
+    const rear = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.32), new THREE.MeshLambertMaterial({ map: rearTex })); rear.position.set(0, 0.62, -t.len / 2 - 0.075); rear.rotation.y = Math.PI; grp.add(rear);
     const bar = (col, x) => { const mm = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.16, 0.3), new THREE.MeshBasicMaterial({ color: col, toneMapped: false })); mm.position.set(x, t.roof + 0.12, -0.45); grp.add(mm); return mm; };
     grp.userData.bar = { r: bar(0xff3040, -0.38), b: bar(0x4080ff, 0.38) };
   }
