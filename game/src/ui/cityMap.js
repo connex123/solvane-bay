@@ -2,7 +2,7 @@
 import { G, levelFromXp } from '../core/gameState.js';
 import { MAP_BOUNDS as B, DISTRICTS, HALF, SEA_X, N, RW, RESPECT_XP, lineCoord } from '../core/config.js';
 import { blocks } from '../world/cityLayout.js';
-import { hex, drawBlips } from './minimap.js';
+import { hex, drawBlips, gpsRoute } from './minimap.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { slotSummary } from '../save/saveGame.js';
 import { packagePositions, SHOP, GARAGE, TAXI, RACE } from '../missions/sideActivities.js';
@@ -85,6 +85,15 @@ function districtLabels(g, X, Z, W, H) {
   g.restore();
 }
 
+// GPS route from the player to the next mission along the roads: dark casing, glowing gold line, moving chevrons; reserved for labels.
+function drawRoute(g, pts) {
+  const path = () => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); };
+  g.save(); g.lineJoin = 'round'; g.lineCap = 'round'; g.shadowBlur = 0;
+  path(); g.strokeStyle = 'rgba(58,18,64,0.9)'; g.lineWidth = 10; g.stroke();
+  g.shadowColor = '#ffd23c'; g.shadowBlur = 16; path(); g.strokeStyle = '#ffd23c'; g.lineWidth = 5; g.stroke(); g.shadowBlur = 0;
+  g.setLineDash([2, 14]); g.lineDashOffset = -(G.time || 0) * 30; path(); g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2.5; g.stroke(); g.restore();
+  for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], n = Math.ceil(Math.hypot(bx - ax, by - ay) / 18); for (let j = 0; j <= n; j++) { const t = j / Math.max(1, n); occ.push([ax + (bx - ax) * t - 6, ay + (by - ay) * t - 6, 12, 12]); } }
+}
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));
   const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; occ = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
@@ -96,6 +105,7 @@ export function drawCityMap() {
   const next1 = MISSIONS.find((m) => !G.completed.includes(m.id));
   badge(g, X(SHOP.x), Z(SHOP.z), '#2f86e8', '$', 'Calder Arms'); badge(g, X(GARAGE.x), Z(GARAGE.z), '#25a96f', 'R', 'Glow Coat'); badge(g, X(TAXI.x), Z(TAXI.z), '#e0a81c', 'T'); badge(g, X(RACE.x), Z(RACE.z), '#d93cb8', 'F');
   badge(g, X(lineCoord(1) + 90), Z(lineCoord(0) + 20), '#6a7a98', 'C', 'Port Cranes'); badge(g, X(SEA_X - 8), Z(lineCoord(0) + 104), '#1fa8c9', 'M', 'Marina Piers'); badge(g, X(corner(2, 6, 1, -1).x), Z(corner(2, 6, 1, -1).z), '#a43cd9', 'V', 'Club Velvet');
+  if (next1) drawRoute(g, gpsRoute(p, next1.start).map(([x, z]) => [X(x), Z(z)]));
   if (next1) { const s0 = next1.start; badge(g, X(s0.x), Z(s0.z), '#f0b81c', '\u2605'); infoCard(g, X(s0.x), Z(s0.z), next1, cv.width, cv.height); }
   g.save(); g.translate(X(p.x), Z(p.z)); g.rotate(Math.PI - (p.car ? p.car.heading : p.yaw)); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -11); g.lineTo(8, 9); g.lineTo(0, 4); g.lineTo(-8, 9); g.closePath(); g.fill(); g.stroke(); g.restore();
   occ.push([X(p.x) - 14, Z(p.z) - 14, 28, 28]); districtLabels(g, X, Z, cv.width, cv.height);
