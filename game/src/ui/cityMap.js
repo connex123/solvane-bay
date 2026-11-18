@@ -16,7 +16,7 @@ const money = (n) => '$' + Number(n).toLocaleString('en-US');
 function baseMap(g, X, Z, k) {
   const W = g.canvas.width, Hh = g.canvas.height, seaX = X(SEA_X), cw = X(HALF + 8);
   g.fillStyle = '#1b2a2a'; g.fillRect(0, 0, W, Hh);
-  for (let i = 0; i < 260; i++) { g.fillStyle = hash(i, 1) > 0.5 ? '#223a2c' : '#172622'; g.beginPath(); g.arc(hash(i, 2) * cw, hash(i, 3) * Hh, 6 + hash(i, 4) * 18, 0, 7); g.fill(); }
+  for (let i = 0; i < 260; i++) { g.fillStyle = hash(i, 1) > 0.5 ? '#2f5e40' : '#24503a'; g.beginPath(); g.arc(hash(i, 2) * cw, hash(i, 3) * Hh, 6 + hash(i, 4) * 18, 0, 7); g.fill(); }
   // sea: gradient, wave rows and sparkles
   const sg = g.createLinearGradient(seaX, 0, W, 0); sg.addColorStop(0, '#35b6d2'); sg.addColorStop(0.35, '#1f87b8'); sg.addColorStop(1, '#0d3c70'); g.fillStyle = sg; g.fillRect(seaX, 0, W - seaX, Hh);
   g.lineWidth = 1.6; for (let r = 0; r < 52; r++) { const y0 = 8 + r * 14, ph = hash(r, 7) * 6; g.strokeStyle = `rgba(210,242,255,${0.12 + hash(r, 8) * 0.18})`; g.beginPath(); for (let x = seaX + 4; x <= W; x += 6) { const y = y0 + Math.sin(x * 0.07 + ph) * 3 + Math.sin(x * 0.19 + ph * 2) * 1.2; x === seaX + 4 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); }
@@ -31,8 +31,8 @@ function baseMap(g, X, Z, k) {
   g.fillStyle = '#2a3350'; g.fillRect(X(-HALF - 10), Z(-HALF - 10), (2 * HALF + 20) * k, (2 * HALF + 20) * k);
   for (const b of blocks) {
     const x = X(b.cx - 25), z = Z(b.cz - 25), w = 50 * k; rr(g, x, z, w, w, 5);
-    g.fillStyle = b.type === 'park' ? '#2e7d50' : b.type === 'plaza' ? '#6c6798' : '#323c5c'; g.fill();
-    if (b.type !== 'park' && b.type !== 'plaza') { rr(g, x, z, w, w, 5); g.fillStyle = DISTRICTS[b.district].color + '30'; g.fill(); g.fillStyle = 'rgba(255,255,255,0.07)'; g.fillRect(x + w * 0.16, z + w * 0.16, w * 0.3, w * 0.24); g.fillRect(x + w * 0.54, z + w * 0.5, w * 0.28, w * 0.3); }
+    g.fillStyle = b.type === 'park' ? '#3f9a5e' : b.type === 'plaza' ? '#8a7fc0' : '#4a5578'; g.fill();
+    if (b.type !== 'park' && b.type !== 'plaza') { rr(g, x, z, w, w, 5); g.fillStyle = DISTRICTS[b.district].color + '58'; g.fill(); g.fillStyle = 'rgba(255,255,255,0.13)'; g.fillRect(x + w * 0.16, z + w * 0.16, w * 0.3, w * 0.24); g.fillRect(x + w * 0.54, z + w * 0.5, w * 0.28, w * 0.3); }
     if (b.type === 'park') for (let t = 0; t < 9; t++) { const tx = x + 6 + hash(b.i * 7 + t, b.j) * (w - 12), tz = z + 6 + hash(b.j * 5 + t, b.i + 3) * (w - 12); g.fillStyle = '#1b5a38'; g.beginPath(); g.arc(tx, tz, 4.4, 0, 7); g.fill(); g.fillStyle = '#5cc27f'; g.beginPath(); g.arc(tx - 1, tz - 1, 2.2, 0, 7); g.fill(); }
   }
   // roads: light lines (avenues thicker), dashed centre lines, names

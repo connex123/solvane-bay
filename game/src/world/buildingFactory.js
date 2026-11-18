@@ -40,7 +40,7 @@ export function buildCity(scene, tex, rng) {
       addBox({ x0, x1, z0, z1, h: h + 0.25 });
       let top = h + 0.25;
       if (tower) { // glass tower: podium, setbacks, crown and spire
-        pushBox(D, cx, 0.25, cz, w + 0.6, 6, d + 0.6, 0xe8e4dc);
+        pushBox(B, cx, 0.25, cz, w + 0.6, 6, d + 0.6, 0xf2ece2, true, uo);
         pushBox(T, cx, 6.25, cz, w, h - 6, d, col, true, uo);
         for (const f of [0.35, 0.7]) pushBox(D, cx, 0.25 + h * f, cz, w + 0.5, 0.6, d + 0.5, 0xf4f6f8);
         const s1 = rng.range(0.62, 0.8); pushBox(T, cx, top, cz, w * s1, h * 0.18, d * s1, col, true, uo); top += h * 0.18;
