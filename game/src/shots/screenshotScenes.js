@@ -1,7 +1,7 @@
 // Deterministic staged scenes for ?shot=<name> (built from the real world, HUD and entities) and the ?selftest=1 smoke test.
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
-import { LANE, lineCoord } from '../core/config.js';
+import { LANE, lineCoord, HALF, N } from '../core/config.js';
 import { input } from '../core/input.js';
 import { createCar } from '../vehicles/carPhysics.js';
 import { placeTraffic } from '../vehicles/trafficSystem.js';
@@ -75,7 +75,17 @@ function onfoot(api) {
 function map(api) {
   const p = G.p; seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 3, 5, 9, 11], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Neon Row', at: '2026-11-18 17:35' })); clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 40; p.z = 20; p.yaw = 2.4;
   refreshStartMarker(); G.markers.forEach((m) => { m.mesh.visible = false; }); G.wanted.stars = 0; api.showHud(false); rig.mode = 'auto'; api.renderFrame(); api.showScreen('cityMap'); finish(api, 1); }
-function title(api) { clearTraffic(); seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' })); G.mode = 'title'; G.clock = 17.55; G.time = 30; rig.mode = 'aerial'; api.showHud(false); api.showScreen('title'); finish(api, 2); }
+// Key art: low angle on the beach road at golden hour, the VELOCE GT and Nico in front, palms, skyline and marina behind.
+function title(api) {
+  clearTraffic(); seedSave({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Palmetto Beach', at: '2026-11-18 17:35' });
+  G.mode = 'title'; G.clock = 17.45; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0;
+  const X = HALF + 2.6, car = createCar('veloce', X, 56.2, -0.7, 'parked', 0xe8203c); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  const p = G.p; p.x = HALF + 2.7; p.z = 58.6; p.yaw = -0.75; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
+  tc('tupelo', -10, 1, 0xf6c21c); tc('rumble', -60, -1, 0x8fd3c8); tc('pico', -120, 1, 0xff8a3d); tc('hawke', 6, -1, 0xf0f0f0);
+  [[-4, 1, 1], [-22, 1, -1], [-40, -1, 1], [16, 1, 1], [-70, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  G.titleCam = { x: HALF - 1.8, y: 1.05, z: 62.6, tx: HALF + 13, ty: 3.1, tz: 34 };
+  api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
   G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-map': map, '4-title': title }[name] || title)(api);

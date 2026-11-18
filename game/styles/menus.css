@@ -1,5 +1,5 @@
 .screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
-#title { justify-content: flex-start; background: linear-gradient(90deg, rgba(20, 8, 40, 0.82) 0%, rgba(20, 8, 40, 0.35) 45%, transparent 70%); }
+#title { justify-content: flex-start; background: linear-gradient(90deg, rgba(34, 12, 46, 0.8) 0%, rgba(50, 16, 56, 0.4) 34%, transparent 52%); }
 .tbox { margin-left: 90px; } .kicker { font-size: 13px; letter-spacing: 5px; color: #ffb347; font-weight: 700; }
 #title h1 { font-size: 104px; margin: 4px 0 0; line-height: 0.95; letter-spacing: 6px; font-weight: 900; font-style: italic; text-shadow: 0 4px 0 #ff4fd8, 0 8px 30px rgba(255, 90, 140, 0.6); }
 #title h1 span { color: #ffd23c; } .sub { font-size: 18px; color: #f0e6ff; margin: 8px 0 28px; letter-spacing: 1px; }

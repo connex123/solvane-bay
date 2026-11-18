@@ -97,7 +97,7 @@ function keys() {
   if (G.mode === 'play' && !input.locked && input.leftPressed && document.getElementById('dialog').classList.contains('hidden')) requestLock();
 }
 export function renderFrame(snap) {
-  const focus = G.p; if (G.mode === 'title') { const o = Math.sin(G.time * 0.05) * 60; Object.assign(rig.aerial, { x: 190 + o, y: 120, z: 390, tx: 150 + o * 0.5, ty: 0, tz: -70 }); }
+  const focus = G.p; if (G.mode === 'title' && G.titleCam) Object.assign(rig.aerial, G.titleCam); else if (G.mode === 'title') { const o = Math.sin(G.time * 0.05) * 60; Object.assign(rig.aerial, { x: 190 + o, y: 120, z: 390, tx: 150 + o * 0.5, ty: 0, tz: -70 }); }
   updateCamera(0.016, !!snap); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : focus, G.camera); draw(); screenFx();
 }
 // Draw through the bloom/tone-mapping pipeline when enabled; plain renderer output is the fallback.

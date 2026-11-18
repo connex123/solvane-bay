@@ -136,7 +136,7 @@ const shared = {};
 function sharedMats() {
   if (shared.glass) return shared;
   const e = env();
-  shared.glass = new THREE.MeshStandardMaterial({ color: 0x1a2430, roughness: 0.05, metalness: 0.6, envMap: e, envMapIntensity: 1.3 });
+  shared.glass = new THREE.MeshStandardMaterial({ color: 0x1a2430, roughness: 0.05, metalness: 0.6, envMap: e, envMapIntensity: 0.85 });
   shared.trim = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.3, envMap: e, envMapIntensity: 0.8 });
   shared.lights = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
   return shared;
@@ -145,7 +145,7 @@ export function buildCarMesh(key, tint) {
   const g = geoCache[key] || (geoCache[key] = build(key)); const t = CAR_TYPES[key], m = sharedMats();
   const c = t.police ? t.tint : key === 'tupelo' ? t.tint : tint ?? t.tint;
   const mk = `${key}${c}`;
-  const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.25, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.75 }));
+  const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.45 }));
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
   a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a;
   if (t.police) {
