@@ -5,7 +5,7 @@ import { copCars } from '../police/policeDispatch.js';
 import { WEAPONS } from '../combat/weapons.js';
 import { radioInfo } from '../audio/radioStations.js';
 import { dlg } from '../story/dialogue.js';
-import { CAST } from '../story/characters.js';
+import { CAST } from '../story/castList.js';
 import { drawPortrait } from './portraits.js';
 import { drawMinimap } from './minimap.js';
 

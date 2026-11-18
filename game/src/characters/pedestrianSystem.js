@@ -22,7 +22,7 @@ export function spawnPedsNear(cx, cz, rMin, rMax) {
   const pt = randomRoadPoint(rnd, cx, cz, rMin, rMax), t = pt.axis === 'x' ? pt.x : pt.z; return spawnPed(pt.axis, pt.line, t, rnd() < 0.5 ? 1 : -1, rnd() < 0.5 ? 1 : -1);
 }
 export function scarePeds(x, z, r = 35) { for (const a of G.actors) if (a.kind === 'ped' && !a.dead && Math.hypot(a.x - x, a.z - z) < r) { a.scared = 6; a.threat = { x, z }; } }
-import { floatText } from '../combat/effects.js';
+import { floatText } from '../combat/visualEffects.js';
 export function hitActor(a, dmg, byPlayer) {
   if (!a.dead && dmg > 1) floatText(a.x, (a.y || 0) + 2.1, a.z, '-' + Math.round(dmg), byPlayer ? 'hit' : 'foe');
   if (a.dead) return; a.hp -= dmg; a.scared = 6; if (byPlayer) { a.threat = { x: G.p.x, z: G.p.z }; a.aggro = true; }

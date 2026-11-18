@@ -1,5 +1,5 @@
 // Draws character portraits on a canvas (flat illustrated busts with per-character hair, shades and colours).
-import { CAST } from '../story/characters.js';
+import { CAST } from '../story/castList.js';
 export function drawPortrait(canvas, id) {
   const c = CAST[id] || CAST.nico, g = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
   const bg = g.createLinearGradient(0, 0, w, h); bg.addColorStop(0, c.bg[0]); bg.addColorStop(1, c.bg[1]); g.fillStyle = bg; g.fillRect(0, 0, w, h);

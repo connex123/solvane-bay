@@ -1,7 +1,7 @@
 // Hitscan shooting: rays against actors, cars, the player and buildings; tracers, flashes, melee and damage rules.
 import { G } from '../core/gameState.js';
 import { rayBuildings } from '../world/collision.js';
-import { tracer, muzzleFlash, sparks } from './effects.js';
+import { tracer, muzzleFlash, sparks } from './visualEffects.js';
 import { damageCar } from '../vehicles/carPhysics.js';
 import { sfx } from '../audio/soundEngine.js';
 

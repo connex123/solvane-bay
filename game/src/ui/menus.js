@@ -1,4 +1,4 @@
-// Menu screens: title, pause, controls, settings, shop, flatlined/cuffed. Buttons use data-act handlers wired in main.js.
+// Menu screens: title, pause, controls, settings, shop, flatlined/cuffed. Buttons use data-act handlers from core/gameFlow.js.
 import { G, notify } from '../core/gameState.js';
 import { WEAPONS, maxAmmo } from '../combat/weapons.js';
 import { levelFromXp } from '../core/gameState.js';

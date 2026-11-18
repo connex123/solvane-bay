@@ -14,7 +14,7 @@ import { setStars, crime } from '../police/wantedSystem.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { startMission, refreshStartMarker } from '../missions/missionRunner.js';
 import { dlg, say } from '../story/dialogue.js';
-import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters } from '../combat/effects.js';
+import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters } from '../combat/visualEffects.js';
 import { rig } from '../camera/cameraRig.js';
 import { seedSave } from '../save/saveGame.js';
 import { addMarker } from '../missions/markers.js';

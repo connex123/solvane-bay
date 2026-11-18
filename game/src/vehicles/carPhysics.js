@@ -3,7 +3,7 @@ import { G, notify } from '../core/gameState.js';
 import { clamp, wrapAngle } from '../core/config.js';
 import { CAR_TYPES, buildCarMesh, burntMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
-import { sparks, smoke, explosion, skidMark, addSiren, removeSiren } from '../combat/effects.js';
+import { sparks, smoke, explosion, skidMark, addSiren, removeSiren } from '../combat/visualEffects.js';
 import { sfx } from '../audio/soundEngine.js';
 
 export function createCar(key, x, z, heading, kind = 'parked', tint) {
