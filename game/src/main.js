@@ -110,7 +110,7 @@ function draw() {
 }
 function screenFx() {
   const sp = G.mode === 'play' && G.p.car ? Math.abs(G.p.car.speed) : 0; speedEl.style.opacity = String(Math.max(0, Math.min(0.85, (sp - 18) / 30)));
-  const gl = G.sunScreen; glareEl.style.opacity = gl && G.mode === 'play' ? String(gl.a) : '0'; if (gl) glareEl.firstElementChild.style.transform = `translate(${gl.x}px, ${gl.y}px)`;
+  const gl = G.sunScreen; glareEl.style.opacity = gl && G.mode === 'play' ? String(gl.a * (post && G.settings.post !== false ? 0.2 : 1)) : '0'; if (gl) glareEl.firstElementChild.style.transform = `translate(${gl.x}px, ${gl.y}px)`;
 }
 const speedEl = document.getElementById('speedfx'), glareEl = document.getElementById('glare');
 let last = 0;

@@ -100,7 +100,7 @@ function build(key) {
     lights.push([B(W * 0.86, 0.06, 0.08, 0, ty - 0.04, rz - 0.05), [4.5, 0.25, 0.2]]); // full-width tail bar
     trim.push([B(W * 0.98, 0.05, 0.55, 0, 1.24, -1.95), DK]); for (const sx of [-0.55, 0.55]) trim.push([B(0.06, 0.3, 0.14, sx, 1.07, -1.95), DK]); // spoiler
     trim.push([B(W * 0.9, 0.06, 0.4, 0, 0.3, fz - 0.1), DK], [B(W * 0.86, 0.16, 0.1, 0, 0.36, rz + 0.03), DK]); // splitter, diffuser
-    for (const sx of [-1, 1]) { trim.push([B(0.05, 0.16, 0.7, sx * (W / 2 - 0.0), 0.62, -0.75), DK]); for (const o of [0.12, 0.28]) trim.push([new THREE.CylinderGeometry(0.06, 0.06, 0.14, 10).rotateX(Math.PI / 2).translate(sx * o, 0.34, rz - 0.05), CH]); }
+    for (const sx of [-1, 1]) { trim.push([B(0.05, 0.16, 0.7, sx * (W / 2 - 0.0), 0.62, -0.75), DK]); for (const o of [0.12, 0.28]) trim.push([new THREE.CylinderGeometry(0.045, 0.05, 0.14, 10).rotateX(Math.PI / 2).translate(sx * o, 0.34, rz - 0.05), [0.35, 0.35, 0.38]]); }
     trim.push([B(0.7, 0.12, 0.06, 0, 0.5, fz - 0.02), DK]); // nose intake
   } else {
     for (const sx of [-1, 1]) lights.push([B(0.42, 0.2, 0.08, sx * (W / 2 - 0.32), ty - 0.08, rz - 0.05), [4.2, 0.22, 0.18]]);

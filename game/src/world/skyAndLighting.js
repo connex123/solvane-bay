@@ -22,7 +22,7 @@ export function createSky(scene) {
         vec3 c = mix(hor, mid, smoothstep(0.0, 0.22, h)); c = mix(c, top, smoothstep(0.12, 0.75, h));
         c = mix(c, sunCol * 1.05, pow(s, 3.0) * (1.0 - smoothstep(0.0, 0.5, h)) * 0.6);
         c = mix(c, hor * 0.75, clamp(-h * 3.0, 0.0, 1.0));
-        c += sunCol * (smoothstep(0.9993, 0.9997, s) * 14.0 + pow(s, 90.0) * 1.6 + pow(s, 14.0) * 0.4 + pow(s, 4.0) * 0.12);
+        c += vec3(1.0, 0.92, 0.75) * smoothstep(0.99935, 0.99955, s) * 5.0 + sunCol * (pow(s, 300.0) * 0.8 + pow(s, 30.0) * 0.35 + pow(s, 5.0) * 0.1);
         gl_FragColor = vec4(c, 1.0); }` });
   const dome = new THREE.Mesh(new THREE.SphereGeometry(1000, 24, 16), mat); dome.frustumCulled = false; dome.renderOrder = -10; scene.add(dome);
   const sun = new THREE.DirectionalLight(0xffb070, 3.0); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 3;
@@ -34,10 +34,10 @@ export function createSky(scene) {
   return {
     update(clock, focus, camera) {
       const e = Math.sin((clock - 6) / 24 * Math.PI * 2), ang = (clock - 6) / 12 * Math.PI;
-      dir.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.7 + 0.32, 0.35).normalize();
+      dir.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.7 + 0.32, 0.12).normalize();
       if (e < 0.02) dir.set(-Math.cos(ang) * 0.5, 0.6, -0.3).normalize();
       ramp(e, 1, u.top.value); ramp(e, 2, u.hor.value); ramp(e, 3, u.sunCol.value);
-      u.sunDir.value.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.8 - (e < 0 ? 0.3 : 0), 0.35).normalize();
+      u.sunDir.value.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.62 - (e < 0 ? 0.3 : 0), -0.03).normalize();
       scene.fog.color.copy(u.hor.value).lerp(tmpA.set('#ffe2c4'), e > 0 ? 0.35 : 0); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
       if (G.mode === 'title') { scene.fog.near = 300; scene.fog.far = 1500; } else { scene.fog.near = 180; scene.fog.far = 950; }
       for (const hm of G.hillMats || []) hm.color.setScalar((G.mode === 'title' ? 1 : 0.78) * Math.max(0.35, Math.min(1, 0.45 + (e + 0.1) * 1.4)));

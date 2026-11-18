@@ -19,6 +19,7 @@ export function updateCamera(dt, snap = false) {
     const dist = 6.6 + c.type.len * 0.25 + Math.min(1.5, vel * 0.03), fx = Math.sin(rig.yaw), fz = Math.cos(rig.yaw);
     pos = new THREE.Vector3(c.x - fx * dist, 3.4 + Math.min(1.3, vel * 0.03), c.z - fz * dist); look = new THREE.Vector3(c.x + fx * 5, 1.3, c.z + fz * 5);
     fov = 58 + Math.min(14, vel * 0.34);
+    const sc = G.shotCam; if (sc) { pos.set(c.x - fx * sc.d, sc.h, c.z - fz * sc.d); look.set(c.x + fx * sc.ahead, sc.ly, c.z + fz * sc.ahead); fov = sc.fov; }
   } else {
     const y = G.cam.yaw, pi = G.cam.pitch, aim = p.aim, dist0 = aim ? (G.camDistAim || 2.6) : 3.8, cp = Math.cos(pi), fx = Math.sin(y) * cp, fy = -Math.sin(pi), fz = Math.cos(y) * cp;
     const rx = -Math.cos(y), rz = Math.sin(y), tx = p.x + rx * (aim ? 0.9 : 0.5), ty = 1.6, tz = p.z + rz * (aim ? 0.9 : 0.5);
@@ -28,6 +29,6 @@ export function updateCamera(dt, snap = false) {
   }
   cam.position.lerp(pos, snap ? 1 : p.car ? 1 - Math.exp(-dt * 14) : k * 1.4 > 1 ? 1 : k * 1.4);
   if (G.shake > 0) cam.position.add(tmp.set((Math.random() - .5) * G.shake * 0.5, (Math.random() - .5) * G.shake * 0.4, (Math.random() - .5) * G.shake * 0.5));
-  rig.look.lerp(look, snap ? 1 : 1 - Math.exp(-dt * 12)); cam.lookAt(rig.look);
+  rig.look.lerp(look, snap ? 1 : 1 - Math.exp(-dt * 12)); cam.lookAt(rig.look); if (G.shotCam?.roll) cam.rotateZ(G.shotCam.roll);
   cam.fov += (fov - cam.fov) * (snap ? 1 : Math.min(1, dt * 3)); cam.updateProjectionMatrix();
 }
