@@ -1,10 +1,10 @@
 // Wanted level: crimes add heat, heat maps to 0-5 stars, and heat fades once the player breaks line of pursuit.
 import { G, notify } from '../core/gameState.js';
 
-const HEAT = { hitped: 0.35, killped: 1.1, runover: 0.9, hitcop: 1.0, killcop: 1.6, ram: 0.2, shootcar: 0.5, explosion: 0.8, steal: 0.7, shots: 0.12, killgang: 0 };
+const HEAT = { hitped: 0.35, killped: 1.1, runover: 0.9, hitcop: 1.0, killcop: 1.6, ram: 0.2, shootcar: 0.5, explosion: 0.8, steal: 0.7, shots: 0.12, shotsSeen: 0.4, shotsCop: 0.6, killgang: 0 };
 export function crime(type) {
   const w = G.wanted, add = HEAT[type] || 0; if (!add) return;
-  const before = w.stars; w.heat = Math.min(5.99, w.heat + add); if (type === 'killcop') w.heat = Math.max(w.heat, 2);
+  const before = w.stars; w.heat = Math.min(5.99, w.heat + add); if (type === 'killcop') w.heat = Math.max(w.heat, 2); if (type === 'shotsCop') w.heat = Math.max(w.heat, 1.5);
   w.stars = Math.floor(w.heat); w.unseen = 0; if (w.stars > before) notify(`WANTED LEVEL ${w.stars}`, 'wanted');
 }
 export function setStars(n) { G.wanted.heat = n; G.wanted.stars = n; G.wanted.unseen = 0; }

@@ -12,7 +12,8 @@ export function initInput(canvas) {
   addEventListener('keyup', (e) => input.keys.delete(e.code));
   addEventListener('blur', () => input.keys.clear());
   addEventListener('mousemove', (e) => { if (input.locked) { input.dx += e.movementX; input.dy += e.movementY; } });
-  addEventListener('mousedown', (e) => { if (e.button === 0) { input.left = true; input.leftPressed = true; } if (e.button === 2) input.right = true; });
+  addEventListener('mousedown', (e) => { if (!input.locked && e.target !== canvas) return; // clicks on menus/HUD never reach the gun
+    if (e.button === 0) { input.left = true; input.leftPressed = true; } if (e.button === 2) input.right = true; });
   addEventListener('mouseup', (e) => { if (e.button === 0) input.left = false; if (e.button === 2) input.right = false; });
   addEventListener('contextmenu', (e) => e.preventDefault());
   addEventListener('wheel', (e) => { input.wheel += Math.sign(e.deltaY); });

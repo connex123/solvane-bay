@@ -73,7 +73,8 @@ function foot(dt, p) {
   setGun(p.mesh, p.weapon ? WEAPONS[p.weapon].id : null);
   p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw;
   const w = WEAPONS[p.weapon];
-  if (input.left && p.shootT <= 0 && (w.auto || input.leftPressed || p.weapon === 0) && G.mode === 'play') {
+  // leftPressed survives until a simulation step reads it, so a quick click between slow frames still fires.
+  if ((input.left || input.leftPressed) && p.shootT <= 0 && (w.auto || input.leftPressed || p.weapon === 0) && G.mode === 'play') {
     if (p.weapon === 0) { melee(p); p.shootT = w.rate; }
     else if (p.ammo[w.id] > 0) { shoot(p, w); }
     else if (input.leftPressed) { notify('OUT OF AMMO', 'bad'); }
@@ -83,5 +84,7 @@ export function shoot(p, w) {
   p.ammo[w.id]--; p.shootT = w.rate; const cam = G.camera, d = new cam.position.constructor(); cam.getWorldDirection(d);
   const sn = Math.sin(p.yaw), cs = Math.cos(p.yaw), mz = { x: p.x + sn * 0.9 - cs * 0.3, y: 1.3, z: p.z + cs * 0.9 + sn * 0.3 };
   fire('player', w, cam.position.x + d.x * 3.2, cam.position.y + d.y * 3.2, cam.position.z + d.z * 3.2, d.x, d.y, d.z, mz);
-  G.hooks.crime('shots'); scarePeds(p.x, p.z, 45); G.shake = Math.max(G.shake, w.id === 'shotgun' ? 0.35 : 0.1);
+  // Witnessed gunfire is a real crime: people nearby raise the heat, an officer in earshot calls it in at once.
+  const near = (k, r) => G.actors.some((a) => a.kind === k && !a.dead && Math.hypot(a.x - p.x, a.z - p.z) < r) || (k === 'cop' && G.cars.some((c) => c.kind === 'cop' && !c.dead && Math.hypot(c.x - p.x, c.z - p.z) < r));
+  G.hooks.crime(near('cop', 60) ? 'shotsCop' : near('ped', 45) ? 'shotsSeen' : 'shots'); scarePeds(p.x, p.z, 45); G.shake = Math.max(G.shake, w.id === 'shotgun' ? 0.35 : 0.1);
 }
