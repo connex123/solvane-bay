@@ -55,7 +55,7 @@ export function updateSirens(t) {
   for (const c of sirens) {
     if (c.dead || !c.mesh) continue; const s = c.siren, f = Math.floor((t * 5 + s.ph) % 2) === 0, a = Math.sin(c.heading), b = Math.cos(c.heading), h = c.type.roof + 0.25;
     s.gR.position.set(c.x + a * 0.2 + b * 0.5, h, c.z + b * 0.2 - a * 0.5); s.gB.position.set(c.x + a * 0.2 - b * 0.5, h, c.z + b * 0.2 + a * 0.5);
-    s.gR.visible = f; s.gB.visible = !f; if (c.bar) { c.bar.r.material.color.setHex(f ? 0xff3040 : 0x401018); c.bar.b.material.color.setHex(f ? 0x101840 : 0x4080ff); }
+    s.gR.visible = f; s.gB.visible = !f; if (c.bar) { c.bar.r.material.color.setHex(f ? 0xff3040 : 0x401018).multiplyScalar(f ? 4 : 1); c.bar.b.material.color.setHex(f ? 0x101840 : 0x4080ff).multiplyScalar(f ? 1 : 4.5); }
   }
 }
 
