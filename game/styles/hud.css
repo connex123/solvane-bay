@@ -22,8 +22,10 @@
 @keyframes eq { from { height: 4px; } to { height: 22px; } } .rname { font-size: 13px; font-weight: 800; letter-spacing: 1px; } .rtrack { font-size: 12.5px; color: #bdb8d4; }
 #bottomLeft { position: absolute; left: 22px; bottom: 22px; display: flex; align-items: flex-end; gap: 12px; }
 #mapWrap { width: 190px; height: 190px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.85); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5); overflow: hidden; background: #111; }
-#minimap { display: block; }
-#vitals { padding: 10px 12px; width: 150px; } #district { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #ffb347; margin-bottom: 8px; }
+#minimap { display: block; width: 182px; height: 182px; }
+#mapCol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#mapWrap { transition: box-shadow 0.2s; }
+#vitals { padding: 10px 12px; width: 150px; } #district { font-size: 12.5px; font-weight: 900; letter-spacing: 1.6px; color: #fff; background: rgba(14, 12, 28, 0.78); border: 1px solid rgba(255, 179, 71, 0.6); border-radius: 999px; padding: 3px 14px; white-space: nowrap; text-shadow: 0 1px 2px #000; }
 .vrow { font-size: 13px; letter-spacing: 1px; color: #bdb8d4; margin-top: 6px; } .vrow .bar { margin-top: 3px; } .bar.hp i { background: #ff4f6a; } .bar.ar i { background: #4fa8ff; } .bar.dmg i { background: #8dff9a; }
 #rightCol { position: absolute; right: 22px; bottom: 22px; width: 280px; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
 #weapons { display: flex; gap: 6px; } .wslot { width: 64px; padding: 6px 4px; text-align: center; background: rgba(14, 12, 28, 0.72); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 10px; font-size: 13px; opacity: 0.55; }
