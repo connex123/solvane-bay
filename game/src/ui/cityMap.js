@@ -50,7 +50,9 @@ function baseMap(g, X, Z, k) {
     g.fillStyle = '#8a6a44'; g.fillRect(x0, py, pw, 6); g.strokeStyle = '#5c432a'; g.lineWidth = 1; for (let x = x0; x < x0 + pw; x += 5) { g.beginPath(); g.moveTo(x, py); g.lineTo(x, py + 6); g.stroke(); }
     for (let b = 0; b < 4; b++) { const bx = X(SEA_X - 10 + b * 14) + 18, bz = Z(zc + (b % 2 ? 4.5 : -4.5)) + (b % 2 ? 4 : -4); g.fillStyle = ['#ffffff', '#f4a6a0', '#8fd3c8', '#f6e3b4'][b]; rr(g, bx - 6, bz - 2.5, 12, 5, 2.5); g.fill(); g.fillStyle = '#1b2a40'; g.fillRect(bx - 1, bz - 1, 3, 2); } }
 }
+let occ = []; // screen rects already used by badges, the info card and the player arrow
 function badge(g, x, y, col, glyph, label) {
+  occ.push(label ? [x - 38, y - 13, 76, 40] : [x - 13, y - 13, 26, 26]);
   g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 8; g.fillStyle = col; g.beginPath(); g.arc(x, y, 10, 0, 7); g.fill(); g.shadowBlur = 0; g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke();
   g.fillStyle = '#fff'; g.font = '800 12px Segoe UI, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(glyph, x, y + 0.5);
   if (label) { g.font = '700 10px Segoe UI, Arial'; g.lineWidth = 3; g.strokeStyle = 'rgba(10,14,30,0.9)'; g.strokeText(label, x, y + 20); g.fillStyle = '#fff'; g.fillText(label, x, y + 20); } g.restore();
@@ -65,16 +67,29 @@ function infoCard(g, px, py, m, W, Hh) {
   g.fillStyle = '#fff'; g.font = '800 15px Segoe UI, Arial'; g.fillText(m.title, cx + 16, cy + 41);
   g.fillStyle = '#c9c2e6'; g.font = '600 12px Segoe UI, Arial'; g.fillText('Contact: ' + m.giver[0].toUpperCase() + m.giver.slice(1), cx + 16, cy + 61);
   g.fillStyle = '#7ee0a0'; g.font = '800 12px Segoe UI, Arial'; g.fillText(`${money(m.reward.money)}  \u00b7  +${m.reward.xp} XP`, cx + 16, cy + 80);
-  g.fillStyle = '#9d96c0'; g.font = '600 10px Segoe UI, Arial'; g.fillText('Walk into the gold marker to begin', cx + 16, cy + 96); g.restore();
+  g.fillStyle = '#9d96c0'; g.font = '600 10px Segoe UI, Arial'; g.fillText('Walk into the gold marker to begin', cx + 16, cy + 96); g.restore(); occ.push([cx - 4, cy - 4, w + 8, h + 8]);
 }
 const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+const hits = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
+// District names on dark pills, nudged around badges, the info card and the player so none is hidden.
+function districtLabels(g, X, Z, W, H) {
+  const seen = {}; for (const b of blocks) (seen[b.district] ||= []).push(b);
+  g.save(); g.font = '800 14px Segoe UI, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const id in seen) {
+    const l = seen[id], cx = X(l.reduce((s, b) => s + b.cx, 0) / l.length), cy = Z(l.reduce((s, b) => s + b.cz, 0) / l.length) + 20, name = DISTRICTS[id].name.toUpperCase(), w = g.measureText(name).width + 18, h = 22;
+    let best = null; for (const [dx, dy] of [[0, 0], [0, -34], [0, 34], [-50, 0], [50, 0], [0, -68], [0, 68], [-60, -34], [60, 34], [-60, 34], [60, -34]]) { const r = [clampN(cx + dx - w / 2, 4, W - w - 4), clampN(cy + dy - h / 2, 4, H - h - 4), w, h]; if (!occ.some((o) => hits(o, r))) { best = r; break; } }
+    best ||= [cx - w / 2, cy - h / 2, w, h]; occ.push(best);
+    rr(g, best[0], best[1], w, h, 11); g.fillStyle = 'rgba(12,10,28,0.72)'; g.fill(); g.strokeStyle = DISTRICTS[id].color + '99'; g.lineWidth = 1.2; g.stroke();
+    g.fillStyle = DISTRICTS[id].color; g.fillText(name, best[0] + w / 2, best[1] + h / 2 + 0.5);
+  }
+  g.restore();
+}
 
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));
-  const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
+  const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; occ = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 14px Segoe UI, Arial'; g.shadowColor = '#000'; g.shadowBlur = 7;
   const seen = {}; for (const b of blocks) (seen[b.district] ||= []).push(b);
-  for (const id in seen) { const l = seen[id], cx = l.reduce((s, b) => s + b.cx, 0) / l.length, cz = l.reduce((s, b) => s + b.cz, 0) / l.length; g.fillStyle = DISTRICTS[id].color; g.fillText(DISTRICTS[id].name.toUpperCase(), X(cx), Z(cz) + 20); }
   g.font = 'italic 800 16px Segoe UI, Arial'; g.fillStyle = '#d6f3ff'; g.fillText('SOLVANE SEA', X(HALF + 112), Z(0)); g.font = '700 11px Segoe UI, Arial'; g.fillStyle = '#6a5426'; g.shadowBlur = 0; g.save(); g.translate(X(HALF + 29), Z(195)); g.rotate(-Math.PI / 2); g.fillText('PALMETTO BEACH', 0, 0); g.restore();
   for (const k2 of packagePositions()) if (!k2.got) { g.fillStyle = '#ffe14a'; g.fillRect(X(k2.x) - 2, Z(k2.z) - 2, 4, 4); }
   drawBlips(g, (x, z) => [X(x), Z(z)], 1.3, 0);
@@ -83,6 +98,7 @@ export function drawCityMap() {
   badge(g, X(lineCoord(1) + 90), Z(lineCoord(0) + 20), '#6a7a98', 'C', 'Port Cranes'); badge(g, X(SEA_X - 8), Z(lineCoord(0) + 104), '#1fa8c9', 'M', 'Marina Piers'); badge(g, X(corner(2, 6, 1, -1).x), Z(corner(2, 6, 1, -1).z), '#a43cd9', 'V', 'Club Velvet');
   if (next1) { const s0 = next1.start; badge(g, X(s0.x), Z(s0.z), '#f0b81c', '\u2605'); infoCard(g, X(s0.x), Z(s0.z), next1, cv.width, cv.height); }
   g.save(); g.translate(X(p.x), Z(p.z)); g.rotate(Math.PI - (p.car ? p.car.heading : p.yaw)); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -11); g.lineTo(8, 9); g.lineTo(0, 4); g.lineTo(-8, 9); g.closePath(); g.fill(); g.stroke(); g.restore();
+  occ.push([X(p.x) - 14, Z(p.z) - 14, 28, 28]); districtLabels(g, X, Z, cv.width, cv.height);
   g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; g.strokeRect(1, 1, cv.width - 2, cv.height - 2);
   const lv = levelFromXp(G.xp), next = RESPECT_XP[lv] ?? null, side = document.getElementById('mapSide');
   const rows = MISSIONS.map((m) => { const done = G.completed.includes(m.id), nx = m === next1; return `<div class="mrow ${done ? 'done' : nx ? 'next' : 'locked'}"><span class="st">${done ? '✓' : nx ? '!' : '🔒'}</span><span>CH ${m.chapter} · ${m.title}</span></div>`; }).join('');
