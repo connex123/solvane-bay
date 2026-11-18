@@ -73,7 +73,7 @@ function foot(dt, p) {
   setGun(p.mesh, p.weapon ? WEAPONS[p.weapon].id : null);
   p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw;
   const w = WEAPONS[p.weapon];
-  if (input.left && p.shootT <= 0 && (w.auto || input.leftPressed || p.weapon === 0) && G.mode === 'play') {
+  if ((input.left || input.leftPressed) && p.shootT <= 0 && (w.auto || input.leftPressed || p.weapon === 0) && G.mode === 'play') {
     if (p.weapon === 0) { melee(p); p.shootT = w.rate; }
     else if (p.ammo[w.id] > 0) { shoot(p, w); }
     else if (input.leftPressed) { notify('OUT OF AMMO', 'bad'); }

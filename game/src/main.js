@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { G, notify } from './core/gameState.js';
 import { drawCityMap } from './ui/cityMap.js';
 import { seedRandom, rnd } from './core/random.js';
-import { initInput, input, pressed, requestLock, releaseLock, endFrame } from './core/input.js';
+import { initInput, input, pressed, requestLock, releaseLock, endFrame, clearEdges } from './core/input.js';
 import { buildLayout } from './world/cityLayout.js';
 import { facadeMaps } from './world/textureFactory.js';
 import { createSky } from './world/skyAndLighting.js';
@@ -32,12 +32,15 @@ import { cycleRadio, updateRadio } from './audio/radioStations.js';
 import { saveGame, readSave, applySave } from './save/saveGame.js';
 import { runShot, runSelfTest } from './shots/screenshotScenes.js';
 import { createPost } from './render/postProcessing.js';
+import { installDebugHook, recordFrame } from './core/debugHook.js';
+import { createAdaptiveQuality } from './render/adaptiveQuality.js';
 
 const params = new URLSearchParams(location.search), shotName = params.get('shot'), selftest = params.has('selftest');
-let renderer, sky, post = null, pedT = 0;
+let renderer, sky, post = null, pedT = 0, quality = null;
 function draw() {
   const c = G.p.car, sp = G.mode === 'play' && c ? Math.abs(c.speed) : 0;
-  if (post) { post.enabled = G.settings.post !== 'low'; post.render(G.scene, G.camera, { fringe: Math.max(0, Math.min(1, (sp - 20) / 25)) }); } else renderer.render(G.scene, G.camera);
+  if (quality && G.settings.post !== 'auto' && quality.level > 0) quality.reset();
+  if (post) { post.enabled = G.settings.post === 'high' || (G.settings.post === 'auto' && G.autoPost !== false); post.render(G.scene, G.camera, { fringe: Math.max(0, Math.min(1, (sp - 20) / 25)) }); } else renderer.render(G.scene, G.camera);
 }
 window.addEventListener('error', (e) => console.error('CONSOLE_ERROR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
 window.addEventListener('unhandledrejection', (e) => console.error('CONSOLE_ERROR ' + e.reason));
@@ -62,15 +65,17 @@ function resetWorld() {
 }
 function startGame(load) {
   initAudio(); resetWorld(); if (load) { const s = readSave(); if (s) applySave(s); }
-  G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); requestLock(); refreshStartMarker();
+  G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); swallowMenuClick(); requestLock(); refreshStartMarker();
   say([{ who: 'dex', text: load ? 'Back in the Bay, Nico? Gold marker, Club Velvet. Let us get to work.' : 'Welcome to Solvane Bay, Nico. Walk into the gold marker outside Club Velvet and we will talk work.' }]);
 }
 function toTitle() { G.mode = 'title'; rig.mode = 'aerial'; showHud(false); showScreen('title'); releaseLock(); G.mission = null; clearDialogue(); }
-function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; hideScreens(); requestLock(); } }
+function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; hideScreens(); swallowMenuClick(); requestLock(); } }
+// the click on a menu button must not also fire the player's gun
+function swallowMenuClick() { clearEdges(); input.left = false; }
 const handlers = {
   new: () => startGame(false), continue: () => startGame(true), controls: () => { G.prevScreen = G.mode; showScreen('controls'); }, settings: () => showScreen('settings'),
   back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
-  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); requestLock(); },
+  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); swallowMenuClick(); requestLock(); },
 };
 
 window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
@@ -111,7 +116,9 @@ function screenFx() {
 const speedEl = document.getElementById('speedfx'), glareEl = document.getElementById('glare');
 let last = 0;
 function frame(t) {
-  requestAnimationFrame(frame); const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t; keys(); stepGame(dt);
+  requestAnimationFrame(frame); const raw = Math.min(0.5, (t - last) / 1000 || 0.016), dt = Math.min(0.05, raw); const last0 = last; last = t; recordFrame(t); quality?.update((t - last0) / 1000 || 0.016); keys();
+  // fixed sub-steps keep the simulation real-time when frames are slow; key/click edges fire on the first sub-step only
+  for (let rem = raw; rem > 1e-4; rem -= 0.05) { stepGame(Math.min(0.05, rem)); clearEdges(); }
   if (G.mode === 'title') { G.p.x = 0; G.p.z = 0; }
   updateCamera(dt, false); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); draw();
   if (G.mode !== 'title') updateHud(dt); endFrame();
@@ -131,6 +138,6 @@ async function boot() {
   const api = { stepGame, renderFrame, startGame, showScreen, showHud, updateHud, handlers };
   if (shotName) { await runShot(shotName, api); return; }
   if (selftest) { await runSelfTest(api); return; }
-  toTitle(); requestAnimationFrame(frame);
+  quality = createAdaptiveQuality(renderer, post, sky.sun); installDebugHook(); toTitle(); requestAnimationFrame(frame);
 }
 boot().catch((e) => { console.error('CONSOLE_ERROR boot ' + (e.stack || e)); document.title = 'BOOT_FAIL ' + e.message; });

@@ -20,4 +20,6 @@ export function initInput(canvas) {
 }
 export function requestLock() { try { const r = input.canvas.requestPointerLock?.(); r?.catch?.(() => {}); } catch (e) { /* ignored */ } }
 export function releaseLock() { try { document.exitPointerLock?.(); } catch (e) { /* ignored */ } }
-export function endFrame() { input.edge.clear(); input.dx = 0; input.dy = 0; input.leftPressed = false; input.wheel = 0; }
+// Key/click edges are consumed once per simulation step; mouse-look deltas once per rendered frame.
+export function clearEdges() { input.edge.clear(); input.leftPressed = false; input.wheel = 0; }
+export function endFrame() { clearEdges(); input.dx = 0; input.dy = 0; }
