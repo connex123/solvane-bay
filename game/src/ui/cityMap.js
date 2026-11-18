@@ -50,13 +50,16 @@ function baseMap(g, X, Z, k) {
     g.fillStyle = '#8a6a44'; g.fillRect(x0, py, pw, 6); g.strokeStyle = '#5c432a'; g.lineWidth = 1; for (let x = x0; x < x0 + pw; x += 5) { g.beginPath(); g.moveTo(x, py); g.lineTo(x, py + 6); g.stroke(); }
     for (let b = 0; b < 4; b++) { const bx = X(SEA_X - 10 + b * 14) + 18, bz = Z(zc + (b % 2 ? 4.5 : -4.5)) + (b % 2 ? 4 : -4); g.fillStyle = ['#ffffff', '#f4a6a0', '#8fd3c8', '#f6e3b4'][b]; rr(g, bx - 6, bz - 2.5, 12, 5, 2.5); g.fill(); g.fillStyle = '#1b2a40'; g.fillRect(bx - 1, bz - 1, 3, 2); } }
 }
+let obst = []; // screen rects already used by icons, labels and the info card; district names avoid them
 function badge(g, x, y, col, glyph, label) {
+  const lw = label ? Math.max(24, label.length * 6.2) : 24; obst.push({ x: x - lw / 2, y: y - 13, w: lw, h: label ? 40 : 26 });
   g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 8; g.fillStyle = col; g.beginPath(); g.arc(x, y, 10, 0, 7); g.fill(); g.shadowBlur = 0; g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke();
   g.fillStyle = '#fff'; g.font = '800 12px Segoe UI, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(glyph, x, y + 0.5);
   if (label) { g.font = '700 10px Segoe UI, Arial'; g.lineWidth = 3; g.strokeStyle = 'rgba(10,14,30,0.9)'; g.strokeText(label, x, y + 20); g.fillStyle = '#fff'; g.fillText(label, x, y + 20); } g.restore();
 }
 function infoCard(g, px, py, m, W, Hh) {
   const w = 236, h = 104, left = px > W * 0.55, cx = clampN(left ? px - w - 26 : px + 26, 8, W - w - 8), cy = clampN(py - h / 2, 8, Hh - h - 8);
+  obst.push({ x: cx - 6, y: cy - 6, w: w + 12, h: h + 12 }, { x: px - 24, y: py - 24, w: 48, h: 48 });
   g.save(); g.strokeStyle = 'rgba(255,210,60,0.9)'; g.lineWidth = 2; g.beginPath(); g.arc(px, py, 15, 0, 7); g.stroke(); g.setLineDash([3, 3]); g.beginPath(); g.arc(px, py, 22, 0, 7); g.stroke(); g.setLineDash([]);
   g.beginPath(); g.moveTo(px + (left ? -15 : 15), py); g.lineTo(left ? cx + w : cx, cy + h / 2); g.stroke();
   g.shadowColor = 'rgba(0,0,0,0.65)'; g.shadowBlur = 18; rr(g, cx, cy, w, h, 10); g.fillStyle = 'rgba(14,12,32,0.94)'; g.fill(); g.shadowBlur = 0; g.strokeStyle = 'rgba(255,255,255,0.28)'; g.lineWidth = 1; g.stroke();
@@ -68,13 +71,25 @@ function infoCard(g, px, py, m, W, Hh) {
   g.fillStyle = '#9d96c0'; g.font = '600 10px Segoe UI, Arial'; g.fillText('Walk into the gold marker to begin', cx + 16, cy + 96); g.restore();
 }
 const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+// District names: try block centres nearest the district centroid until one is clear of every icon, label and the card.
+function districtLabels(g, X, Z, seen) {
+  g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 14px Segoe UI, Arial'; g.lineJoin = 'round';
+  const hit = (r) => obst.some((o) => r.x < o.x + o.w && r.x + r.w > o.x && r.y < o.y + o.h && r.y + r.h > o.y);
+  for (const id in seen) {
+    const l = seen[id], name = DISTRICTS[id].name.toUpperCase(), w = g.measureText(name).width + 8, cx = l.reduce((s, b) => s + b.cx, 0) / l.length, cz = l.reduce((s, b) => s + b.cz, 0) / l.length;
+    const cands = [[cx, cz], ...l.map((b) => [b.cx, b.cz])].sort((a, b) => Math.hypot(a[0] - cx, a[1] - cz) - Math.hypot(b[0] - cx, b[1] - cz));
+    let pos = null; for (const [x, z] of cands) for (const dy of [0, -16, 16]) { const r = { x: X(x) - w / 2, y: Z(z) + dy - 10, w, h: 20 }; if (!pos && !hit(r)) pos = r; }
+    pos ||= { x: X(cx) - w / 2, y: Z(cz) - 10, w, h: 20 }; obst.push(pos);
+    g.lineWidth = 4; g.strokeStyle = 'rgba(8,10,24,0.85)'; g.strokeText(name, pos.x + w / 2, pos.y + 10); g.fillStyle = DISTRICTS[id].color; g.fillText(name, pos.x + w / 2, pos.y + 10);
+  }
+  g.restore();
+}
 
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));
-  const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
+  const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; obst = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 14px Segoe UI, Arial'; g.shadowColor = '#000'; g.shadowBlur = 7;
   const seen = {}; for (const b of blocks) (seen[b.district] ||= []).push(b);
-  for (const id in seen) { const l = seen[id], cx = l.reduce((s, b) => s + b.cx, 0) / l.length, cz = l.reduce((s, b) => s + b.cz, 0) / l.length; g.fillStyle = DISTRICTS[id].color; g.fillText(DISTRICTS[id].name.toUpperCase(), X(cx), Z(cz) + 20); }
   g.font = 'italic 800 16px Segoe UI, Arial'; g.fillStyle = '#d6f3ff'; g.fillText('SOLVANE SEA', X(HALF + 112), Z(0)); g.font = '700 11px Segoe UI, Arial'; g.fillStyle = '#6a5426'; g.shadowBlur = 0; g.save(); g.translate(X(HALF + 29), Z(195)); g.rotate(-Math.PI / 2); g.fillText('PALMETTO BEACH', 0, 0); g.restore();
   for (const k2 of packagePositions()) if (!k2.got) { g.fillStyle = '#ffe14a'; g.fillRect(X(k2.x) - 2, Z(k2.z) - 2, 4, 4); }
   drawBlips(g, (x, z) => [X(x), Z(z)], 1.3, 0);
@@ -83,6 +98,8 @@ export function drawCityMap() {
   badge(g, X(lineCoord(1) + 90), Z(lineCoord(0) + 20), '#6a7a98', 'C', 'Port Cranes'); badge(g, X(SEA_X - 8), Z(lineCoord(0) + 104), '#1fa8c9', 'M', 'Marina Piers'); badge(g, X(corner(2, 6, 1, -1).x), Z(corner(2, 6, 1, -1).z), '#a43cd9', 'V', 'Club Velvet');
   if (next1) { const s0 = next1.start; badge(g, X(s0.x), Z(s0.z), '#f0b81c', '\u2605'); infoCard(g, X(s0.x), Z(s0.z), next1, cv.width, cv.height); }
   g.save(); g.translate(X(p.x), Z(p.z)); g.rotate(Math.PI - (p.car ? p.car.heading : p.yaw)); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -11); g.lineTo(8, 9); g.lineTo(0, 4); g.lineTo(-8, 9); g.closePath(); g.fill(); g.stroke(); g.restore();
+  obst.push({ x: X(p.x) - 14, y: Z(p.z) - 14, w: 28, h: 28 }); for (const m of G.markers) if (!m.hidden && !m.follow) obst.push({ x: X(m.x) - 12, y: Z(m.z) - 12, w: 24, h: 24 });
+  districtLabels(g, X, Z, seen);
   g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; g.strokeRect(1, 1, cv.width - 2, cv.height - 2);
   const lv = levelFromXp(G.xp), next = RESPECT_XP[lv] ?? null, side = document.getElementById('mapSide');
   const rows = MISSIONS.map((m) => { const done = G.completed.includes(m.id), nx = m === next1; return `<div class="mrow ${done ? 'done' : nx ? 'next' : 'locked'}"><span class="st">${done ? '✓' : nx ? '!' : '🔒'}</span><span>CH ${m.chapter} · ${m.title}</span></div>`; }).join('');
