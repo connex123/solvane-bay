@@ -55,7 +55,7 @@ export function facadeMaps() {
 export function asphaltTex(lines = true) {
   seed = 11;
   return canvasTex(512, 512, (g) => {
-    g.fillStyle = '#62636b'; g.fillRect(0, 0, 512, 512); noise(g, 512, 512, 9000, 0.12, 2); noise(g, 512, 512, 600, 0.06, 6);
+    g.fillStyle = '#7c7d85'; g.fillRect(0, 0, 512, 512); noise(g, 512, 512, 9000, 0.12, 2); noise(g, 512, 512, 600, 0.06, 6);
     g.fillStyle = 'rgba(30,30,36,0.18)'; for (let k = 0; k < 2; k++) g.fillRect(0, 150 + k * 190, 512, 34); // tyre polish in each lane pair
     if (!lines) return;
     g.fillStyle = '#f6f6f0'; g.fillRect(0, 26, 512, 7); g.fillRect(0, 479, 512, 7);
