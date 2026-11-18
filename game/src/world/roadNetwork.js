@@ -16,7 +16,7 @@ export function buildRoads(scene) {
   const buf = newBuf();
   for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
     const x = lineCoord(i), z = lineCoord(j);
-    pushBox(buf, x, 0, z, RW, 0.05, RW, 0x4a4a54);
+    pushBox(buf, x, 0, z, RW, 0.05, RW, 0x5c5d65);
     for (let s = -5; s <= 5; s++) for (const sg of [-1, 1]) {
       pushBox(buf, x + s * 1.1, 0.04, z + sg * 8.4, 0.55, 0.03, 2.4, 0xf2f0e8); // crosswalk over the z-road
       pushBox(buf, x + sg * 8.4, 0.04, z + s * 1.1, 2.4, 0.03, 0.55, 0xf2f0e8); // crosswalk over the x-road
