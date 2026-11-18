@@ -85,6 +85,9 @@ function title(api) {
   const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
   tc('tupelo', -10, 1, 0xf6c21c); tc('rumble', -60, -1, 0x8fd3c8); tc('pico', -120, 1, 0xff8a3d); tc('hawke', 6, -1, 0xf0f0f0);
   [[-4, 1, 1], [-22, 1, -1], [-40, -1, 1], [16, 1, 1], [-70, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  // sunlit foreground: a warm low key from the sea side washes the near asphalt and kerb in late sun
+  const key = new THREE.SpotLight(0xffc27e, 1400, 90, 0.5, 0.7, 1.6); key.position.set(HALF + 18, 16, 98); key.target.position.set(HALF - 9, 0, 70); G.scene.add(key, key.target);
+  if (G.roadMat) G.roadMat.color.setRGB(1.45, 1.22, 1.0); if (G.post) G.post.params.vignette = 0.3;
   G.titleCam = { x: HALF - 2.2, y: 1.35, z: 71.5, tx: HALF - 6, ty: 3.4, tz: 30 };
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 

@@ -22,5 +22,5 @@ function screenFx() {
 }
 // snap: jump the camera straight to its target (staged shots); dt drives camera smoothing.
 export function renderFrame(snap, dt = 0.016) {
-  titleCamera(); updateCamera(dt, !!snap); G.sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); draw(); screenFx();
+  titleCamera(); updateCamera(dt, !!snap); G.sky.update(G.clock, G.mode === 'title' && G.titleCam ? { x: G.titleCam.x, z: G.titleCam.z - 30 } : rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); draw(); screenFx();
 }

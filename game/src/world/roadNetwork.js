@@ -7,7 +7,7 @@ import { G } from '../core/gameState.js';
 
 export function buildRoads(scene) {
   const len = N * S + RW, tex = asphaltTex(true); tex.repeat.set(len / 16, 1);
-  const mat = new THREE.MeshLambertMaterial({ map: tex, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  const mat = new THREE.MeshLambertMaterial({ map: tex, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); G.roadMat = mat;
   const geo = new THREE.PlaneGeometry(len, RW); geo.rotateX(-Math.PI / 2);
   for (let k = 0; k <= N; k++) {
     const a = new THREE.Mesh(geo, mat); a.position.set(0, 0.02, lineCoord(k)); a.receiveShadow = true; scene.add(a);
