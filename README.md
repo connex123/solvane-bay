@@ -7,14 +7,17 @@
 SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + mouse): a sun-soaked low-poly coastal city you explore on foot and by car, as newcomer Nico Varela working up from Dex's Club Velvet to a marina heist.
 
 - Procedural three.js city at golden hour: azure-to-peach sky dome with the sun setting over the sea, pastel art-deco stucco blocks (balconies, awnings, cornices, rooftop AC units and water tanks), glass towers downtown, curved-trunk palm boulevards, bus stops, benches, hydrants, our own billboard ads, beach, marina, neon nightlife district, docks, parks; day/night clock, lit windows
-- Hand-written post-processing: HDR render target, bright-pass bloom pyramid, ACES filmic tone mapping, warm colour grade, vignette and a speed-driven chromatic fringe (Settings > Visual quality, with a plain-render fallback)
+- Hand-written post-processing: HDR render target, bright-pass bloom pyramid, ACES filmic tone mapping, warm colour grade, vignette and a speed-driven chromatic fringe ; Settings > Graphics quality defaults to Auto, which steps resolution, shadows and bloom down until the frame rate holds
 - Sleek extruded car models with clearcoat paint, tinted glass, spoked rims and glowing head/tail lights: VELOCE GT sports car, SBPD cruisers in a navy/teal livery with red/blue light bars, taxi, van, SUV, compact, convertible
+- Smooth low-poly people: rounded heads with faces and hair styles, open jackets with collars, hands and shoes; varied pedestrian outfits, SBPD officers in navy uniforms with caps and badges, Nico in a teal bomber over a white tee
 - Third-person on foot (WASD, aim, SMG/pistol/shotgun/fists) and arcade driving with drift, damage, smoke, explosions, skid marks, chase camera with speed FOV
 - Steal any car; lane-following traffic with signals; pedestrians that flee gunfire
 - Wanted level 0-5: SBPD patrol cars that pursue and ram, roadblocks, officers on foot, a police helicopter, CUFFED / FLATLINED respawns
 - Six-chapter story with portraits and dialogue (steal, deliver, collect, shoot-out, car chase, escape, heist), plus taxi fares, a street race, 16 hidden packages
 - Respect levels unlock weapons at the Calder Arms shop; Glow Coat Respray clears heat; health/armor pickups
-- Full HUD (mission card, SBPD response list, minimap, radio card, speedometer), city map (M), pause menu, save/load, three synthesized radio stations
+- Full HUD: mission card, SBPD response list, radio card, speedometer, on-screen waypoint with distance, and a rotating minimap with the road network, parks, beach and sea, a GPS route along the streets, north marker, icon blips (flashing police, objective star, shops), district name and a red/blue rim when wanted
+- City map (M) with street names and clear district labels, pause menu, save/load, three synthesized radio stations
+- Fixed-step simulation (1/60 s with an accumulator) so low frame rates never run in slow motion; menu clicks never fire the gun
 - No build step, no network, no binary assets: all geometry, textures and sound are generated at run time
 
 ## Run it
@@ -22,6 +25,8 @@ SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + 
 ```sh
 node serve.ts   # then open http://localhost:8080 in desktop Chrome
 ```
+
+Checks: `?selftest=1` (page title SELFTEST PASS/FAIL), `node tools/playtest.mjs` (drives the real game over the Chrome DevTools Protocol: New Game, walk, sprint, shoot, wanted level and police, steal a car, drive, map, pause, resume; prints errors and fps), `node tools/take-screenshots.mjs [scene]`.
 
 ---
 
