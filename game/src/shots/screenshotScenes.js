@@ -16,6 +16,7 @@ import { startMission, refreshStartMarker } from '../missions/missionRunner.js';
 import { dlg, say } from '../story/dialogue.js';
 import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters } from '../combat/effects.js';
 import { rig } from '../camera/cameraRig.js';
+import { seedSave } from '../save/saveGame.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
 
@@ -68,9 +69,9 @@ function onfoot(api) {
   rig.mode = 'auto'; finish(api);
   floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
 function map(api) {
-  const p = G.p; try { localStorage.setItem('solvane-bay-save-1', JSON.stringify({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 3, 5, 9, 11], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Neon Row', at: '2026-11-18 17:35' })); } catch (e) { /* ignore */ } clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 40; p.z = 20; p.yaw = 2.4;
+  const p = G.p; seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 3, 5, 9, 11], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Neon Row', at: '2026-11-18 17:35' })); clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 40; p.z = 20; p.yaw = 2.4;
   refreshStartMarker(); G.markers.forEach((m) => { m.mesh.visible = false; }); G.wanted.stars = 0; api.showHud(false); rig.mode = 'auto'; api.renderFrame(); api.showScreen('cityMap'); finish(api, 1); }
-function title(api) { clearTraffic(); try { localStorage.setItem('solvane-bay-save-1', JSON.stringify({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' })); } catch (e) { /* ignore */ } G.mode = 'title'; G.clock = 17.55; G.time = 30; rig.mode = 'aerial'; api.showHud(false); api.showScreen('title'); finish(api, 2); }
+function title(api) { clearTraffic(); seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' })); G.mode = 'title'; G.clock = 17.55; G.time = 30; rig.mode = 'aerial'; api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
   G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-map': map, '4-title': title }[name] || title)(api);
@@ -82,7 +83,7 @@ export async function runShot(name, api) {
 }
 export async function runSelfTest(api) {
   try {
-    api.startGame(false); for (let i = 0; i < 90; i++) api.stepGame(0.016);
+    seedSave(null); api.startGame(false); for (let i = 0; i < 90; i++) api.stepGame(0.016);
     const car = G.cars.find((c) => c.kind === 'parked'); G.p.x = car.x + 2; G.p.z = car.z; input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear();
     if (!G.p.car) throw new Error('could not enter car'); input.keys.add('KeyW'); const x0 = G.p.x, z0 = G.p.z;
     for (let i = 0; i < 360; i++) { if (i === 100) input.keys.add('KeyD'); if (i === 140) input.keys.delete('KeyD'); api.stepGame(0.016); }
