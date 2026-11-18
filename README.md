@@ -11,7 +11,7 @@ SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + 
 - Steal any car; lane-following traffic with signals; pedestrians that flee gunfire
 - Wanted level 0-5: SBPD patrol cars that pursue and ram, roadblocks, officers on foot, a police helicopter, Busted / Wasted respawns
 - Six-chapter story with portraits and dialogue (steal, deliver, collect, shoot-out, car chase, escape, heist), plus taxi fares, a street race, 16 hidden packages
-- Respect levels unlock weapons at the Ammu-Bay shop; Pay & Spray clears heat; health/armor pickups
+- Respect levels unlock weapons at the Calder Arms shop; Glow Coat Respray clears heat; health/armor pickups
 - Full HUD (mission card, SBPD response list, minimap, radio card, speedometer), city map (M), pause menu, save/load, three synthesized radio stations
 - No build step, no network, no binary assets: all geometry, textures and sound are generated at run time
 

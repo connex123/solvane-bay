@@ -1,4 +1,4 @@
-// Side content: taxi fares, a street race, hidden packages, health/armor pickups, Ammu-Bay weapon shop and Pay & Spray.
+// Side content: taxi fares, a street race, hidden packages, health/armor pickups, Calder Arms weapon shop and Glow Coat Respray.
 import { G, notify, levelFromXp } from '../core/gameState.js';
 import { rnd } from '../core/random.js';
 import { lineCoord, CAR_COLORS } from '../core/config.js';
@@ -14,9 +14,9 @@ export const RESPAWN = { hospital: corner(6, 4, 1, 1), police: corner(4, 3, -1, 
 const PACK = [[1, 1], [7, 0], [8, 3], [3, 2], [5, 1], [0, 4], [6, 8], [2, 8], [8, 7], [4, 5], [0, 7], [5, 7], [1, 5], [7, 5], [3, 0], [6, 2]];
 let packs = [], pickups = [];
 export function initSideActivities() {
-  addMarker({ ...SHOP, color: 0x4fa8ff, kind: 'shop', label: 'AMMU-BAY', prompt: 'E: Ammu-Bay weapon shop', auto: false, r: 4, onInteract: () => G.hooks.openShop() });
-  addMarker({ ...GARAGE, color: 0x4fe0a0, kind: 'garage', label: 'PAY & SPRAY', needCar: true, r: 5, cooldown: 4, onEnter: () => {
-    const c = G.p.car; if (G.money < 150) return notify('PAY & SPRAY costs $150', 'bad'); G.money -= 150; c.mesh.userData.bodyMesh.material = c.mesh.userData.bodyMesh.material.clone(); c.mesh.userData.bodyMesh.material.color.setHex(rnd.pick(CAR_COLORS)); c.hp = c.maxHp; setStars(0); G.wanted.heat = 0; notify('RESPRAYED: wanted level cleared', 'good'); sfx.pickup(); } });
+  addMarker({ ...SHOP, color: 0x4fa8ff, kind: 'shop', label: 'CALDER ARMS', prompt: 'E: Calder Arms weapon shop', auto: false, r: 4, onInteract: () => G.hooks.openShop() });
+  addMarker({ ...GARAGE, color: 0x4fe0a0, kind: 'garage', label: 'GLOW COAT RESPRAY', needCar: true, r: 5, cooldown: 4, onEnter: () => {
+    const c = G.p.car; if (G.money < 150) return notify('GLOW COAT RESPRAY costs $150', 'bad'); G.money -= 150; c.mesh.userData.bodyMesh.material = c.mesh.userData.bodyMesh.material.clone(); c.mesh.userData.bodyMesh.material.color.setHex(rnd.pick(CAR_COLORS)); c.hp = c.maxHp; setStars(0); G.wanted.heat = 0; notify('RESPRAYED: wanted level cleared', 'good'); sfx.pickup(); } });
   addMarker({ ...TAXI, color: 0xf2c230, kind: 'side', label: 'TAXI FARE', prompt: 'E: start a taxi fare (needs a car)', auto: false, needCar: true, r: 5, onInteract: () => startFare() });
   addMarker({ ...RACE, color: 0xff4fd8, kind: 'side', label: 'STREET RACE', prompt: 'E: start a street race (needs a car)', auto: false, needCar: true, r: 5, onInteract: () => startRace() });
   const gm = new THREE.SphereGeometry(0.7, 10, 8), mm = new THREE.MeshBasicMaterial({ color: 0xffe14a });

@@ -20,3 +20,11 @@
 .leg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; } .leg i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
 .slot { padding: 6px 8px; border: 1px dashed rgba(255, 255, 255, 0.3); border-radius: 8px; font-size: 12px; }
 .deadbox { text-align: center; } #deadTitle { font-size: 120px; margin: 0; letter-spacing: 10px; color: #ff3a55; text-shadow: 0 6px 0 #400; font-style: italic; } #deadSub { font-size: 20px; color: #f0e6ff; }
+
+#contSub { margin: -6px 0 0 4px; padding-left: 14px; font-size: 13px; letter-spacing: 0.6px; color: #ffe2a8; text-shadow: 0 1px 5px #000; }
+#contSub:empty { display: none; }
+#btnContinue:not(:disabled) { border-color: rgba(255, 210, 60, 0.7); }
+
+.slot.used { border-style: solid; border-color: rgba(255, 210, 60, 0.55); background: rgba(255, 210, 60, 0.07); line-height: 1.4; }
+.slotbtns { display: flex; gap: 8px; margin-top: 8px; } .slotbtns button { flex: 1; padding: 7px 10px; font-size: 13px; font-weight: 800; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(40, 34, 70, 0.9); color: #fff; cursor: pointer; letter-spacing: 1px; }
+.slotbtns button:hover:not(:disabled) { background: linear-gradient(90deg, #ff9a3c, #ff4fd8); border-color: transparent; } .slotbtns button:disabled { opacity: 0.35; cursor: default; }

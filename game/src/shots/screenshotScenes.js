@@ -14,7 +14,7 @@ import { setStars, crime } from '../police/wantedSystem.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { startMission, refreshStartMarker } from '../missions/missionRunner.js';
 import { dlg, say } from '../story/dialogue.js';
-import { muzzleFlash, tracer, sparks, smoke } from '../combat/effects.js';
+import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters } from '../combat/effects.js';
 import { rig } from '../camera/cameraRig.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
@@ -30,7 +30,7 @@ function chase(api) {
   const p = G.p, z0 = lineCoord(3); clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 520; G.radio = 1; api.showHud(true);
   const car = createCar('veloce', 8, z0 - LANE, -Math.PI / 2, 'parked', 0xe83a5c); enterCar(car); car.speed = 41.5; car.vx = -41.5; car.vz = 0; car.input.throttle = 1; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
   const cop = (x, z, h, vx, ai) => { const c = spawnCop(x, z, h, ai); c.vx = vx; c.speed = Math.abs(vx); c.ai = ai; return c; };
-  cop(10.6, z0 - 0.1, -Math.PI / 2, -40.5, 'RAMMING'); cop(8.4, z0 - LANE * 2 + 0.2, -Math.PI / 2, -40, 'PURSUIT');
+  cop(7.4, z0 - LANE + 2.25, -Math.PI / 2 + 0.05, -40.5, 'RAMMING'); cop(8.4, z0 - LANE * 2 + 0.2, -Math.PI / 2, -40, 'PURSUIT');
   cop(-52, z0 + LANE, Math.PI / 2, 26, 'ARRIVING').heading = Math.PI / 2; cop(-92, z0 + LANE + 0.2, Math.PI / 2, 24, 'ARRIVING');
   const tc = (key, x, dir, col) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.nav.spd = 11; return c; };
   tc('hawke', -30, -1, 0x222831); tc('tupelo', -78, -1, 0xf2c230); tc('marlin', -22, 1, 0x2f7fd8); tc('cadia', -64, 1, 0x2fb89a); tc('rumble', -4, 1, 0xf0f0f0); tc('marlin', 40, 1, 0xff8a3d);
@@ -39,30 +39,38 @@ function chase(api) {
   setStars(4); G.wanted.heat = 4.3; fakeMission(5, 3, 'Escape the SBPD, then reach the Alder Hills safehouse', 87);
   say([{ who: 'sol', text: 'Left at the next light, Nico! I can hear that chopper from here. Stay off the brakes!' }]); typed();
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; }
-  car.mesh.rotation.z = 0.02; smoke(12, 1, z0, 0x777777); smoke(11.4, 1.2, z0 - 0.2, 0x666666); sparks(14, 0.4, z0 - 3, 5);
+  car.mesh.rotation.z = 0.02; smoke(12, 1, z0, 0x777777); smoke(11.4, 1.2, z0 - 0.2, 0x666666); sparks(14, 0.4, z0 - 3, 5); sparks(9.9, 0.7, z0 - LANE + 1.15, 30); sparks(9.2, 0.55, z0 - LANE + 1.15, 16); particle({ x: 9.9, y: 0.75, z: z0 - LANE + 1.15, life: 1, size: 3, color: 0xffd080, add: true });
   rig.mode = 'auto'; rig.yaw = -Math.PI / 2;
   finish(api); }
 function onfoot(api) {
-  const p = G.p, z0 = lineCoord(7); clearTraffic(); G.mode = 'play'; G.clock = 17.85; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
-  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16 }; p.hp = 72; p.armor = 45; G.camDistAim = 6.2; p.x = -199; p.z = z0 + 0.6; p.yaw = Math.PI / 2; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI / 2 - 0.04; G.cam.pitch = 0.2;
+  const p = G.p, z0 = lineCoord(7); clearTraffic(); G.mode = 'play'; G.clock = 17.3; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
+  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16 }; p.hp = 72; p.armor = 45; G.camDistAim = 4.3; p.x = -199; p.z = z0 + 0.4; p.yaw = Math.PI / 2 - 0.3; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI / 2 - 0.05; G.cam.pitch = 0.16;
   animateWalk(p.mesh, 0.6, 0.0, true); p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg');
-  const cops = [[-184, z0 - 1.9], [-181, z0 + 2.6], [-176.5, z0 - 0.3]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: -Math.PI / 2 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = -Math.PI / 2; return a; });
-  cops[1].mesh.rotation.x = 0; const cc = spawnCop(-158, z0 - 3.3, -Math.PI / 2, 'ARRIVING'); cc.mesh.position.set(cc.x, 0, cc.z); cc.heading = -Math.PI / 2 - 0.35; cc.mesh.rotation.y = cc.heading;
-  const cc2 = spawnCop(-135, z0 + 3.5, Math.PI / 2 + 0.1, 'PURSUIT'); cc2.mesh.position.set(cc2.x, 0, cc2.z); cc2.mesh.rotation.y = cc2.heading;
-  const stolen = createCar('cadia', -190, z0 + 5.6, Math.PI / 2 + 0.45, 'parked', 0x2fb89a); stolen.mesh.rotation.y = stolen.heading;
+  // two SBPD officers in uniform, in frame and returning fire
+  const cops = [[-187.5, z0 + 2.5], [-184.5, z0 + 5.3]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: -Math.PI / 2 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = -Math.PI / 2 + (i ? 0.12 : -0.06); return a; });
+  // crashed patrol car with a live light bar, against the kerb
+  const cr = spawnCop(-181, z0 - 4.9, -Math.PI / 2 + 0.85, 'PURSUIT'); cr.mesh.position.set(cr.x, 0, cr.z); cr.heading = -Math.PI / 2 + 0.85; cr.mesh.rotation.set(0.03, cr.heading, 0.07); cr.speed = 0; cr.vx = cr.vz = 0;
+  const cc = spawnCop(-146, z0 + 3.4, -Math.PI / 2, 'ARRIVING'); cc.mesh.position.set(cc.x, 0, cc.z); cc.heading = -Math.PI / 2; cc.mesh.rotation.y = cc.heading;
+  const stolen = createCar('cadia', -168, z0 + 6.3, Math.PI / 2 - 0.05, 'parked', 0x2fb89a); stolen.mesh.rotation.y = stolen.heading;
   const door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 1.3), new THREE.MeshLambertMaterial({ color: 0x2fb89a })); door.position.set(1.15, 0.85, 0.5); door.rotation.y = 0.9; stolen.mesh.add(door);
   const tc = (key, x, dir, col) => { const c = placeTraffic('x', 7, x, dir, key, 'traffic', col); c.nav.spd = 6; return c; };
-  tc('marlin', -168, 1, 0xf2c230); tc('hawke', -118, -1, 0xf0f0f0); tc('rumble', -100, 1, 0xff4fd8);
-  [[-178, 1, 1], [-192, -1, 1], [-170, 1, -1], [-205, 1, 1], [-160, -1, 1], [-186, -1, -1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 7, x, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.9, false); a.mesh.position.y = 0; });
+  tc('marlin', -128, 1, 0xf2c230); tc('rumble', -118, -1, 0xff4fd8);
+  [[-205, 1, 1], [-198, -1, -1], [-192, 1, 1], [-186, -1, 1], [-181, 1, -1], [-176, -1, 1], [-170, 1, 1], [-164, -1, -1], [-158, 1, 1], [-209, -1, 1], [-178, -1, -1], [-168, 1, -1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 7, x, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  for (const [c, x, z] of [[0xff4fd8, -192, z0 - 9], [0x4fd8ff, -180, z0 + 9], [0xffa030, -168, z0 - 9], [0xff4fd8, -206, z0 + 9]]) { const L = new THREE.PointLight(c, 140, 42, 2); L.position.set(x, 5, z); G.scene.add(L); }
   setStars(3); G.wanted.heat = 3.2; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0);
-  const mx = p.x + 0.85, mz = p.z - 0.3; muzzleFlash(mx, 1.3, mz);
-  for (const [i, c] of cops.entries()) { tracer(mx, 1.3, mz, c.x - 0.3, 1.1 + i * 0.1, c.z + i * 0.2); sparks(c.x - 0.3, 1.1, c.z, 5); }
-  tracer(mx, 1.3, mz, -150, 1.2, z0 + 1); sparks(-150, 1.1, z0 + 1, 4); G.shake = 0; G.toasts.push({ text: 'WANTED LEVEL 3', kind: 'wanted', t: 9 });
-  rig.mode = 'auto'; finish(api); }
+  for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); }
+  updateSirens(0.1);
+  const gx = p.x + Math.sin(p.yaw) * 1.1, gz = p.z + Math.cos(p.yaw) * 1.1; muzzleFlash(gx, 1.38, gz);
+  cops.forEach((c, i) => { const fx = c.x - 0.7, fz = c.z; muzzleFlash(fx, 1.38, fz); tracer(fx, 1.38, fz, p.x + 0.3, 1.2 + i * 0.3, p.z - 0.2 + i * 0.2); sparks(c.x - 0.3, 1.1, c.z, 5); });
+  tracer(gx, 1.38, gz, -187.9, 1.3, z0 + 2.4); sparks(-187.9, 1.3, z0 + 2.4, 6); tracer(gx, 1.38, gz, -184.9, 1.2, z0 + 5.2); sparks(-184.9, 1.1, z0 + 5.2, 4);
+  sparks(-180, 0.9, z0 - 3.5, 10); sparks(-178.6, 0.6, z0 - 5.6, 6); smoke(-178.9, 1.4, z0 - 3.8, 0x555555); smoke(-178.6, 2.4, z0 - 3.6, 0x666666); smoke(-179, 3.4, z0 - 3.9, 0x777777);
+  G.shake = 0; G.toasts.push({ text: 'WANTED LEVEL 3', kind: 'wanted', t: 9 });
+  rig.mode = 'auto'; finish(api);
+  floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
 function map(api) {
-  const p = G.p; clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 40; p.z = 20; p.yaw = 2.4;
+  const p = G.p; try { localStorage.setItem('solvane-bay-save-1', JSON.stringify({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 3, 5, 9, 11], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Neon Row', at: '2026-11-18 17:35' })); } catch (e) { /* ignore */ } clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 40; p.z = 20; p.yaw = 2.4;
   refreshStartMarker(); G.markers.forEach((m) => { m.mesh.visible = false; }); G.wanted.stars = 0; api.showHud(false); rig.mode = 'auto'; api.renderFrame(); api.showScreen('cityMap'); finish(api, 1); }
-function title(api) { clearTraffic(); G.mode = 'title'; G.clock = 17.55; G.time = 30; rig.mode = 'aerial'; api.showHud(false); api.showScreen('title'); finish(api, 2); }
+function title(api) { clearTraffic(); try { localStorage.setItem('solvane-bay-save-1', JSON.stringify({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' })); } catch (e) { /* ignore */ } G.mode = 'title'; G.clock = 17.55; G.time = 30; rig.mode = 'aerial'; api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
   G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-map': map, '4-title': title }[name] || title)(api);
@@ -83,11 +91,11 @@ export async function runSelfTest(api) {
     if (G.cars.filter((c) => c.kind === 'cop').length < 1) throw new Error('no police spawned');
     input.keys.delete('KeyW'); startMission(MISSIONS[0]); for (let i = 0; i < 60; i++) api.stepGame(0.016); api.updateHud(0.016); api.renderFrame();
     if (!G.mission || Number.isNaN(G.p.x)) throw new Error('mission/NaN');
-    // more systems: on-foot shooting, heli at 5 stars, steal-stage completion, map, radio, shop, wasted
+    // more systems: on-foot shooting, heli at 5 stars, steal-stage completion, map, radio, shop, flatlined
     input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear(); G.p.car = G.p.car; if (G.p.car) { G.p.car.speed = 0; G.p.car.vx = 0; G.p.car.vz = 0; input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear(); }
     G.p.weapon = 1; input.left = true; for (let i = 0; i < 120; i++) { input.leftPressed = i % 10 === 0; api.stepGame(0.016); } input.left = false;
     crime('killcop'); crime('killcop'); crime('killcop'); crime('explosion'); crime('explosion'); for (let i = 0; i < 400; i++) api.stepGame(0.016);
-    api.showScreen('cityMap'); api.showScreen('shop'); api.showScreen('pause'); api.handlers.resume(); G.hooks.playerDown('WASTED'); for (let i = 0; i < 260; i++) api.stepGame(0.016);
+    api.showScreen('cityMap'); api.showScreen('shop'); api.showScreen('pause'); api.handlers.resume(); G.hooks.playerDown('FLATLINED'); for (let i = 0; i < 260; i++) api.stepGame(0.016);
     if (G.mode !== 'play') throw new Error('did not respawn: ' + G.mode); document.title = 'SELFTEST PASS';
   } catch (e) { console.error('CONSOLE_ERROR selftest ' + (e.stack || e)); document.title = 'SELFTEST FAIL ' + e.message; }
 }

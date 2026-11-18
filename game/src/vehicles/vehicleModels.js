@@ -17,18 +17,20 @@ function build(key) {
   const t = CAR_TYPES[key], W = t.wid, L = t.len, body = newBuf(), trim = newBuf(), [cl, ch, co] = t.cab;
   pushBox(body, 0, 0.35, 0, W, 0.55, L, 0xffffff);
   if (key === 'cadia') { pushBox(body, 0, 0.9, -L * 0.3, W * 0.95, 0.3, L * 0.38, 0xffffff); }
-  pushBox(trim, 0, 0.92, co * L * 0.3, W * 0.88, ch * 0.82, L * cl, 0x1a2230);
+  pushBox(trim, 0, 0.92, co * L * 0.3, W * 0.88, ch * 0.82, L * cl, 0x2a4560);
+  for (const sx of [-1, 1]) { pushBox(body, sx * W * 0.43, 0.92, co * L * 0.3, 0.08, ch * 0.82, L * cl * 0.1, 0xffffff); pushBox(trim, sx * (W / 2 + 0.08), 0.95, L * 0.16, 0.14, 0.1, 0.18, 0x15151a); }
+  pushBox(trim, 0, 0.92 + ch * 0.55, co * L * 0.3 - L * cl / 2 - 0.01, W * 0.6, ch * 0.2, 0.02, 0x6f93b4);
   pushBox(body, 0, 0.92 + ch * 0.82, co * L * 0.3, W * 0.8, 0.07, L * cl * 0.92, 0xffffff);
   if (key === 'rumble') pushBox(body, 0, 0.9, L * 0.28, 0.5, 0.12, 0.8, 0x111111);
-  if (key === 'veloce') pushBox(body, 0, 0.98, -L * 0.46, W * 0.9, 0.1, 0.5, 0x111111);
+  if (key === 'veloce') { for (const sx of [-1, 1]) { pushBox(body, sx * 0.62, 0.9, -L * 0.45, 0.08, 0.3, 0.12, 0x111111); pushBox(body, sx * W * 0.47, 1.1, -L * 0.46, 0.06, 0.2, 0.62, 0x111111); pushBox(trim, sx * 0.55, 0.12, -L / 2 - 0.1, 0.12, 0.12, 0.3, 0xb8bcc8); } pushBox(body, 0, 1.18, -L * 0.46, W * 0.98, 0.06, 0.62, 0x111111); for (const sx of [-1, 1]) pushBox(trim, sx * 0.13, 0.9, L * 0.12, 0.14, 0.012, L * 0.38, 0xf4f4f4); }
   if (t.police) { pushBox(body, 0, 0.45, 0, W + 0.04, 0.2, L * 0.55, 0x101820); pushBox(body, 0, 0.9, L * 0.28, W * 0.5, 0.04, 0.9, 0x101820); }
   if (key === 'tupelo') pushBox(trim, 0, 0.92 + ch * 0.82 + 0.07, 0, 0.7, 0.22, 0.3, 0xfff2b0);
   for (const sx of [-1, 1]) {
-    for (const sz of [-1, 1]) pushBox(trim, sx * (W / 2 - 0.05), 0, sz * L * 0.32, 0.3, 0.7, 0.7, 0x15151a);
-    pushBox(trim, sx * (W / 2 - 0.35), 0.62, L / 2 + 0.01, 0.4, 0.18, 0.06, 0xfff4c0);
-    pushBox(trim, sx * (W / 2 - 0.35), 0.62, -L / 2 - 0.01, 0.4, 0.18, 0.06, 0xff2a2a);
+    for (const sz of [-1, 1]) { pushBox(trim, sx * (W / 2 - 0.02), 0, sz * L * 0.32, 0.34, 0.74, 0.74, 0x101014); pushBox(trim, sx * (W / 2 + 0.16), 0.14, sz * L * 0.32, 0.05, 0.46, 0.46, 0xc8ced8); pushBox(trim, sx * (W / 2 + 0.19), 0.3, sz * L * 0.32, 0.03, 0.14, 0.14, 0x555a66); }
+    pushBox(trim, sx * (W / 2 - 0.35), 0.62, L / 2 + 0.01, 0.46, 0.2, 0.08, 0xfffbe0); pushBox(trim, sx * (W / 2 - 0.35), 0.6, L / 2 + 0.05, 0.3, 0.12, 0.03, 0xffffff);
+    pushBox(trim, sx * (W / 2 - 0.35), 0.62, -L / 2 - 0.01, 0.5, 0.2, 0.08, 0xff3030);
   }
-  pushBox(trim, 0, 0.3, L / 2, W, 0.2, 0.12, 0x222226); pushBox(trim, 0, 0.3, -L / 2, W, 0.2, 0.12, 0x222226);
+  pushBox(trim, 0, 0.62, -L / 2 - 0.02, W * 0.4, 0.07, 0.06, 0xff4a4a); pushBox(trim, 0, 0.4, -L / 2 - 0.03, 0.5, 0.16, 0.03, 0xf2f2ee); pushBox(trim, 0, 0.3, L / 2, W, 0.2, 0.12, 0x222226); pushBox(trim, 0, 0.3, -L / 2, W, 0.2, 0.12, 0x222226);
   return { body: toGeometry(body), trim: toGeometry(trim) };
 }
 export function buildCarMesh(key, tint) {

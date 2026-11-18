@@ -53,6 +53,6 @@ export function updatePolice(dt) {
   // busting
   const w = G.wanted; let near = false;
   if (st > 0) for (const a of G.actors) if (a.kind === 'cop' && !a.dead && Math.hypot(a.x - p.x, a.z - p.z) < 2.4 && (!p.car || Math.abs(p.car.speed) < 3)) near = true;
-  w.bust = near ? w.bust + dt : Math.max(0, w.bust - dt); if (w.bust > 2.2) { w.bust = 0; G.hooks.playerDown('BUSTED'); }
+  w.bust = near ? w.bust + dt : Math.max(0, w.bust - dt); if (w.bust > 2.2) { w.bust = 0; G.hooks.playerDown('CUFFED'); }
   return minD;
 }

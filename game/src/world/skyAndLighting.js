@@ -6,7 +6,7 @@ const KEYS = [ // sun elevation, top, horizon, sun colour
   [-0.3, '#070b24', '#1a1740', '#6a7fc0'], [-0.05, '#2a2160', '#c14f7a', '#ff7a5a'], [0.08, '#5a4a9e', '#ff7f6e', '#ff9a55'],
   [0.25, '#5a8ed8', '#ffc08e', '#ffc080'], [0.8, '#3f8fe8', '#bfe4ff', '#fff4e0'],
 ].map(([e, a, b, c]) => [e, new THREE.Color(a), new THREE.Color(b), new THREE.Color(c)]);
-const tmpA = new THREE.Color();
+const tmpA = new THREE.Color(), sunV = new THREE.Vector3(), fwd = new THREE.Vector3();
 function ramp(e, idx, out) {
   let k = 0; while (k < KEYS.length - 2 && e > KEYS[k + 1][0]) k++;
   const a = KEYS[k], b = KEYS[k + 1], t = Math.max(0, Math.min(1, (e - a[0]) / (b[0] - a[0])));
@@ -35,11 +35,15 @@ export function createSky(scene) {
       ramp(e, 1, u.top.value); ramp(e, 2, u.hor.value); ramp(e, 3, u.sunCol.value);
       u.sunDir.value.set(Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.8 - (e < 0 ? 0.3 : 0), 0.35).normalize();
       scene.fog.color.copy(u.hor.value); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
+      if (G.mode === 'title') { scene.fog.near = 300; scene.fog.far = 1500; scene.fog.color.lerp(tmpA.set('#b9a3c9'), 0.55); } else { scene.fog.near = 140; scene.fog.far = 720; }
+      for (const hm of G.hillMats || []) hm.color.setScalar((G.mode === 'title' ? 1 : 0.78) * Math.max(0.35, Math.min(1, 0.45 + (e + 0.1) * 1.4)));
       const day = Math.max(0.28, Math.min(1, (e + 0.08) * 5));
       sun.color.copy(u.sunCol.value); sun.intensity = e < 0 ? 0.55 : Math.min(2.4, 0.9 + e * 5) * (e < 0.04 ? 0.8 : 1);
       hemi.color.copy(u.hor.value).lerp(u.top.value, 0.4); hemi.intensity = 0.35 + day * 0.65;
       sun.position.set(focus.x + dir.x * 160, dir.y * 160, focus.z + dir.z * 160); sun.target.position.set(focus.x, 0, focus.z);
       dome.position.copy(camera.position);
+      sunV.copy(u.sunDir.value).multiplyScalar(600).add(camera.position).project(camera); camera.getWorldDirection(fwd); const fa = fwd.dot(u.sunDir.value);
+      G.sunScreen = sunV.z < 1 && fa > 0.45 && e > -0.02 ? { x: (sunV.x * 0.5 + 0.5) * innerWidth, y: (-sunV.y * 0.5 + 0.5) * innerHeight, a: Math.min(0.9, (fa - 0.45) * 2.2) } : null;
       if (G.buildingMat) G.buildingMat.emissiveIntensity = Math.max(0.05, Math.min(1.1, 0.95 - e * 3.5));
     },
   };

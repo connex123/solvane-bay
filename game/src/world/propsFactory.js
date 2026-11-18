@@ -4,7 +4,7 @@ import { N, S, HALF, lineCoord } from '../core/config.js';
 import { inst } from '../core/geometryUtils.js';
 import { blocks } from './cityLayout.js';
 import { lots } from './buildingFactory.js';
-import { signTexture } from './textureFactory.js';
+import { signTexture, glowTex } from './textureFactory.js';
 
 const NEON = [['CLUB VELVET', '#ff4fd8'], ['TACOS 24H', '#ffb02e'], ['SUNSET BAR', '#ff6a5c'], ['KARAOKE', '#4fd8ff'], ['LA LUNA', '#b48cff'], ['PIZZA', '#7dff9a'], ['HOTEL BAY', '#ff4f7a'], ['SOLVANE LIVE', '#4fd8ff']];
 const BOARDS = [['SUNSET FM 94.3', '#ff9a3c'], ['CORAL CAFE', '#4fe0c0'], ['VELOCE GT', '#ff4f6a'], ['VISIT THE BAY', '#6ab8ff'], ['NEON PULSE 101', '#ff4fd8']];
@@ -49,14 +49,19 @@ export function buildProps(scene, rng) {
   // neon shop signs on facades in Neon Row, billboards on rooftops
   const mats = NEON.map(([t, c]) => new THREE.MeshBasicMaterial({ map: signTexture(t, c) }));
   const bmats = BOARDS.map(([t, c]) => new THREE.MeshBasicMaterial({ map: signTexture(t, c, '#10131f', 512, 256), side: THREE.DoubleSide }));
-  const pg = new THREE.PlaneGeometry(1, 1);
+  const pg = new THREE.PlaneGeometry(1, 1), poolGeo = new THREE.PlaneGeometry(20, 20).rotateX(-Math.PI / 2), glowMap = glowTex();
   for (const b of blocks) {
     if (b.district !== 'neon' || b.type !== 'buildings') continue;
     for (let k = 0; k < 3; k++) {
-      const side = rng.int(0, 3), off = rng.range(-12, 12), m = new THREE.Mesh(pg, mats[rng.int(0, mats.length - 1)]);
+      const side = rng.int(0, 3), off = rng.range(-12, 12), ni = rng.int(0, mats.length - 1), m = new THREE.Mesh(pg, mats[ni]);
       m.scale.set(8, 2.6, 1); const y = rng.range(5, 9);
       if (side < 2) { m.position.set(b.cx + (side ? 22.7 : -22.7), y, b.cz + off); m.rotation.y = side ? Math.PI / 2 : -Math.PI / 2; } else { m.position.set(b.cx + off, y, b.cz + (side === 3 ? 22.7 : -22.7)); m.rotation.y = side === 3 ? 0 : Math.PI; }
       scene.add(m);
+      // coloured neon light pool on the street and a double-sided blade sign (readable from both directions)
+      const nx = side < 2 ? (side ? 1 : -1) : 0, nz = side < 2 ? 0 : (side === 3 ? 1 : -1), col = new THREE.Color(NEON[ni][1]);
+      const pool = new THREE.Mesh(poolGeo, new THREE.MeshBasicMaterial({ map: glowMap, color: col, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+      pool.position.set(m.position.x + nx * 10, 0.07, m.position.z + nz * 10); scene.add(pool);
+      if (k === 0) for (const flip of [0, Math.PI]) { const bl = new THREE.Mesh(pg, mats[ni]), o = flip ? 0.03 : -0.03; bl.scale.set(4, 1.4, 1); bl.position.set(m.position.x + nx * 3.4 + (nx ? 0 : o), 4.4, m.position.z + nz * 3.4 + (nz ? 0 : o)); bl.rotation.y = (nx ? 0 : Math.PI / 2) + flip; scene.add(bl); }
     }
   }
   let n = 0;

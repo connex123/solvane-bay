@@ -49,12 +49,28 @@ export function updateEffects(dt) {
     p.vy -= p.g * dt; p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt; p.size += p.grow * dt; p.s.scale.setScalar(p.size); p.s.material.opacity = p.op * (p.life / p.max);
   }
   for (const t of tracers) if (t.life > 0) { t.life -= dt; if (t.life <= 0) t.m.visible = false; }
-  G.shake = Math.max(0, G.shake - dt * 2.2);
+  G.shake = Math.max(0, G.shake - dt * 2.2); layoutFloaters(dt);
 }
 export function updateSirens(t) {
   for (const c of sirens) {
     if (c.dead || !c.mesh) continue; const s = c.siren, f = Math.floor((t * 5 + s.ph) % 2) === 0, a = Math.sin(c.heading), b = Math.cos(c.heading), h = c.type.roof + 0.25;
     s.gR.position.set(c.x + a * 0.2 + b * 0.5, h, c.z + b * 0.2 - a * 0.5); s.gB.position.set(c.x + a * 0.2 - b * 0.5, h, c.z + b * 0.2 + a * 0.5);
     s.gR.visible = f; s.gB.visible = !f; if (c.bar) { c.bar.r.material.color.setHex(f ? 0xff3040 : 0x401018); c.bar.b.material.color.setHex(f ? 0x101840 : 0x4080ff); }
+  }
+}
+
+// Floating damage numbers with a hit marker, projected from world space onto a DOM overlay.
+const floaters = []; let fxRoot;
+export function floatText(x, y, z, text, kind = 'hit') {
+  if (!fxRoot) { fxRoot = document.createElement('div'); fxRoot.id = 'fx'; document.body.appendChild(fxRoot); }
+  const el = document.createElement('div'); el.className = 'dmg ' + kind; el.innerHTML = `<i class="hm"></i><b>${text}</b>`; fxRoot.appendChild(el);
+  floaters.push({ el, x, y, z, t: 0, life: 0.9 }); if (floaters.length > 16) floaters.shift().el.remove();
+}
+export function layoutFloaters(dt) {
+  const cam = G.camera; if (!cam) return; const v = new THREE.Vector3();
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i]; f.t += dt; if (f.t > f.life) { f.el.remove(); floaters.splice(i, 1); continue; }
+    v.set(f.x, f.y + f.t * 1.2, f.z).project(cam); if (v.z > 1) { f.el.style.display = 'none'; continue; }
+    f.el.style.display = ''; f.el.style.transform = `translate(${(v.x * 0.5 + 0.5) * innerWidth}px, ${(-v.y * 0.5 + 0.5) * innerHeight}px)`; f.el.style.opacity = String(Math.min(1, (f.life - f.t) * 3));
   }
 }

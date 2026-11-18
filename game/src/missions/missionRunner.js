@@ -44,7 +44,7 @@ export const failMission = fail;
 function complete() {
   const M = G.mission, d = M.def; clearObj(); G.mission = null; G.money += d.reward.money; const lv = levelFromXp(G.xp); G.xp += d.reward.xp;
   notify(`MISSION PASSED  +$${d.reward.money}  +${d.reward.xp} RESPECT`, 'good'); sfx.pickup();
-  if (levelFromXp(G.xp) > lv) notify(`RESPECT LEVEL ${levelFromXp(G.xp)}: new gear unlocked at Ammu-Bay`, 'good');
+  if (levelFromXp(G.xp) > lv) notify(`RESPECT LEVEL ${levelFromXp(G.xp)}: new gear unlocked at Calder Arms`, 'good');
   if (d.side) { refreshStartMarker(); return; }
   G.completed.push(d.id); if (d.outro) say(d.outro); saveGame(); notify('GAME SAVED', ''); refreshStartMarker();
   if (G.completed.length === MISSIONS.length) notify('STORY COMPLETE: Solvane Bay is yours', 'good');

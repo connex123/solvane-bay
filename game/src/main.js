@@ -1,6 +1,7 @@
 // Boot and game loop for SOLVANE BAY: builds the city, wires systems together, runs the frame loop and game flow.
 import * as THREE from 'three';
 import { G, notify } from './core/gameState.js';
+import { drawCityMap } from './ui/cityMap.js';
 import { seedRandom, rnd } from './core/random.js';
 import { initInput, input, pressed, requestLock, releaseLock, endFrame } from './core/input.js';
 import { buildLayout } from './world/cityLayout.js';
@@ -40,10 +41,10 @@ function hurtPlayer(d) { const p = G.p; if (p.car) { damageCar(p.car, d * 3); re
 function playerDown(kind) {
   if (G.mode !== 'play') return; G.mode = 'dead'; G.deadT = 0; G.deadKind = kind; failMission(kind.toLowerCase()); clearDialogue();
   const fee = Math.min(Math.floor(G.money), Math.max(100, Math.round(G.money * 0.05))); G.fee = fee; releaseLock();
-  showDead(kind, kind === 'BUSTED' ? `The SBPD took $${fee} and your freedom for a night.` : `Hospital bills: $${fee}. Nico wakes up in Crown Medical.`);
+  showDead(kind, kind === 'CUFFED' ? `The SBPD took $${fee} and your freedom for a night.` : `Hospital bills: $${fee}. Nico wakes up in Crown Medical.`);
 }
 function respawn() {
-  const p = G.p, at = G.deadKind === 'BUSTED' ? RESPAWN.police : RESPAWN.hospital; G.money -= G.fee; if (p.car) exitCar(true);
+  const p = G.p, at = G.deadKind === 'CUFFED' ? RESPAWN.police : RESPAWN.hospital; G.money -= G.fee; if (p.car) exitCar(true);
   p.x = at.x; p.z = at.z; p.hp = 100; p.armor = 0; p.yaw = 0; p.hidden = false; p.mesh.visible = true; G.cam.yaw = Math.PI; setStars(0);
   for (const c of G.cars.filter((c) => c.kind === 'cop')) removeCar(c); for (const a of G.actors.filter((a) => a.kind === 'cop')) removeActor(a);
   G.mode = 'play'; hideScreens(); showHud(true); requestLock(); refreshStartMarker();
@@ -67,6 +68,8 @@ const handlers = {
   quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); requestLock(); },
 };
 
+window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
+
 export function stepGame(dt) {
   const p = G.p; G.time += dt;
   if (G.mode === 'play') {
@@ -78,7 +81,7 @@ export function stepGame(dt) {
   }
   if (G.mode === 'play') {
     const cd = updatePolice(dt); updateWanted(dt, cd); updateHeli(dt); updateMarkers(dt); updateMission(dt); updateSide(dt);
-    if (p.hp <= 0) playerDown('WASTED');
+    if (p.hp <= 0) playerDown('FLATLINED');
     const c = p.car; sfx.engine(!!c && !c.dead, c ? c.speed : 0, c ? c.input.throttle : 0);
     let near = 999; for (const k of G.cars) if (k.kind === 'cop' && !k.dead) near = Math.min(near, Math.hypot(k.x - p.x, k.z - p.z)); sfx.siren(G.wanted.stars > 0 ? Math.max(0, 1 - near / 120) : 0);
     updateRadio();
@@ -93,9 +96,14 @@ function keys() {
   if (G.mode === 'play' && !input.locked && input.leftPressed && document.getElementById('dialog').classList.contains('hidden')) requestLock();
 }
 export function renderFrame(snap) {
-  const focus = G.p; if (G.mode === 'title') { const a = 0.35 + G.time * 0.015; Object.assign(rig.aerial, { x: Math.cos(a) * 430, y: 140, z: Math.sin(a) * 430, tx: 0, ty: 10, tz: 0 }); }
-  updateCamera(0.016, !!snap); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : focus, G.camera); renderer.render(G.scene, G.camera);
+  const focus = G.p; if (G.mode === 'title') { const o = Math.sin(G.time * 0.05) * 60; Object.assign(rig.aerial, { x: 190 + o, y: 120, z: 390, tx: 150 + o * 0.5, ty: 0, tz: -70 }); }
+  updateCamera(0.016, !!snap); sky.update(G.clock, rig.mode === 'aerial' ? { x: 0, z: 0 } : focus, G.camera); renderer.render(G.scene, G.camera); screenFx();
 }
+function screenFx() {
+  const sp = G.mode === 'play' && G.p.car ? Math.abs(G.p.car.speed) : 0; speedEl.style.opacity = String(Math.max(0, Math.min(0.85, (sp - 18) / 30)));
+  const gl = G.sunScreen; glareEl.style.opacity = gl && G.mode === 'play' ? String(gl.a) : '0'; if (gl) glareEl.firstElementChild.style.transform = `translate(${gl.x}px, ${gl.y}px)`;
+}
+const speedEl = document.getElementById('speedfx'), glareEl = document.getElementById('glare');
 let last = 0;
 function frame(t) {
   requestAnimationFrame(frame); const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t; keys(); stepGame(dt);

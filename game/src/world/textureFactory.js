@@ -36,7 +36,7 @@ export function asphaltTex(lines = true) {
 }
 export const sandTex = () => canvasTex(128, 128, (g) => { g.fillStyle = '#e8d4a2'; g.fillRect(0, 0, 128, 128); noise(g, 128, 128, 1200, 0.12); });
 export const waterTex = () => canvasTex(256, 256, (g) => {
-  const gr = g.createLinearGradient(0, 0, 256, 256); gr.addColorStop(0, '#2b9bb8'); gr.addColorStop(1, '#1d6f9a'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = '#2490b4'; g.fillRect(0, 0, 256, 256); g.fillStyle = 'rgba(20,90,140,0.25)'; for (let i = 0; i < 14; i++) g.fillRect(0, i * 19, 256, 8);
   g.strokeStyle = 'rgba(255,255,255,0.3)'; g.lineWidth = 2;
   for (let i = 0; i < 40; i++) { const x = Math.random() * 256, y = Math.random() * 256; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 10, y - 4, x + 22, y); g.stroke(); }
 });
