@@ -80,13 +80,13 @@ function map(api) {
 // Key art: low angle on the beach road at golden hour, the VELOCE GT and Nico in front, palms, skyline and marina behind.
 function title(api) {
   clearTraffic(); seedSave({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Palmetto Beach', at: '2026-11-18 17:35' });
-  G.mode = 'title'; G.clock = 17.45; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0;
-  const X = HALF + 2.6, car = createCar('veloce', X, 56.2, -0.7, 'parked', 0xe8203c); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
-  const p = G.p; p.x = HALF + 2.7; p.z = 58.6; p.yaw = -0.75; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  G.mode = 'title'; G.clock = 16.7; G.exposure = 1.45; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0;
+  const car = createCar('veloce', HALF - 3.4, 62.6, 0.35, 'parked', 0xd01020); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  const p = G.p; p.x = HALF - 0.3; p.z = 66.2; p.yaw = 0.2; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
   const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
   tc('tupelo', -10, 1, 0xf6c21c); tc('rumble', -60, -1, 0x8fd3c8); tc('pico', -120, 1, 0xff8a3d); tc('hawke', 6, -1, 0xf0f0f0);
   [[-4, 1, 1], [-22, 1, -1], [-40, -1, 1], [16, 1, 1], [-70, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  G.titleCam = { x: HALF - 1.8, y: 1.05, z: 62.6, tx: HALF + 13, ty: 3.1, tz: 34 };
+  G.titleCam = { x: HALF - 2.2, y: 1.35, z: 71.5, tx: HALF - 6, ty: 3.4, tz: 30 };
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {

@@ -36,9 +36,9 @@ const bx = (w, h, d, x, y, z, rx = 0, rz = 0) => new THREE.BoxGeometry(w, h, d).
 // Tapered limb segment hanging down from y0: cylinder with rounded ends.
 const limb = (out, col, r1, r2, len, y0, z = 0) => out.push([cyl(r1, r2, len, 0, y0 - len / 2, z, 1, 12), col], [sph(r1, 0, y0, z, 1, 1, 1, 12, 8), col], [sph(r2, 0, y0 - len, z, 1, 1, 1, 12, 8), col]);
 // Torso shell: lathe profile from waist to neck, flattened front-to-back.
-function torso(scaleR, depth, col) {
+function torso(scaleR, depth, col, gap = 0) {
   const pr = [[0.0, 0.9], [0.19, 0.9], [0.2, 1.0], [0.205, 1.1], [0.225, 1.24], [0.25, 1.36], [0.245, 1.43], [0.19, 1.49], [0.08, 1.53], [0.0, 1.53]];
-  return [new THREE.LatheGeometry(pr.map(([r, y]) => new THREE.Vector2(r * scaleR, y)), 18).scale(1, 1, depth), col];
+  return [new THREE.LatheGeometry(pr.map(([r, y]) => new THREE.Vector2(r * scaleR, y)), 18, gap, Math.PI * 2 - 2 * gap).scale(1, 1, depth), col];
 }
 
 function hair(B, st) {
@@ -57,8 +57,7 @@ function parts(st) {
   // Torso: shirt underneath, jacket shell over it with an open front.
   B.push(torso(1, 0.62, st.shirt));
   if (st.jacket) {
-    B.push(torso(1.06, 0.64, jk), [sph(0.13, 0, 1.22, 0.075, 0.62, 2.0, 0.6), st.shirt]); // open front shows the shirt
-    B.push([bx(0.035, 0.46, 0.03, -0.075, 1.22, 0.145, 0, -0.08), tr], [bx(0.035, 0.46, 0.03, 0.075, 1.22, 0.145, 0, 0.08), tr]); // zip edges
+    B.push(torso(1.07, 0.66, jk, 0.42)); // open front shows the shirt
     B.push([cyl(0.225, 0.215, 0.06, 0, 0.93, 0, 0.66), tr]); // ribbed hem
     B.push([new THREE.TorusGeometry(0.1, 0.035, 6, 16).rotateX(Math.PI / 2).scale(1, 1, 0.85).translate(0, 1.5, -0.01), tr]); // collar
   } else {
@@ -79,7 +78,7 @@ function parts(st) {
     B.push([bx(0.05, 0.012, 0.012, sx * 0.047, 1.74, 0.116, 0, sx * -0.12), st.hair]); // brows
   }
   B.push([bx(0.05, 0.01, 0.01, 0, 1.625, 0.112), 0x6a2e24]); // mouth
-  if (st.beard) B.push([sph(0.09, 0, 1.615, 0.035, 0.95, 0.7, 0.95), st.hair]);
+  if (st.beard) B.push([sph(0.088, 0, 1.612, 0.036, 0.95, 0.62, 0.95), 0x3a2a20]);
   if (st.cap) B.push([cyl(0.142, 0.14, 0.09, 0, 1.79, -0.005, 1, 16), st.cap], [sph(0.142, 0, 1.83, -0.005, 1, 0.35, 1), st.cap], [cyl(0.13, 0.13, 0.012, 0, 1.765, 0.1, 0.6, 16), 0x0a0a0a],
     [sph(0.024, 0, 1.8, 0.138, 1, 1.2, 0.4), 0xe8c040], [cyl(0.145, 0.145, 0.018, 0, 1.755, -0.005, 1, 16), 0xe8c040], [sph(0.12, 0, 1.69, -0.06, 1.1, 0.8, 0.9), st.hair]);
   else hair(B, st);
