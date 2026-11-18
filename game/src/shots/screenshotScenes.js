@@ -7,7 +7,7 @@ import { createCar } from '../vehicles/carPhysics.js';
 import { placeTraffic } from '../vehicles/trafficSystem.js';
 import { enterCar, selectWeapon } from '../characters/playerController.js';
 import { spawnPed, createActor } from '../characters/pedestrianSystem.js';
-import { STYLES, setGun, animateWalk } from '../characters/characterModel.js';
+import { STYLES, setGun, animateWalk, randomStyle } from '../characters/characterModel.js';
 import { spawnCop } from '../police/policeDispatch.js';
 import { createHeli, placeCone } from '../police/helicopterUnit.js';
 import { setStars, crime } from '../police/wantedSystem.js';
@@ -28,20 +28,23 @@ function finish(api, frames = 2) { G.hudRate = 1; const gl0 = G.renderer.getCont
 function typed() { dlg.t = 99; }
 
 function chase(api) {
-  const p = G.p, z0 = lineCoord(3); clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 520; G.radio = 1; api.showHud(true);
-  const car = createCar('veloce', 8, z0 - LANE, -Math.PI / 2, 'parked', 0xe83a5c); enterCar(car); car.speed = 41.5; car.vx = -41.5; car.vz = 0; car.input.throttle = 1; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
-  const cop = (x, z, h, vx, ai) => { const c = spawnCop(x, z, h, ai); c.vx = vx; c.speed = Math.abs(vx); c.ai = ai; return c; };
-  cop(7.4, z0 - LANE + 2.25, -Math.PI / 2 + 0.05, -40.5, 'RAMMING'); cop(8.4, z0 - LANE * 2 + 0.2, -Math.PI / 2, -40, 'PURSUIT');
-  cop(-52, z0 + LANE, Math.PI / 2, 26, 'ARRIVING').heading = Math.PI / 2; cop(-92, z0 + LANE + 0.2, Math.PI / 2, 24, 'ARRIVING');
-  const tc = (key, x, dir, col) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.nav.spd = 11; return c; };
-  tc('hawke', -30, -1, 0x222831); tc('tupelo', -78, -1, 0xf2c230); tc('marlin', -22, 1, 0x2f7fd8); tc('cadia', -64, 1, 0x2fb89a); tc('rumble', -4, 1, 0xf0f0f0); tc('marlin', 40, 1, 0xff8a3d);
-  [[-12, 1, 1], [-30, 1, -1], [-50, 1, 1], [4, -1, -1], [-20, -1, 1], [-44, -1, -1], [-62, 1, 1], [20, -1, 1], [-84, -1, 1], [34, 1, -1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 3, x, s, d); if (i % 3 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  G.heli = createHeli(-70, z0 - 8); G.heli.y = 36; G.heli.mesh.position.set(G.heli.x, 36, G.heli.z); G.heli.mesh.rotation.set(0.06, Math.PI / 2, 0.12); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
+  // East along the Palmetto boulevard at golden hour: the sea and the setting sun at the end of the street.
+  const p = G.p, z0 = lineCoord(6), X = 128; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 520; G.radio = 1; api.showHud(true);
+  const car = createCar('veloce', X, z0 + 1.75, Math.PI / 2, 'parked', 0xd80c2c); enterCar(car); car.speed = 41.5; car.vx = 41.5; car.vz = 0; car.input.throttle = 1; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
+  const cop = (x, z, h, vx, vz, ai) => { const c = spawnCop(x, z, h, ai); c.heading = h; c.vx = vx; c.vz = vz; c.speed = Math.hypot(vx, vz); c.ai = ai; return c; };
+  cop(X - 1.7, z0 - 0.6, Math.PI / 2 + 0.13, 40.5, 3, 'RAMMING'); cop(X - 1.4, z0 + 5.5, Math.PI / 2 - 0.04, 40, 0, 'PURSUIT');
+  cop(158.5, z0 + 10.5, Math.PI - 0.95, 9, -11, 'ARRIVING'); cop(236, z0 - 5.25, -Math.PI / 2, -24, 0, 'ARRIVING');
+  const tc = (key, x, dir, col) => { const c = placeTraffic('x', 6, x, dir, key, 'traffic', col); c.nav.spd = 11; return c; };
+  tc('surf', 262, 1, 0xf4f1ea); tc('pixie', 204, 1, 0x8fd3c8); tc('tupelo', 150, -1, 0xf2c230); tc('riviera', 188, -1, 0xff8a7a); tc('marlin', 228, -1, 0x2f7fd8); tc('hawke', 112, -1, 0x222831); tc('rumble', 256, 1, 0xff8a3d);
+  [[140, 1, 1], [146, -1, -1], [152, 1, 1], [160, -1, 1], [170, 1, -1], [178, -1, -1], [186, 1, 1], [196, -1, 1], [134, -1, 1], [210, 1, -1], [122, 1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 6, x, s, d); if (i % 3 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  G.heli = createHeli(170, z0 - 7); G.heli.y = 21; G.heli.mesh.position.set(G.heli.x, 21, G.heli.z); G.heli.mesh.rotation.set(0.1, -Math.PI / 2 + 0.5, -0.16); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x + 1.5, car.z); G.shotLock = true;
   setStars(4); G.wanted.heat = 4.3; fakeMission(5, 3, 'Escape the SBPD, then reach the Alder Hills safehouse', 87);
   say([{ who: 'sol', text: 'Left at the next light, Nico! I can hear that chopper from here. Stay off the brakes!' }]); typed();
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; }
-  car.mesh.rotation.z = 0.02; smoke(12, 1, z0, 0x777777); smoke(11.4, 1.2, z0 - 0.2, 0x666666); sparks(14, 0.4, z0 - 3, 5); sparks(9.9, 0.7, z0 - LANE + 1.15, 30); sparks(9.2, 0.55, z0 - LANE + 1.15, 16); particle({ x: 9.9, y: 0.75, z: z0 - LANE + 1.15, life: 1, size: 3, color: 0xffd080, add: true });
-  rig.mode = 'auto'; rig.yaw = -Math.PI / 2;
+  car.mesh.rotation.z = -0.025; const ram = G.cars.find((c) => c.ai === 'RAMMING'); ram.mesh.rotation.z = 0.03;
+  const sx = X + 0.5, sz = z0 + 0.74; sparks(sx, 0.6, sz, 30); sparks(sx + 0.3, 0.5, sz, 18); particle({ x: sx, y: 0.6, z: sz - 0.3, life: 1, size: 0.9, color: 0xffb050, add: true });
+  smoke(X - 2.6, 0.5, z0 + 2.4, 0x9a948c); smoke(X - 3.4, 0.7, z0 + 1.2, 0x8a847c); smoke(X - 5.5, 0.5, z0 - 0.4, 0x9a948c);
+  rig.mode = 'auto'; rig.yaw = Math.PI / 2; rig.shot = { pos: [X - 10.2, 2.05, z0 + 1.9], look: [X + 30, 2.25, z0 + 1.0], fov: 60, roll: -0.035 };
   finish(api); }
 function onfoot(api) {
   const p = G.p, z0 = lineCoord(7); clearTraffic(); G.mode = 'play'; G.clock = 17.3; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
@@ -71,7 +74,16 @@ function onfoot(api) {
 function map(api) {
   const p = G.p; seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 3, 5, 9, 11], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Neon Row', at: '2026-11-18 17:35' })); clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 40; p.z = 20; p.yaw = 2.4;
   refreshStartMarker(); G.markers.forEach((m) => { m.mesh.visible = false; }); G.wanted.stars = 0; api.showHud(false); rig.mode = 'auto'; api.renderFrame(); api.showScreen('cityMap'); finish(api, 1); }
-function title(api) { clearTraffic(); seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' })); G.mode = 'title'; G.clock = 17.55; G.time = 30; rig.mode = 'aerial'; api.showHud(false); api.showScreen('title'); finish(api, 2); }
+function title(api) { // key art: low angle on the coast road at golden hour, Nico beside the VELOCE GT, sun going down over the sea
+  clearTraffic(); seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' }));
+  G.mode = 'title'; G.clock = 17.1; G.time = 30; G.sunAz = 0.75; const p = G.p, X = lineCoord(9);
+  const car = createCar('veloce', X + 1.5, 216, 0.85, 'parked', 0xd80c2c); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  p.x = X - 0.6; p.z = 218.2; p.yaw = -0.5; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  const tc = (key, z, col, h) => { const c = createCar(key, X + (h ? 3.5 : -3.5), z, h ? 0 : Math.PI, 'parked', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; };
+  tc('riviera', 175, 0x8fd3c8, 0); tc('pixie', 140, 0xffe7a3, 1); tc('marlin', 110, 0x2f7fd8, 0);
+  [[X - 9, 190], [X - 8.5, 160], [X + 8.5, 196], [X - 9, 132]].forEach(([x, z], i) => { const a = createActor('ped', x, z, randomStyle({ pick: (arr) => arr[(i * 3 + 1) % arr.length] }), { yaw: Math.PI }); animateWalk(a.mesh, i * 1.7, 0.6, false); a.mesh.position.set(x, 0.25, z); });
+  rig.mode = 'auto'; rig.shot = { pos: [X - 3.5, 1.7, 226], look: [X + 20, 3.0, 160], fov: 48, roll: 0 };
+  api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
   G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-map': map, '4-title': title }[name] || title)(api);

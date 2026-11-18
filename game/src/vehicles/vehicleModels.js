@@ -34,8 +34,8 @@ const trimMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 
 const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x0b1622, metalness: 0.3, roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6 });
 const tireMat = new THREE.MeshStandardMaterial({ color: 0x151518, roughness: 0.85 });
 const rimMat = new THREE.MeshStandardMaterial({ color: 0xd8dde4, metalness: 0.85, roughness: 0.25 });
-const headMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.0, 3.5) });
-const tailMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(3.4, 0.12, 0.1) });
+const headMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(3.0, 2.85, 2.5) });
+const tailMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.08, 0.06) });
 const signMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 2.2, 1.2) });
 
 function ensureEnv() { // tiny sky environment (azure -> peach horizon, warm sun) prefiltered with PMREM for paint/glass reflections
@@ -121,7 +121,7 @@ function build(key) {
 function paint(key, c) {
   const mk = `${key}${c}`; if (matCache[mk]) return matCache[mk];
   const police = CAR_TYPES[key].police;
-  return (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, map: police ? (matCache.livery ||= liveryTex()) : null, metalness: police ? 0.05 : 0.25, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.1 }));
+  return (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, map: police ? (matCache.livery ||= liveryTex()) : null, metalness: police ? 0.05 : 0.25, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.65 }));
 }
 export function buildCarMesh(key, tint) {
   ensureEnv();

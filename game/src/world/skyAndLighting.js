@@ -27,7 +27,7 @@ export function createSky(scene) {
         c = mix(c, mix(top, horW, 0.55) * 1.05, smoothstep(0.0, 0.1, h) * (1.0 - smoothstep(0.1, 0.45, h)) * 0.25);
         c = mix(c, horW * 0.92, clamp(-h * 4.0, 0.0, 1.0));
         float s = max(dot(d, sd), 0.0);
-        c += sunCol * sunI * (smoothstep(0.99955, 0.99975, s) * 26.0 + pow(s, 900.0) * 6.0 + pow(s, 60.0) * 0.7 + pow(s, 8.0) * 0.22);
+        c += sunCol * sunI * (smoothstep(0.99935, 0.9996, s) * 26.0 + pow(s, 900.0) * 6.0 + pow(s, 60.0) * 0.7 + pow(s, 8.0) * 0.22);
         gl_FragColor = vec4(c, 1.0); }` });
   const dome = new THREE.Mesh(new THREE.SphereGeometry(1000, 32, 20), mat); dome.frustumCulled = false; dome.renderOrder = -10; scene.add(dome);
   const sun = new THREE.DirectionalLight(0xffb070, 2.6); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
@@ -41,7 +41,8 @@ export function createSky(scene) {
     sun, hemi,
     update(clock, focus, camera) {
       const e = Math.sin((clock - 6) / 24 * Math.PI * 2), ang = (clock - 6) / 12 * Math.PI;
-      u.sunDir.value.set(-Math.cos(ang), Math.max(0.035, Math.sin(ang)) - (e < 0 ? 0.3 : 0), -0.22).normalize();
+      const az = G.sunAz ?? 0.06; // sun azimuth: sets over the sea, slightly north of the east-west boulevards
+      u.sunDir.value.set(-Math.cos(ang) * Math.cos(az), Math.max(0.035, Math.sin(ang)) - (e < 0 ? 0.3 : 0), Math.cos(ang) * Math.sin(az)).normalize();
       dir.copy(u.sunDir.value); if (e < 0.02) dir.set(Math.cos(ang) * 0.5, 0.6, -0.3).normalize();
       dir.y = Math.max(dir.y, 0.2); dir.normalize(); // keep shadows long but readable
       ramp(e, 1, u.top.value); ramp(e, 2, u.hor.value); ramp(e, 3, u.sunCol.value); ramp(e, 4, fogC); u.sunI.value = e < -0.02 ? 0.3 : 1;
@@ -50,7 +51,7 @@ export function createSky(scene) {
       for (const hm of G.hillMats || []) hm.color.setScalar(Math.max(0.3, Math.min(1, 0.45 + (e + 0.1) * 1.6)));
       const day = Math.max(0.2, Math.min(1, (e + 0.08) * 5));
       sun.color.copy(u.sunCol.value); sun.intensity = e < 0 ? 0.45 : Math.min(3.0, 2.2 + e * 2.5);
-      hemi.color.copy(cool).lerp(u.top.value, 0.35); hemi.groundColor.copy(u.hor.value).multiplyScalar(0.7); hemi.intensity = 0.35 + day * 1.0; amb.intensity = 0.1 + day * 0.2;
+      hemi.color.copy(cool).lerp(u.top.value, 0.35); hemi.groundColor.copy(u.hor.value).multiplyScalar(0.7); hemi.intensity = 0.35 + day * 1.0; amb.intensity = 0.3 + day * 0.4;
       sun.position.set(focus.x + dir.x * 170, dir.y * 170, focus.z + dir.z * 170); sun.target.position.set(focus.x, 0, focus.z);
       dome.position.copy(camera.position);
       sunV.copy(u.sunDir.value).multiplyScalar(600).add(camera.position).project(camera); camera.getWorldDirection(fwd); const fa = fwd.dot(u.sunDir.value);

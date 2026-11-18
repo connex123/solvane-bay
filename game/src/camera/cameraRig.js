@@ -10,6 +10,7 @@ const tmp = new THREE.Vector3();
 export function updateCamera(dt, snap = false) {
   const cam = G.camera, p = G.p, k = snap ? 1 : 1 - Math.exp(-dt * 7);
   let pos, look, fov = 60;
+  if (rig.shot) { const s = rig.shot; cam.position.set(...s.pos); cam.up.set(0, 1, 0); cam.lookAt(...s.look); cam.rotateZ(s.roll || 0); cam.fov = s.fov || 60; cam.updateProjectionMatrix(); return; } // staged screenshot camera
   if (rig.mode === 'aerial') {
     const a = rig.aerial; pos = tmp.set(a.x, a.y, a.z); look = new THREE.Vector3(a.tx, a.ty, a.tz); fov = 50; cam.position.copy(pos); cam.lookAt(look); cam.fov = fov; cam.updateProjectionMatrix(); return;
   }

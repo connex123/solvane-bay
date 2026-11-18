@@ -44,7 +44,7 @@ export function createPost(renderer, opts = {}) {
   const bright = sm(BRIGHT, { tSrc: { value: null }, threshold: { value: 1.7 }, knee: { value: 0.7 } });
   const blur = sm(BLUR, { tSrc: { value: null }, dir: { value: new THREE.Vector2() } });
   const copy = sm(COPY, { tSrc: { value: null } });
-  const comp = sm(COMPOSITE, { tScene: { value: sceneRT.texture }, tBloomA: { value: half[0].texture }, tBloomB: { value: quarter[0].texture }, exposure: { value: 1.0 }, bloom: { value: 1.0 },
+  const comp = sm(COMPOSITE, { tScene: { value: sceneRT.texture }, tBloomA: { value: half[0].texture }, tBloomB: { value: quarter[0].texture }, exposure: { value: 1.0 }, bloom: { value: 0.55 },
     fringe: { value: 0 }, vig: { value: 0.32 }, warm: { value: new THREE.Vector3(1.04, 1.0, 0.93) }, sat: { value: 1.12 } });
   const pass = (mat, target) => { quad.material = mat; renderer.setRenderTarget(target); renderer.render(qs, cam); };
   const blurPair = (rt, n) => { const w = rt[0].width, h = rt[0].height; for (let k = 0; k < n; k++) { const s = 1 + k * 0.5;
