@@ -40,7 +40,7 @@ export function skidMark(x, z, heading) {
 }
 export function addSiren(car, scene) {
   const mk = (c) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: c, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); s.scale.setScalar(3.4); scene.add(s); return s; };
-  car.siren = { gR: mk(0xff2030), gB: mk(0x2060ff), ph: Math.random() * 6 }; sirens.add(car);
+  car.siren = { gR: mk(new THREE.Color(2.4, 0.15, 0.2)), gB: mk(new THREE.Color(0.2, 0.45, 2.8)), ph: Math.random() * 6 }; sirens.add(car);
 }
 export function removeSiren(car) { if (car.siren) { car.siren.gR.removeFromParent(); car.siren.gB.removeFromParent(); } sirens.delete(car); }
 export function updateEffects(dt) {
@@ -55,7 +55,7 @@ export function updateSirens(t) {
   for (const c of sirens) {
     if (c.dead || !c.mesh) continue; const s = c.siren, f = Math.floor((t * 5 + s.ph) % 2) === 0, a = Math.sin(c.heading), b = Math.cos(c.heading), h = c.type.roof + 0.25;
     s.gR.position.set(c.x + a * 0.2 + b * 0.5, h, c.z + b * 0.2 - a * 0.5); s.gB.position.set(c.x + a * 0.2 - b * 0.5, h, c.z + b * 0.2 + a * 0.5);
-    s.gR.visible = f; s.gB.visible = !f; if (c.bar) { c.bar.r.material.color.setHex(f ? 0xff3040 : 0x401018); c.bar.b.material.color.setHex(f ? 0x101840 : 0x4080ff); }
+    s.gR.visible = f; s.gB.visible = !f; if (c.bar) { c.bar.r.material.color.setRGB(f ? 6 : 0.3, f ? 0.35 : 0.02, f ? 0.4 : 0.04); c.bar.b.material.color.setRGB(f ? 0.02 : 0.35, f ? 0.05 : 0.9, f ? 0.3 : 7); }
   }
 }
 

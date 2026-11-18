@@ -41,7 +41,7 @@ export function createPost(renderer, opts = {}) {
   const half = [mk(1, 1), mk(1, 1)], quarter = [mk(1, 1), mk(1, 1)];
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)), cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), qs = new THREE.Scene(); quad.frustumCulled = false; qs.add(quad);
   const sm = (fs, uniforms) => new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: fs, uniforms, depthTest: false, depthWrite: false, toneMapped: false });
-  const bright = sm(BRIGHT, { tSrc: { value: null }, threshold: { value: 1.0 }, knee: { value: 0.5 } });
+  const bright = sm(BRIGHT, { tSrc: { value: null }, threshold: { value: 1.7 }, knee: { value: 0.7 } });
   const blur = sm(BLUR, { tSrc: { value: null }, dir: { value: new THREE.Vector2() } });
   const copy = sm(COPY, { tSrc: { value: null } });
   const comp = sm(COMPOSITE, { tScene: { value: sceneRT.texture }, tBloomA: { value: half[0].texture }, tBloomB: { value: quarter[0].texture }, exposure: { value: 1.0 }, bloom: { value: 1.0 },
