@@ -18,7 +18,7 @@ export const CAR_TYPES = {
 // Side profiles (z: rear -> front is -L/2 -> +L/2, y: height). top = front-to-rear outline of the painted body;
 // cab = greenhouse outline (front base, roof front, roof rear, rear base); light heights; wheel radius.
 const PROFILES = {
-  veloce: { top: [[2.25, 0.4], [2.18, 0.6], [1.1, 0.78], [0.55, 0.84], [-1.65, 0.95], [-2.2, 0.93], [-2.25, 0.62]], cab: [[0.6, 0.83], [-0.2, 1.2], [-0.85, 1.19], [-1.8, 0.93]], hy: 0.55, ty: 0.8, r: 0.35, sport: true },
+  veloce: { top: [[2.25, 0.4], [2.18, 0.6], [1.1, 0.78], [0.55, 0.84], [-1.6, 0.94], [-1.98, 0.92], [-2.18, 0.86], [-2.29, 0.74], [-2.32, 0.56], [-2.28, 0.42]], cab: [[0.6, 0.83], [-0.2, 1.2], [-0.8, 1.18], [-1.95, 0.9]], hy: 0.55, ty: 0.8, r: 0.35, sport: true },
   sedan: { top: [[2.35, 0.48], [2.3, 0.8], [1.05, 0.92], [0.85, 0.95], [-1.55, 0.99], [-2.3, 0.96], [-2.35, 0.55]], cab: [[0.85, 0.94], [0.05, 1.42], [-1.0, 1.42], [-1.6, 0.98]], hy: 0.66, ty: 0.82, r: 0.36 },
   hawke: { top: [[2.45, 0.58], [2.4, 1.0], [1.3, 1.1], [1.1, 1.12], [-2.4, 1.16], [-2.45, 0.66]], cab: [[1.1, 1.1], [0.4, 1.78], [-2.2, 1.78], [-2.4, 1.16]], hy: 0.85, ty: 1.0, r: 0.4 },
   cadia: { top: [[2.55, 0.55], [2.5, 0.92], [1.95, 1.05], [1.8, 1.08], [0.55, 2.02], [-2.5, 2.04], [-2.55, 0.62]], cab: [[1.85, 1.05], [1.2, 1.9], [0.62, 1.92], [0.62, 1.05]], hy: 0.8, ty: 1.2, r: 0.38 },
@@ -69,8 +69,10 @@ const polyShape = (pts) => { const s = new THREE.Shape(); s.moveTo(pts[0][0], pt
 const geoCache = {};
 function build(key) {
   const t = CAR_TYPES[key], pr = PROFILES[key], W = t.wid, L = t.len, wz = L * 0.32, hl = L / 2;
-  const plan = (z) => 1 - 0.1 * Math.pow(Math.min(1, Math.abs(z) / hl), 3);
-  const paint = [extrudeProfile(bodyShape(pr, L), W, (y, z) => plan(z) * (1 - 0.05 * Math.max(0, Math.min(1, (y - 0.6) / 0.4))))];
+  // plan-view taper; the sports car gets a pinched tail and rounded rear shoulders over wide haunches
+  const plan = (z) => 1 - (pr.sport && z < 0 ? 0.17 : 0.1) * Math.pow(Math.min(1, Math.abs(z) / hl), pr.sport && z < 0 ? 2.4 : 3);
+  const shoulder = pr.sport ? 0.14 : 0.05, sy = pr.sport ? 0.55 : 0.6;
+  const paint = [extrudeProfile(bodyShape(pr, L), W, (y, z) => plan(z) * (1 - shoulder * Math.pow(Math.max(0, Math.min(1, (y - sy) / 0.4)), 1.4)))];
   const glass = [], trim = [], lights = [];
   const DK = 0x141418, CH = [1.2, 1.2, 1.25], PLATE = 0xf4f4ee;
   if (pr.cab) {
@@ -85,10 +87,10 @@ function build(key) {
     trim.push([B(W * 0.86, 0.06, 1.3, 0, 0.9, -0.2), 0x2a1a14]);
   }
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) { // wheels: tyre, sidewall, spoked rim, hub
-    const x = sx * (W / 2 - 0.15), z = sz * wz, ox = x + sx * 0.14;
-    trim.push([cyl(pr.r, 0.3, x, pr.r, z, 16), 0x111113], [cyl(pr.r * 0.72, 0.02, ox, pr.r, z, 16), 0x2a2a2e], [cyl(pr.r * 0.66, 0.03, ox + sx * 0.005, pr.r, z, 16), [0.55, 0.57, 0.6]], [cyl(0.07, 0.05, ox + sx * 0.02, pr.r, z, 8), CH]);
+    const wide = pr.sport && sz < 0, x = sx * (W / 2 - (wide ? 0.13 : 0.15)), z = sz * wz, ox = x + sx * (wide ? 0.18 : 0.14);
+    trim.push([cyl(pr.r, wide ? 0.38 : 0.3, x, pr.r, z, 16), 0x111113], [cyl(pr.r * 0.72, 0.02, ox, pr.r, z, 16), 0x2a2a2e], [cyl(pr.r * 0.66, 0.03, ox + sx * 0.005, pr.r, z, 16), [0.55, 0.57, 0.6]], [cyl(0.07, 0.05, ox + sx * 0.02, pr.r, z, 8), CH]);
     for (let k = 0; k < 5; k++) { const sp = new THREE.BoxGeometry(0.03, pr.r * 1.25, 0.07); sp.rotateX(k / 5 * Math.PI); sp.translate(ox + sx * 0.02, pr.r, z); trim.push([sp, CH]); }
-    if (pr.sport) paint.push(B(0.12, 0.16, 0.95, sx * (W / 2 - 0.02), pr.r + 0.36, z)); // fender flare lip
+    if (pr.sport) paint.push(B(wide ? 0.2 : 0.12, wide ? 0.2 : 0.16, wide ? 1.05 : 0.95, sx * (W / 2 + (wide ? 0.02 : -0.02)), pr.r + (wide ? 0.33 : 0.36), z)); // fender flare lip, wider haunches at the rear
   }
   const fz = pr.top[0][0], rz = pr.top[pr.top.length - 1][0], hy = pr.hy, ty = pr.ty;
   for (const sx of [-1, 1]) {
@@ -97,16 +99,21 @@ function build(key) {
     trim.push([B(0.1, 0.09, 0.2, sx * (W / 2 + 0.04), pr.cab ? pr.cab[0][1] + 0.08 : 1.0, pr.cab ? pr.cab[0][0] - 0.2 : 0.5), DK]); // mirrors
   }
   if (pr.sport) {
-    lights.push([B(W * 0.86, 0.06, 0.08, 0, ty - 0.04, rz - 0.05), [4.5, 0.25, 0.2]]); // full-width tail bar
-    trim.push([B(W * 0.98, 0.05, 0.55, 0, 1.24, -1.95), DK]); for (const sx of [-0.55, 0.55]) trim.push([B(0.06, 0.3, 0.14, sx, 1.07, -1.95), DK]); // spoiler
-    trim.push([B(W * 0.9, 0.06, 0.4, 0, 0.3, fz - 0.1), DK], [B(W * 0.86, 0.16, 0.1, 0, 0.36, rz + 0.03), DK]); // splitter, diffuser
-    for (const sx of [-1, 1]) { trim.push([B(0.05, 0.16, 0.7, sx * (W / 2 - 0.0), 0.62, -0.75), DK]); for (const o of [0.12, 0.28]) trim.push([new THREE.CylinderGeometry(0.045, 0.05, 0.14, 10).rotateX(Math.PI / 2).translate(sx * o, 0.34, rz - 0.05), [0.35, 0.35, 0.38]]); }
+    // full-width LED tail bar wrapping the tail, dark rear panel band, ducktail lip
+    const rb = rz - 0.07; // rear skin, past the extrusion bevel
+    lights.push([B(W * 0.76, 0.08, 0.05, 0, 0.75, rb - 0.01), [7, 0.35, 0.25]], [B(W * 0.7, 0.025, 0.04, 0, 0.69, rb - 0.03), [2.4, 0.12, 0.1]]);
+    for (const sx of [-1, 1]) lights.push([B(0.08, 0.07, 0.34, sx * 0.8, 0.75, -2.18), [6, 0.3, 0.22]]);
+    trim.push([B(W * 0.7, 0.14, 0.04, 0, 0.6, rb - 0.03), DK], [B(W * 0.8, 0.035, 0.22, 0, 0.93, -2.03), DK]);
+    trim.push([B(W * 0.9, 0.06, 0.4, 0, 0.3, fz - 0.1), DK], [B(W * 0.8, 0.14, 0.2, 0, 0.31, rb - 0.05), DK]); // splitter, diffuser
+    for (let f = -2; f <= 2; f++) trim.push([B(0.03, 0.15, 0.22, f * 0.15, 0.3, rb - 0.08), [0.08, 0.08, 0.09]]); // diffuser fins
+    for (const sx of [-1, 1]) { trim.push([B(0.05, 0.16, 0.7, sx * (W / 2 - 0.0), 0.62, -0.75), DK]);
+      trim.push([new THREE.CylinderGeometry(0.085, 0.09, 0.2, 14).rotateX(Math.PI / 2).translate(sx * 0.52, 0.32, rb - 0.06), [0.6, 0.6, 0.65]], [new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12).rotateX(Math.PI / 2).translate(sx * 0.52, 0.32, rb - 0.165), [0.03, 0.03, 0.03]]); } // twin exhausts
     trim.push([B(0.7, 0.12, 0.06, 0, 0.5, fz - 0.02), DK]); // nose intake
   } else {
     for (const sx of [-1, 1]) lights.push([B(0.42, 0.2, 0.08, sx * (W / 2 - 0.32), ty - 0.08, rz - 0.05), [4.2, 0.22, 0.18]]);
     trim.push([B(W * 0.52, 0.2, 0.08, 0, hy - 0.02, fz - 0.03), DK], [B(W + 0.02, 0.18, 0.16, 0, 0.36, fz - 0.04), 0x2a2a30], [B(W + 0.02, 0.18, 0.16, 0, 0.36, rz + 0.04), 0x2a2a30]); // grille, bumpers
   }
-  trim.push([B(0.5, 0.13, 0.03, 0, 0.44, rz - 0.01), PLATE]);
+  trim.push([B(0.5, 0.13, 0.03, 0, pr.sport ? 0.5 : 0.44, rz - (pr.sport ? 0.1 : 0.01)), PLATE]);
   if (key === 'interceptor') {
     trim.push([B(W * 0.7, 0.42, 0.12, 0, 0.55, fz + 0.12), DK], [B(0.12, 0.42, 0.1, 0, 0.55, fz + 0.06), DK]); // push bar
     trim.push([B(1.5, 0.08, 0.36, 0, t.roof + 0.0, -0.45), DK]); // light bar base
@@ -141,6 +148,22 @@ function sharedMats() {
   shared.lights = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
   return shared;
 }
+// Sports-car tail: soft red bloom card behind the LED bar and exhaust flames that flicker while the player is on the throttle.
+const pr_sport = (key) => !!PROFILES[key].sport;
+let glowTex = null, flameMat = null, tailMat = null;
+function sportRear(grp, key) {
+  const rz = PROFILES[key].top[PROFILES[key].top.length - 1][0];
+  glowTex = glowTex || canvasTex(128, 64, (g) => { const gr = g.createRadialGradient(64, 32, 2, 64, 32, 62); gr.addColorStop(0, 'rgba(255,90,70,1)'); gr.addColorStop(0.35, 'rgba(255,40,40,0.45)'); gr.addColorStop(1, 'rgba(255,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 64); }, false);
+  tailMat = tailMat || new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0.55 });
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(CAR_TYPES[key].wid * 1.25, 0.5), tailMat); glow.position.set(0, 0.74, rz - 0.13); glow.rotation.y = Math.PI; grp.add(glow);
+  flameMat = flameMat || new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.85, 0.22), transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
+  for (const sx of [-1, 1]) {
+    const f = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.42, 10, 1, true).rotateX(-Math.PI / 2).translate(0, 0, -0.2), flameMat); f.position.set(sx * 0.52, 0.32, rz - 0.24);
+    f.onBeforeRender = () => { const c = G.p.car, on = c && c.mesh === grp ? Math.max(0, c.input.throttle) * Math.min(1, Math.abs(c.speed) / 20) : 0, t = (G.time || 0) * 37 + sx * 1.7;
+      const k = on * (0.55 + 0.3 * Math.sin(t) + 0.2 * Math.sin(t * 2.3 + 1)); f.scale.set(0.8 + 0.4 * k, 0.8 + 0.4 * k, Math.max(0.001, k)); };
+    grp.add(f);
+  }
+}
 export function buildCarMesh(key, tint) {
   const g = geoCache[key] || (geoCache[key] = build(key)); const t = CAR_TYPES[key], m = sharedMats();
   const c = t.police ? t.tint : key === 'tupelo' ? t.tint : tint ?? t.tint;
@@ -148,6 +171,7 @@ export function buildCarMesh(key, tint) {
   const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.45 }));
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
   a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a;
+  if (pr_sport(key)) sportRear(grp, key);
   if (t.police) {
     const lv = livery();
     const sideLit = new THREE.MeshLambertMaterial({ map: lv.side, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
