@@ -56,7 +56,7 @@ function headParts(b, st) {
     b.add(BOX, st.cop ? 0x2a1a10 : st.hair, { x: sx * 0.046, y: hy + 0.048, z: 0.118, sx: 0.048, sy: 0.011, sz: 0.012, rz: sx * -0.12 }); // brow
   }
   b.add(BOX, new THREE.Color(sk).multiplyScalar(0.7), { y: hy - 0.07, z: 0.113, sx: 0.045, sy: 0.009, sz: 0.01 }); // mouth
-  if (st.stubble) b.add(SPH, new THREE.Color(sk).lerp(new THREE.Color(st.hair), 0.45), { y: hy - 0.08, z: 0.03, sx: 0.09, sy: 0.064, sz: 0.098 });
+  if (st.stubble) b.add(SPH, new THREE.Color(sk).lerp(new THREE.Color(st.hair), 0.22), { y: hy - 0.08, z: 0.03, sx: 0.09, sy: 0.064, sz: 0.098 });
   const h = st.hair, hs = st.cop ? 'short' : st.hairStyle || 'short';
   if (hs !== 'bald') b.add(HAIR_CAP, h, { y: hy + 0.005, z: -0.008, sx: 0.126, sy: hs === 'curly' ? 0.17 : 0.152, sz: 0.138, rx: -0.32 });
   if (hs === 'fade') b.add(SPH, h, { y: hy + 0.11, z: 0.02, sx: 0.1, sy: 0.05, sz: 0.11, rx: -0.2 });          // swept top
@@ -102,7 +102,7 @@ function armParts(b, st) {
   b.add(cap(0.016, 0.04), st.skin, { x: 0.035, y: -0.6, z: 0.03, rz: 0.5 });                         // thumb
 }
 function legParts(b, st) {
-  b.add(cyl(0.095, 0.075, 0.44, 9), st.pants, { y: -0.22 });
+  b.add(cyl(0.11, 0.08, 0.46, 9), st.pants, { y: -0.21 });
   b.add(cyl(0.075, 0.058, 0.36, 9), st.pants, { y: -0.6 });
   b.add(cap(0.058, 0.16), st.shoes ?? 0x111114, { y: -0.8, z: 0.045, rx: Math.PI / 2, sy: 1, sx: 1.05, sz: 0.75 }); // shoe
   b.add(BOX, 0xe8e8e8, { y: -0.845, z: 0.045, sx: 0.115, sy: 0.02, sz: 0.27 });                     // sole

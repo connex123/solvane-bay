@@ -84,13 +84,15 @@ function map(api) {
   refreshStartMarker(); G.markers.forEach((m) => { m.mesh.visible = false; }); G.wanted.stars = 0; api.showHud(false); rig.mode = 'auto'; api.renderFrame(); api.showScreen('cityMap'); finish(api, 1); }
 function title(api) { // key art: low angle on the coast road at golden hour, Nico beside the VELOCE GT, sun going down over the sea
   clearTraffic(); seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, at: '2026-11-18 17:35' }));
-  G.mode = 'title'; G.clock = 17.1; G.time = 30; G.sunAz = 0.75; const p = G.p, X = lineCoord(9);
-  const car = createCar('veloce', X + 1.5, 216, 0.85, 'parked', 0xd80c2c); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
-  p.x = X - 0.6; p.z = 218.2; p.yaw = -0.5; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  G.mode = 'title'; G.clock = 16.9; G.time = 30; G.sunAz = -1.2; const p = G.p, X = lineCoord(9); // low sun over the camera's right shoulder
+  const car = createCar('veloce', X + 5.2, 211.8, -2.3, 'parked', 0xe0081e); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  p.x = X + 1.25; p.z = 216.4; p.yaw = -0.72; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  p.mesh.userData.armL.rotation.z = 0.12; p.mesh.userData.armR.rotation.set(-0.25, 0, -0.35);
   const tc = (key, z, col, h) => { const c = createCar(key, X + (h ? 3.5 : -3.5), z, h ? 0 : Math.PI, 'parked', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; };
   tc('riviera', 175, 0x8fd3c8, 0); tc('pixie', 140, 0xffe7a3, 1); tc('marlin', 110, 0x2f7fd8, 0);
   [[X - 9, 190], [X - 8.5, 160], [X + 8.5, 196], [X - 9, 132]].forEach(([x, z], i) => { const a = createActor('ped', x, z, randomStyle({ pick: (arr) => arr[(i * 3 + 1) % arr.length] }), { yaw: Math.PI }); animateWalk(a.mesh, i * 1.7, 0.6, false); a.mesh.position.set(x, 0.25, z); });
-  rig.mode = 'auto'; rig.shot = { pos: [X - 3.5, 1.7, 226], look: [X + 20, 3.0, 160], fov: 48, roll: 0 };
+  rig.mode = 'auto'; rig.shot = { pos: [X - 1.4, 1.15, 220.4], look: [X + 4.6, 3.05, 196], fov: 50, roll: 0 };
+  if (G.post) G.post.params.vig.value = 0.12; G.renderer.toneMappingExposure = 1.35;
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
