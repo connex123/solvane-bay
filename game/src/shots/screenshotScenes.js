@@ -62,7 +62,7 @@ function onfoot(api) {
   const tc = (key, x, dir, col) => { const c = placeTraffic('x', 7, x, dir, key, 'traffic', col); c.nav.spd = 6; return c; };
   tc('marlin', -128, 1, 0xf2c230); tc('rumble', -118, -1, 0xff4fd8);
   [[-205, 1, 1], [-198, -1, -1], [-192, 1, 1], [-186, -1, 1], [-181, 1, -1], [-176, -1, 1], [-170, 1, 1], [-164, -1, -1], [-158, 1, 1], [-209, -1, 1], [-178, -1, -1], [-168, 1, -1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 7, x, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  for (const [c, x, z] of [[0xff4fd8, -192, z0 - 9], [0x4fd8ff, -180, z0 + 9], [0xffa030, -168, z0 - 9], [0xff4fd8, -206, z0 + 9]]) { const L = new THREE.PointLight(c, 140, 42, 2); L.position.set(x, 5, z); G.scene.add(L); }
+  for (const [c, x, z] of [[0xff4fd8, -192, z0 - 9], [0x4fd8ff, -180, z0 + 9], [0xffa030, -168, z0 - 9], [0xff4fd8, -206, z0 + 9]]) { const L = new THREE.PointLight(c, c === 0x4fd8ff ? 70 : 140, 42, 2); L.position.set(x, 5, z); G.scene.add(L); }
   setStars(3); G.wanted.heat = 3.2; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0);
   for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); }
   updateSirens(0.1);
@@ -71,6 +71,8 @@ function onfoot(api) {
   tracer(gx, 1.38, gz, -187.9, 1.3, z0 + 2.4); sparks(-187.9, 1.3, z0 + 2.4, 6); tracer(gx, 1.38, gz, -184.9, 1.2, z0 + 5.2); sparks(-184.9, 1.1, z0 + 5.2, 4);
   sparks(-180, 0.9, z0 - 3.5, 10); sparks(-178.6, 0.6, z0 - 5.6, 6); smoke(-178.9, 1.4, z0 - 3.8, 0x555555); smoke(-178.6, 2.4, z0 - 3.6, 0x666666); smoke(-179, 3.4, z0 - 3.9, 0x777777);
   G.shake = 0; G.toasts.push({ text: 'WANTED LEVEL 3', kind: 'wanted', t: 9 });
+  // tame the low sun's bloom down the street so the officers and neon read; flashes and tracers are far brighter and keep theirs
+  G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.42, threshold: 1.15 });
   rig.mode = 'auto'; finish(api);
   floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
 function map(api) {
