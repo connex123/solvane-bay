@@ -28,3 +28,13 @@
 .slot.used { border-style: solid; border-color: rgba(255, 210, 60, 0.55); background: rgba(255, 210, 60, 0.07); line-height: 1.4; }
 .slotbtns { display: flex; gap: 8px; margin-top: 8px; } .slotbtns button { flex: 1; padding: 7px 10px; font-size: 13px; font-weight: 800; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(40, 34, 70, 0.9); color: #fff; cursor: pointer; letter-spacing: 1px; }
 .slotbtns button:hover:not(:disabled) { background: linear-gradient(90deg, #ff9a3c, #ff4fd8); border-color: transparent; } .slotbtns button:disabled { opacity: 0.35; cursor: default; }
+
+/* Title logo: chunky condensed letters, sunset gradient fill, thick ink outline, stacked drop shadows, slight tilt. */
+#title h1.logo { display: flex; flex-direction: column; align-items: flex-start; margin: 6px 0 4px -6px; font: 400 128px/0.86 'Anton', Impact, 'Barlow Condensed', 'Arial Narrow', sans-serif; letter-spacing: 3px; font-style: normal; text-shadow: none; transform: rotate(-6deg) skewX(-8deg); transform-origin: left center; }
+#title h1.logo span { display: block; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 4px #1c0626; paint-order: stroke fill; padding: 0 14px 0 4px; }
+#title h1.logo .l1 { background-image: linear-gradient(180deg, #fff6c8 0%, #ffd23c 38%, #ff8a2a 62%, #ff3a6a 100%); filter: drop-shadow(5px 6px 0 #ff2a8a) drop-shadow(10px 12px 0 #2a0838) drop-shadow(0 0 26px rgba(255, 90, 150, 0.55)); }
+#title h1.logo .l2 { font-size: 168px; margin-left: 120px; background-image: linear-gradient(180deg, #e8ffff 0%, #5ff0ff 40%, #2a9cff 70%, #7a3cff 100%); filter: drop-shadow(5px 6px 0 #ff2a8a) drop-shadow(10px 12px 0 #2a0838) drop-shadow(0 0 30px rgba(80, 200, 255, 0.55)); }
+#title .kicker { font: 700 16px 'Barlow Condensed', 'Arial Narrow', sans-serif; letter-spacing: 6px; } #title .sub { font: 600 21px 'Barlow Condensed', 'Arial Narrow', sans-serif; letter-spacing: 2px; margin: 18px 0 24px; text-shadow: 0 2px 6px #000; }
+#title .menu button { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; border-left: 5px solid #ff4fd8; border-radius: 6px; padding: 9px 18px; }
+#title .menu button:first-child { background: linear-gradient(90deg, #ff9a3c, #ff4fd8); border-color: #ffd23c; }
+#title .kicker { margin-bottom: 34px; text-shadow: 0 2px 6px #000; }
