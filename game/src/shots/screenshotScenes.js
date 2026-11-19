@@ -36,7 +36,8 @@ function typed() { dlg.t = 99; }
 function chase(api) {
   const p = G.p, z0 = lineCoord(3), zc = z0 + 0.5, x0 = -8; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 760; G.radio = 1; api.showHud(true);
   const car = createCar('veloce', x0, zc, Math.PI / 2 - 0.55, 'parked', 0xd01020); enterCar(car); car.vx = 38; car.vz = 1.5; car.speed = 38; car.steerA = 0.5; car.input.throttle = 1;
-  car.hp = car.maxHp * 0.68; car.nitro = 0.62; car.boosting = true; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
+  car.hp = car.maxHp * 0.68; car.nitro = 0.62; car.boosting = true; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24, molotov: 3 };
+  G.completed = ['m1', 'm2', 'm3', 'm4', 'm5']; G.territory = null; G.crew = { cd: { sol: 22 }, swaps: 1 };
   const cop = (x, z, h, v, ai) => { const c = spawnCop(x, z, h, ai); c.vx = Math.sin(h) * v; c.vz = Math.cos(h) * v; c.speed = v; c.ai = ai; c.heading = h; return c; };
   // one cruiser rams the left rear quarter, one closes on the right, a third trails behind
   cop(x0 - 1.4, zc - 2.6, 1.12, 39, 'RAMMING'); cop(x0 + 8, zc + 4.2, Math.PI / 2 + 0.2, 37, 'PURSUIT'); cop(x0 - 18, zc - 3, Math.PI / 2 - 0.12, 36, 'PURSUIT');
@@ -45,8 +46,8 @@ function chase(api) {
   const tc = (key, x, dir, col, spd = 11) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.nav.spd = spd; return c; };
   tc('marlin', x0 + 56, -1, 0x2f7fd8, 14); tc('cadia', 66, -1, 0x2fb89a); tc('rumble', 92, -1, 0x8fd3c8); tc('pico', 120, 1, 0xff8a3d); tc('tupelo', 140, -1, 0xf6c21c); tc('hawke', 112, -1, 0xe9c46a); tc('pico', 80, -1, 0xc3a6e0);
   [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1], [2, 1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1], [48, 1, -1], [34, -1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 3, x, s, d); if (i % 2 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, i % 2 ? 0.6 : 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  G.heli = createHeli(x0 + 30, zc + 1); G.heli.y = 15; G.heli.mesh.position.set(G.heli.x, 15, G.heli.z); G.heli.mesh.rotation.set(0.12, -Math.PI / 2 - 0.6, -0.16); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
-  addMarker({ x: 150, z: zc, kind: 'obj', label: 'Safehouse', color: 0xffd23c, auto: false }); setStars(4); G.wanted.heat = 4.3; fakeMission(5, 3, 'Escape the SBPD, then reach the Alder Hills safehouse', 87);
+  G.heli = createHeli(x0 + 37, zc + 5); G.heli.y = 9.2; G.heli.mesh.position.set(G.heli.x, 9.2, G.heli.z); G.heli.mesh.rotation.set(0.08, 0.35, -0.12); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
+  addMarker({ x: 150, z: zc, kind: 'obj', label: 'Safehouse', color: 0xffd23c, auto: false }); setStars(4); G.wanted.heat = 4.3; fakeMission(5, 2, "Reyne's units are on the pier: lose 4 stars", 0);
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   updateSirens(0.1); updateLineOfSight(1);
   // the drift so far: an arc of twin skid marks behind the rear wheels, and light sunlit tyre smoke rolling off them, kept low and to the side
@@ -57,7 +58,7 @@ function chase(api) {
   // the ram: sparks where the cruiser's push bar meets the rear quarter
   const hx = x0 - 0.3, hz = zc - 1.45; sparks(hx, 0.7, hz, 34); sparks(hx, 0.55, hz, 18); particle({ x: hx, y: 0.75, z: hz, life: 1, size: 2.2, color: 0xffc070, add: true });
   G.money = 48000; api.updateHud(0.016); popup('DRIFT x3', 150, 'drift'); popup('NEAR MISS', 100, 'near');
-  say({ who: 'sol', text: 'Spikes at the bridge! Hit the nitro and thread the gap!' }); typed();
+  say({ who: 'sol', text: 'Dex sold us out! Spikes ahead: hit the nitro and thread the gap!' }); typed();
   G.exposure = 1.12; G.shotCam = { pos: [x0 - 9, 2.0, zc - 0.5], look: [x0 + 40, -0.6, zc - 0.5], fov: 44, roll: 0.03 };
   const rim = new THREE.PointLight(0xffe0c0, 60, 14, 1.6); rim.position.set(car.x - 3.5, 3.2, car.z + 1.5); G.scene.add(rim);
   finish(api); }
@@ -65,7 +66,7 @@ function chase(api) {
 // goes up in a fireball; beachgoers flee across the sand, the sea and the palms on the right.
 function onfoot(api) {
   const p = G.p, X = HALF; clearTraffic(); G.mode = 'play'; G.clock = 16.2; G.magicForce = 0.5; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
-  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16 }; p.hp = 72; p.armor = 45; G.camDistAim = 4.4; p.x = X - 1.2; p.z = 46; p.yaw = Math.PI + 0.12; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI - 0.22; G.cam.pitch = 0.1;
+  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16, molotov: 2 }; G.completed = ['m1', 'm2']; G.territory = null; G.crew = { cd: { wren: 12 } }; p.hp = 72; p.armor = 45; G.camDistAim = 4.4; p.x = X - 1.2; p.z = 46; p.yaw = Math.PI + 0.12; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI - 0.22; G.cam.pitch = 0.1;
   animateWalk(p.mesh, 0.6, 0.0, true); p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg');
   // the SBPD cruiser slewed across the road, officers firing over and beside it
   const cr = spawnCop(X - 2.5, 31, Math.PI / 2 + 0.25, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
