@@ -9,7 +9,7 @@ export function updateNitro(car, dt, want) {
   nitroLevel(car);
   const sn = Math.sin(car.heading), cs = Math.cos(car.heading), fwd = sn * car.vx + cs * car.vz;
   if (want && !car.dead && fwd > 3 && (car.boosting ? car.nitro > 0 : car.nitro > NITRO.minFire)) {
-    car.boosting = true; car.nitro = Math.max(0, car.nitro - NITRO.drain * dt);
+    car.boosting = true; car.nitro = Math.max(0, car.nitro - NITRO.drain * (car.nitroMul || 1) * dt);
     const push = fwd < car.type.max * NITRO.overspeed ? NITRO.thrust * dt : 0;
     car.vx += sn * push; car.vz += cs * push; G.fovKick = Math.min(1, (G.fovKick || 0) + dt * 3);
     if (Math.random() < dt * 30) { const b = car.type.len * 0.55; particle({ x: car.x - sn * b, y: 0.35, z: car.z - cs * b, vx: -car.vx * 0.2, vz: -car.vz * 0.2, vy: 0.4, life: 0.18, size: 0.9, color: 0x6fb8ff, add: true }); }

@@ -16,6 +16,7 @@ import { createPlayer } from './characters/playerController.js';
 import { populateParked, spawnTrafficNear } from './vehicles/trafficSystem.js';
 import { spawnPedsNear } from './characters/pedestrianSystem.js';
 import { initSideActivities } from './missions/sideActivities.js';
+import { initGarage } from './shop/garageShop.js';
 import { updateHud, showHud } from './ui/hud.js';
 import { initMenus, showScreen } from './ui/menus.js';
 import { createPostProcessing } from './render/postProcessing.js';
@@ -43,7 +44,7 @@ async function boot() {
   initInput(canvas);
   buildLayout(rng); const tex = { facade: facadeMaps() };
   G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); initEffects(scene);
-  createPlayer(); populateParked(40); initSideActivities(); initMenus(handlers);
+  createPlayer(); populateParked(40); initSideActivities(); initGarage(); initMenus(handlers);
   for (let k = 0; k < 18; k++) spawnTrafficNear(0, 0, 20, 280); for (let k = 0; k < 22; k++) spawnPedsNear(0, 0, 10, 250);
   const api = { stepGame, renderFrame, startGame, showScreen, showHud, updateHud, handlers };
   if (shotName) { await runShot(shotName, api); return; }

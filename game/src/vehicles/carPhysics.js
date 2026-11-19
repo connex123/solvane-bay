@@ -16,7 +16,7 @@ export function createCar(key, x, z, heading, kind = 'parked', tint) {
 }
 export function removeCar(car) { car.mesh.removeFromParent(); removeSiren(car); const i = G.cars.indexOf(car); if (i >= 0) G.cars.splice(i, 1); }
 export function damageCar(car, amt) {
-  if (car.dead) return; car.hp -= amt; car.hitT = 4;
+  if (car.dead) return; car.hp -= amt * (car.driver === 'player' ? car.armourMul || 1 : 1); car.hitT = 4;
   if (car.hp <= 0) wreck(car);
 }
 export function wreck(car) {
@@ -34,8 +34,8 @@ export function stepCar(car, dt) {
   const i = car.input, t = car.type, sn = Math.sin(car.heading), cs = Math.cos(car.heading);
   let vF = car.vx * sn + car.vz * cs, vL = car.vx * cs - car.vz * sn;
   if (car.dead) { i.throttle = 0; i.brake = 0.6; }
-  const mx = t.max * (car.kind === 'cop' ? 0.97 : 1) * (car.tyresBurst ? 0.55 : 1);
-  if (i.throttle > 0) vF += t.acc * i.throttle * dt * clamp(1 - Math.max(0, vF) / mx, 0.05, 1) * (vF < 0 ? 2 : 1);
+  const mx = t.max * (car.pmax || 1) * (car.kind === 'cop' ? 0.97 : 1) * (car.tyresBurst ? 0.55 : 1);
+  if (i.throttle > 0) vF += t.acc * (car.pacc || 1) * i.throttle * dt * clamp(1 - Math.max(0, vF) / mx, 0.05, 1) * (vF < 0 ? 2 : 1);
   if (i.brake > 0) { if (vF > 0.8) vF -= 32 * i.brake * dt; else vF = Math.max(vF - t.acc * 0.55 * i.brake * dt, -11); }
   if (!i.throttle && !i.brake) vF -= Math.sign(vF) * Math.min(Math.abs(vF), 3.5 * dt);
   vF *= 1 - 0.12 * dt;
