@@ -79,36 +79,41 @@ function chase(api) {
   G.shotCam = { pos: [px, camY, pz], look: [lx, 0.9, lz], fov: 54, roll: 0.025 };
   const rim = new THREE.PointLight(0xffe0c0, 50, 14, 1.6); { const [x, z] = T(-3, -2); rim.position.set(x, 3.2, z); } G.scene.add(rim);
   finish(api); }
-// Daylight firefight on the Palmetto Beach road: Nico fires on SBPD officers behind their cruiser while a car they hit
-// goes up in a fireball; beachgoers flee across the sand, the sea and the palms on the right.
+// Chapter 2, Collection Day: the Crown envelope stop at the Old Town lagoon market goes loud. Nico fires across the
+// turquoise water at SBPD officers on Brandt's payroll on the boardwalk, a car burns at the corner, stallholders run,
+// and Crown Tower's gold crest stands over Old Town behind them.
 function onfoot(api) {
-  const p = G.p, X = HALF; clearTraffic(); G.mode = 'play'; G.clock = 16.2; G.magicForce = 0.5; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
-  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16, molotov: 2 }; G.completed = ['m1', 'm2']; G.territory = null; G.crew = { cd: { wren: 12 } }; p.hp = 72; p.armor = 45; G.camDistAim = 4.4; p.x = X - 1.2; p.z = 46; p.yaw = Math.PI + 0.12; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI - 0.22; G.cam.pitch = 0.1;
+  const p = G.p, LX = -256, LZ = 192; clearTraffic(); G.mode = 'play'; G.clock = 16.3; G.magicForce = 0.55; G.time = 0.1; G.money = 3240; G.xp = 320; G.radio = 2; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
+  p.owned = { 0: 1, 1: 1, 2: 1 }; p.ammo = { pistol: 60, smg: 118 }; G.completed = ['m1']; G.territory = null; G.crew = { cd: {} }; p.hp = 72; p.armor = 45; G.camDistAim = 3.4;
+  const camYaw = Math.PI - 0.7; p.x = LX - 6; p.z = LZ + 27; p.yaw = Math.PI - 0.36; p.aim = true; selectWeapon(2); G.cam.yaw = camYaw; G.cam.pitch = -0.02;
   animateWalk(p.mesh, 0.6, 0.0, true); p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg');
-  // the SBPD cruiser slewed across the road, officers firing over and beside it
-  const cr = spawnCop(X - 2.5, 31, Math.PI / 2 + 0.25, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
-  const cr2 = spawnCop(X + 2.6, 23, Math.PI - 0.5, 'PURSUIT'); cr2.speed = 0; cr2.deployed = true;
-  const cops = [[X - 5.6, 29.0], [X + 0.2, 28.8], [X + 2.6, 26.6]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: 0 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = Math.atan2(p.x - x, p.z - z) + (i - 1) * 0.08; return a; });
-  // the car that caught the stray rounds: a real wreck (burnt shell, fireball, blast) on the kerb behind the line
-  const boom = createCar('rumble', X + 5.6, 35, -0.6, 'parked', 0xff8a3d); boom.mesh.position.set(boom.x, 0, boom.z); boom.mesh.rotation.y = boom.heading;
-  const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; c.nav.spd = 0; return c; };
-  tc('tupelo', -30, 1, 0xf6c21c); tc('pico', -60, -1, 0xff4fd8); tc('marlin', 70, -1, 0x2f7fd8);
-  [[40, 1, 1], [34, 1, 1], [30, -1, 1], [52, 1, 1], [20, 1, -1], [58, -1, 1], [44, -1, 1], [14, -1, -1], [62, 1, 1]].forEach(([z, s, d], i) => { const a = spawnPed('z', N, z, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  for (const [x, z, yw] of [[X + 14, 38, 0.6], [X + 18, 30, -0.4], [X + 22, 44, 0.9], [X + 12, 22, 0.2], [X + 26, 36, -0.8]]) { const a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); a.scared = 6; animateWalk(a.mesh, x * 0.7, 0.95, false); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = yw; }
-  setStars(3); G.wanted.heat = 3.4; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0); G.mission.def = { ...G.mission.def };
+  // a cruiser slewed across the corner road beyond the market, its officers firing from the boardwalk and its door
+  const cr = spawnCop(LX + 30, LZ - 6, Math.PI / 2 + 0.5, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
+  const DECK = 1.8, cops = [[LX + 2, LZ + 15, DECK], [LX + 16, LZ + 9, DECK], [LX + 28, LZ - 1.5, 0]].map(([x, z, y], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: 0 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, y, z); a.y = y; a.mesh.rotation.y = Math.atan2(p.x - x, p.z - z) + (i - 1) * 0.08; return a; });
+  // the car that caught the stray rounds burns at the north-east corner
+  const boom = createCar('rumble', LX + 28.5, LZ + 8, 0.9, 'parked', 0xff8a3d); boom.mesh.position.set(boom.x, 0, boom.z); boom.mesh.rotation.y = boom.heading;
+  const tc = (axis, line, t, dir, key, col) => { const c = placeTraffic(axis, line, t, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; c.nav.spd = 0; return c; };
+  tc('z', 1, LZ + 60, 1, 'tidebus'); tc('x', 7, LX + 70, -1, 'pico', 0xff4fd8); tc('x', 8, LX + 40, 1, 'tupelo', 0xf6c21c);
+  // stallholders and shoppers running off the boardwalks, passers-by fleeing along the sidewalks
+  for (const [x, z, yw, y] of [[LX - 4, LZ - 2.5, -2.4, 1.65], [LX - 12, LZ - 2.2, -1.9, 1.65], [LX + 0.4, LZ - 8, 3.0, 1.65], [LX - 14, LZ + 8.5, -2.8, DECK], [LX - 12, LZ + 4.5, -2.2, DECK], [LX + 12, LZ + 8, 2.6, DECK], [LX - 16, LZ + 27, -1.6, 0], [LX + 6, LZ + 27.5, 1.7, 0], [LX + 10, LZ + 28, 1.5, 0]]) {
+    const a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); a.scared = 6; animateWalk(a.mesh, x * 0.7 + z, 0.95, false); a.mesh.position.set(x, y, z); a.y = y; a.mesh.rotation.y = yw; }
+  [[LZ - 20, 1, 1], [LZ - 6, -1, -1], [LZ + 14, 1, 1], [LZ + 2, 1, -1]].forEach(([z, s, d], i) => { const a = spawnPed('z', 1, z, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  setStars(2); G.wanted.heat = 2.4; fakeMission(1, 0, 'Collect the four Crown envelopes (2/4)', 0); G.mission.collected = 2;
   for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); c.mesh.rotation.y = c.heading; }
-  wreck(boom); layoutFloaters(5); for (let k = 0; k < 6; k++) { fire(boom.x, 1.1, boom.z); fire(boom.x, 1.1, boom.z); updateEffects(0.05); }
-  setStars(3); G.wanted.heat = 3.4; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0); G.toasts.length = 0;
+  // the wreck has been burning a few seconds: the fireball has rolled away, flames and a lit smoke column remain
+  wreck(boom); layoutFloaters(5); for (let k = 0; k < 30; k++) { fire(boom.x, 1.1, boom.z); if (k % 2) fire(boom.x + 0.6, 1.0, boom.z - 0.4); updateEffects(0.05); }
+  setStars(2); G.wanted.heat = 2.4; fakeMission(1, 0, 'Collect the four Crown envelopes (2/4)', 0); G.mission.collected = 2; G.toasts.length = 0;
   for (const a of cops) { a.dead = false; a.hp = Math.max(a.hp || 0, 40); }
   G.cars.forEach((c) => { if (c !== boom) { c.dead = false; c.hp = Math.max(c.hp, 400); } });
   updateSirens(0.1); updateLineOfSight(1);
-  const gx = p.x + Math.sin(p.yaw) * 1.1, gz = p.z + Math.cos(p.yaw) * 1.1; muzzleFlash(gx, 1.38, gz);
-  cops.forEach((c, i) => { const fx = c.x + Math.sin(c.mesh.rotation.y) * 0.7, fz = c.z + Math.cos(c.mesh.rotation.y) * 0.7; muzzleFlash(fx, 1.38, fz); tracer(fx, 1.38, fz, p.x + 0.3 - i * 0.3, 1.2 + i * 0.2, p.z - 0.4); });
-  tracer(gx, 1.38, gz, cops[0].x, 1.3, cops[0].z); sparks(cops[0].x, 1.3, cops[0].z, 6); tracer(gx, 1.38, gz, cops[1].x, 1.2, cops[1].z); sparks(cr.x + 0.5, 0.9, cr.z + 0.9, 10);
-  G.shake = 0;
-  G.exposure = 1.18; if (G.post) Object.assign(G.post.params, { bloom: 0.5, threshold: 1.05 });
+  const gx = p.x + Math.sin(p.yaw) * 1.1, gz = p.z + Math.cos(p.yaw) * 1.1; muzzleFlash(gx, 1.38, gz); thinPalms(p.x - 3.2, p.z + 6.4, 28, 75, 6);
+  cops.forEach((c, i) => { const fx = c.x + Math.sin(c.mesh.rotation.y) * 0.7, fz = c.z + Math.cos(c.mesh.rotation.y) * 0.7, fy = c.y + 1.38; muzzleFlash(fx, fy, fz); });
+  tracer(gx, 1.38, gz, cops[0].x, DECK + 1.3, cops[0].z); sparks(cops[0].x, DECK + 1.3, cops[0].z, 6); tracer(gx, 1.38, gz, cops[1].x, DECK + 1.2, cops[1].z); sparks(cr.x - 0.5, 0.9, cr.z + 0.9, 10);
+  G.shake = 0; G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.35, threshold: 1.2, vignette: 0.35 });
+  // camera low behind Nico's right, Nico full-length on the left third, the market and Crown Tower's crest ahead
+  { const b = Math.PI / 180 * 26.6, f = Math.PI / 180 * 40.6, cx = p.x - Math.sin(b) * 7, cz = p.z + Math.cos(b) * 7; G.shotCam = { pos: [cx, 3.4, cz], look: [cx + Math.sin(f) * 40, 3.4 + 40 * Math.tan(0.052), cz - Math.cos(f) * 40], fov: 60 }; }
   rig.mode = 'auto'; finish(api);
-  floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
+  floatText(cops[0].x, DECK + 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, DECK + 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
 // Crew & Chapters screen opened from a ride on The Strand: six chapters done, Dex has turned, Sol's HOT SWAP cooling down.
 function crewScreen(api) {
   const p = G.p, done = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; clearTraffic(); G.mode = 'pause'; G.clock = 17.1; G.magicForce = 0.6; G.completed = done; G.territory = null; G.xp = 2200; G.money = 21400; G.crew = { cd: { sol: 18 }, swaps: 1 }; G.wanted.stars = 0;

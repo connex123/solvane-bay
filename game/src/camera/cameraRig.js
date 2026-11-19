@@ -26,6 +26,7 @@ export function updateCamera(dt, snap = false) {
     const t = rayBuildings(tx, ty, tz, -fx, -fy, -fz, dist0 + 0.4), dist = Math.max(0.8, Math.min(dist0, t - 0.4));
     pos = new THREE.Vector3(tx - fx * dist, Math.max(0.5, ty - fy * dist), tz - fz * dist); look = new THREE.Vector3(tx + fx * 10, ty + fy * 10, tz + fz * 10);
     rig.yaw = y; fov = aim ? 52 : 60;
+    if (G.shotCam?.pos) { pos.set(...G.shotCam.pos); look.set(...G.shotCam.look); fov = G.shotCam.fov; } // staged on-foot shots frame the scene explicitly
   }
   cam.position.lerp(pos, snap ? 1 : p.car ? 1 - Math.exp(-dt * 14) : k * 1.4 > 1 ? 1 : k * 1.4);
   if (G.shake > 0) cam.position.add(tmp.set((Math.random() - .5) * G.shake * 0.5, (Math.random() - .5) * G.shake * 0.4, (Math.random() - .5) * G.shake * 0.5));
