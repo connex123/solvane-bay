@@ -13,6 +13,7 @@ import { conditionPct, conditionWord } from '../vehicles/vehicleCondition.js';
 import { nitroLevel } from '../vehicles/nitroBoost.js';
 import { driftState } from '../vehicles/driftScoring.js';
 import { updateChapterCard } from './chapterCompleteCard.js';
+import { gunSvg } from './weaponIcons.js';
 import { updateCrewCards } from './crewCardStack.js';
 import { shares } from '../story/territoryControl.js';
 import { galaLabel } from '../story/chapterArc.js';
@@ -28,13 +29,6 @@ function updateWaypoint() {
   set('wpDist', `${Math.round(Math.hypot(t.x - G.p.x, t.z - G.p.z))} m`);
 }
 
-// Weapon silhouettes for the weapon card (drawn as inline SVG, no image files).
-const GUN_SVG = {
-  fists: '<path d="M22 8h22a6 6 0 0 1 6 6v4h4a5 5 0 0 1 0 10h-6l-4 6H24l-6-8V14a6 6 0 0 1 4-6z"/><path d="M24 14h24M24 20h24" stroke="#1a1030" stroke-width="2"/>',
-  pistol: '<path d="M8 9h50l3 2v7H34l-2 3h-6l-3 15H11l4-17-7-2z"/><path d="M27 21h5l-1 6h-5" fill="none" stroke="#fff" stroke-width="2"/>',
-  smg: '<path d="M2 12l12-2h48v4h6v5H46l-2 3H34l-2 14h-8l2-14h-6l-2 6h-6l1-6H2z"/><rect x="38" y="22" width="6" height="14" rx="1"/>',
-  shotgun: '<path d="M0 15l18-3h54v5H40l-2 3H26l-6 9H8l6-9H0z"/><rect x="40" y="18" width="16" height="4" rx="2"/>',
-};
 let lastMoney = null, gain = 0, deltaT = 0;
 const $ = (id) => document.getElementById(id); let lastWho = null, polT = 0, cache = {};
 const set = (id, v) => { if (cache[id] !== v) { cache[id] = v; $(id).textContent = v; } };
@@ -60,9 +54,10 @@ export function updateHud(dt) {
   show('losTag', w.stars > 0); if (w.stars > 0) { set('losTag', w.seen ? 'IN SIGHT' : 'SEARCHING'); $('losTag').className = w.seen ? 'seen' : 'search'; }
   const r = radioInfo(); set('rName', r ? r.name : 'RADIO OFF'); set('rTrack', r ? `${r.track} · ${r.dj}` : 'Press R to tune in');
   $('hpBar').style.width = `${Math.max(0, p.hp)}%`; $('arBar').style.width = `${p.armor}%`; set('hpNum', String(Math.max(0, Math.round(p.hp)))); set('arNum', String(Math.round(p.armor))); set('district', districtAt(p.x, p.z).toUpperCase());
-  const wp = WEAPONS[p.weapon] || WEAPONS[0], wh = WEAPONS.map((q, i) => `<i class="wslot${p.owned[i] ? ' own' : ''}${p.weapon === i ? ' sel' : ''}"></i>`).join('') + wp.id;
-  if (cache.wh !== wh) { cache.wh = wh; $('weapons').innerHTML = wh.slice(0, -wp.id.length); $('wIcon').innerHTML = `<svg viewBox="0 0 74 40">${GUN_SVG[wp.id]}</svg>`; set('wName', wp.name.toUpperCase()); }
-  const am = wp.id === 'fists' ? '∞' : p.ammo[wp.id] ?? 0, mag = wp.mag ? Math.min(wp.mag, am) : 0; const ah = wp.id === 'fists' ? '<small>MELEE</small>' : `${mag}<small> / ${Math.max(0, am - mag)}</small>`; if (cache.ah !== ah) { cache.ah = ah; $('wAmmo').innerHTML = ah; }
+  const wp = WEAPONS[p.weapon] || WEAPONS[0], wh = WEAPONS.map((q, i) => `<div class="wt${p.owned[i] ? ' own' : ''}${p.weapon === i ? ' sel' : ''}"><b>${i + 1}</b>${gunSvg(q.id)}<span>${!p.owned[i] ? '' : q.id === 'fists' ? '∞' : p.ammo[q.id] ?? 0}</span></div>`).join('');
+  if (cache.wh !== wh) { cache.wh = wh; $('wbar').innerHTML = wh; }
+  if (cache.wid !== wp.id) { cache.wid = wp.id; $('wIcon').innerHTML = gunSvg(wp.id); set('wName', wp.name.toUpperCase()); }
+  const am = wp.id === 'fists' ? '∞' : p.ammo[wp.id] ?? 0, mag = wp.mag ? Math.min(wp.mag, am) : 0; const ah = wp.id === 'fists' ? '<small>MELEE</small>' : wp.thrown ? `${am}<small> THROW</small>` : `${mag}<small> / ${Math.max(0, am - mag)}</small>`; if (cache.ah !== ah) { cache.ah = ah; $('wAmmo').innerHTML = ah; }
   show('speedo', !!p.car); if (p.car) { set('speedVal', String(Math.round(Math.abs(p.car.speed) * 3.6))); set('carName', p.car.type.name.toUpperCase()); const cp = conditionPct(p.car); $('carBar').style.width = `${cp}%`; set('condPct', `${cp}% ${conditionWord(cp)}`); $('carBar').parentNode.classList.toggle('low', cp <= 45); const nl = nitroLevel(p.car); $('nitroBar').style.width = `${Math.round(nl * 100)}%`; $('nitroBar').parentNode.classList.toggle('on', !!p.car.boosting); set('nitroKey', p.car.boosting ? 'BOOST!' : `${Math.round(nl * 100)}%`); set('gear', p.car.speed < -0.5 ? 'R' : `D${Math.min(6, 1 + Math.floor(Math.abs(p.car.speed) / 9))}`); }
   show('crosshair', !p.car && p.aim && G.mode === 'play');
   const d = dlg.cur; show('dialog', !!d);

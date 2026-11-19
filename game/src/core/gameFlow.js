@@ -11,6 +11,7 @@ import { RESPAWN } from '../missions/sideActivities.js';
 import { HOME } from '../missions/storyMissions.js';
 import { say, clearDialogue } from '../story/dialogue.js';
 import { galaLabel } from '../story/chapterArc.js';
+import { grantMolotovs } from '../combat/molotov.js';
 import { rig } from '../camera/cameraRig.js';
 import { showHud } from '../ui/hud.js';
 import { showScreen, hideScreens, showDead } from '../ui/menus.js';
@@ -31,10 +32,10 @@ export function respawn() {
   for (const c of G.cars.filter((c) => c.kind === 'cop')) removeCar(c); for (const a of G.actors.filter((a) => a.kind === 'cop')) removeActor(a);
   G.mode = 'play'; hideScreens(); showHud(true); requestLock(); refreshStartMarker();
 }
-G.hooks = { hitActor, crime, hurtPlayer, playerDown, openShop: () => { G.mode = 'pause'; releaseLock(); showScreen('shop'); }, onEnterCar: () => {} };
+G.hooks = { hitActor, crime, hurtPlayer, playerDown, openShop: () => { G.mode = 'pause'; releaseLock(); showScreen('shop'); }, onEnterCar: () => {}, onChapter: (id) => { if (id === 'm3') grantMolotovs(3); } };
 
 function resetWorld() {
-  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; G.territory = null; p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
+  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; G.territory = null; p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0, molotov: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
   setStars(0); G.clock = 17.6; if (p.car) exitCar(true); p.x = HOME.x; p.z = HOME.z; p.yaw = Math.PI / 2; G.cam.yaw = Math.PI / 2; G.cam.pitch = 0.2; p.mesh.visible = true; p.hidden = false; clearDialogue();
 }
 // Swallow the click that pressed a menu button so it never reaches the gun.

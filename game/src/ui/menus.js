@@ -11,7 +11,7 @@ import { drawCityMap } from './cityMap.js';
 import { setQuality } from '../render/qualityGovernor.js';
 
 const $ = (id) => document.getElementById(id); const ALL = ['title', 'pause', 'controls', 'settings', 'shop', 'cityMap', 'dead'];
-const KEYS = [['W A S D', 'Move / drive'], ['Shift', 'Sprint / nitro in a car'], ['Mouse', 'Look and aim'], ['L-Click', 'Shoot / punch'], ['R-Click', 'Aim'], ['1 – 4', 'Fists, pistol, SMG, shotgun'], ['Z / X / C', 'Crew: Hot Swap, Blackout, Patch Up'], ['J', 'Crew & Chapters'], ['F', 'Enter or steal nearest car / exit'], ['E', 'Interact, talk, advance dialogue'], ['Space', 'Handbrake (drift)'], ['H', 'Horn'], ['R', 'Radio station'], ['M', 'City map'], ['Esc', 'Pause'], ['Walk into gold markers', 'Start missions']];
+const KEYS = [['W A S D', 'Move / drive'], ['Shift', 'Sprint / nitro in a car'], ['Mouse', 'Look and aim'], ['L-Click', 'Shoot / punch'], ['R-Click', 'Aim'], ['1 – 5', 'Fists, pistol, SMG, shotgun, molotov'], ['Tab (hold)', 'Weapon wheel'], ['Z / X / C', 'Crew: Hot Swap, Blackout, Patch Up'], ['J', 'Crew & Chapters'], ['F', 'Enter or steal nearest car / exit'], ['E', 'Interact, talk, advance dialogue'], ['Space', 'Handbrake (drift)'], ['H', 'Horn'], ['R', 'Radio station'], ['M', 'City map'], ['Esc', 'Pause'], ['Walk into gold markers', 'Start missions']];
 export function initMenus(handlers) {
   $('keysList').innerHTML = KEYS.map(([k, t]) => `<div><b>${k}</b>${t}</div>`).join('');
   document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => { sfx.click(); handlers[b.dataset.act]?.(); }));

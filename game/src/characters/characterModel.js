@@ -108,4 +108,4 @@ export function animateWalk(ch, phase, amt, aim) {
   const u = ch.userData, s = Math.sin(phase) * amt;
   u.legL.rotation.x = s; u.legR.rotation.x = -s; u.armL.rotation.x = aim ? -1.35 : -s * 0.8; u.armR.rotation.x = aim ? -1.5 : s * 0.8; u.armL.rotation.z = aim ? 0.42 : 0.06; u.armR.rotation.z = aim ? -0.42 : -0.06;
 }
-export function setGun(ch, kind) { const g = ch.userData.gun; g.visible = !!kind; if (kind) g.scale.set(1, 1, kind === 'shotgun' ? 1.5 : kind === 'smg' ? 1.1 : 0.7); }
+export function setGun(ch, kind) { const g = ch.userData.gun; g.visible = !!kind && kind !== 'molotov'; if (kind) g.scale.set(1, 1, kind === 'shotgun' ? 1.5 : kind === 'smg' ? 1.1 : 0.7); }

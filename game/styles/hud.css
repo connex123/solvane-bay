@@ -44,7 +44,6 @@
 #weaponCard { width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 6px 10px; }
 #wIcon { width: 74px; height: 40px; flex: none; } #wIcon svg { width: 100%; height: 100%; fill: #fff; filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.6)); }
 .winfo { flex: 1; line-height: 1; } #wName { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: #ffd23c; } #wAmmo { font: 30px var(--big); color: #fff; letter-spacing: 1px; } #wAmmo small { font-size: 18px; color: #bdb8d4; }
-#weapons { display: flex; flex-direction: column; gap: 2px; } .wslot { width: 10px; height: 7px; border-radius: 1px; background: rgba(255, 255, 255, 0.25); } .wslot.own { background: rgba(255, 255, 255, 0.55); } .wslot.sel { background: #ffd23c; }
 #speedo { display: flex; align-items: center; gap: 12px; padding: 8px 12px 10px 10px; width: 100%; box-sizing: border-box; }
 .sv { line-height: 1; min-width: 104px; } #carName { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: #3fd8ff; } .sv b { display: block; font: italic 58px/1 var(--big); color: #fff; text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55); } .sv small { font-size: 14px; font-weight: 800; letter-spacing: 2px; color: #bdb8d4; }
 .gear { margin-left: 6px; color: #ffb347; } .sinfo { flex: 1; }
@@ -111,3 +110,19 @@
 /* BLACKOUT: the screen stutters like a failing grid. */
 #hud.blackout #vignette { background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 10, 30, 0.75)); animation: bo 0.35s steps(2) infinite; }
 @keyframes bo { 50% { opacity: 0.55; } }
+/* Five-slot weapon bar: key number, drawn icon, ammo; the selected slot is lit yellow. */
+#wbar { display: flex; gap: 4px; width: 100%; }
+.wt { position: relative; flex: 1; height: 46px; border-radius: 5px; background: rgba(16, 10, 34, 0.72); border: 2px solid rgba(255, 255, 255, 0.12); opacity: 0.45; box-sizing: border-box; }
+.wt.own { opacity: 1; } .wt.sel { background: linear-gradient(180deg, #ffd23c, #ff9a1f); border-color: #fff; box-shadow: 0 0 12px rgba(255, 210, 60, 0.7); }
+.wt svg { position: absolute; left: 6px; right: 6px; top: 7px; width: calc(100% - 12px); height: 22px; fill: #fff; filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.7)); } .wt.sel svg { fill: #1a1030; filter: none; }
+.wt b { position: absolute; left: 4px; top: 1px; font: 13px var(--big); color: #ffd23c; } .wt.sel b { color: #1a1030; }
+.wt span { position: absolute; right: 4px; bottom: 1px; font: 14px/1 var(--big); color: #fff; } .wt.sel span { color: #1a1030; }
+/* Weapon wheel (hold Tab). */
+#wheel { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+#wheel::before { content: ''; position: absolute; left: -165px; top: -165px; width: 330px; height: 330px; border-radius: 50%; background: radial-gradient(circle, rgba(16, 10, 34, 0.55) 30%, rgba(16, 10, 34, 0.85) 70%, transparent 72%); }
+.wseg { position: absolute; width: 92px; height: 66px; margin: -33px 0 0 -46px; border-radius: 10px; background: rgba(30, 20, 56, 0.9); border: 2px solid rgba(255, 255, 255, 0.15); opacity: 0.45; text-align: center; }
+.wseg.own { opacity: 1; } .wseg.on { background: linear-gradient(180deg, #ffd23c, #ff9a1f); border-color: #fff; transform: scale(1.12); box-shadow: 0 0 18px rgba(255, 210, 60, 0.8); }
+.wseg svg { width: 64px; height: 34px; margin-top: 8px; fill: #fff; } .wseg.on svg { fill: #1a1030; }
+.wseg b { position: absolute; left: 6px; top: 2px; font: 15px var(--big); color: #ffd23c; } .wseg.on b { color: #1a1030; }
+.wseg span { display: block; font: 15px/1 var(--big); color: #fff; } .wseg.on span { color: #1a1030; }
+.wcenter { position: absolute; left: -60px; top: -22px; width: 120px; text-align: center; } .wcenter b { display: block; font: 24px var(--big); color: #fff; } .wcenter span { font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #ffd9a8; }

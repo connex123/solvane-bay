@@ -12,12 +12,14 @@ import { createActor, scarePeds } from './pedestrianSystem.js';
 import { randomStyle } from './characterModel.js';
 import { WEAPONS } from '../combat/weapons.js';
 import { fire, melee } from '../combat/projectiles.js';
+import { throwMolotov } from '../combat/molotov.js';
+import { updateWeaponWheel } from '../combat/weaponWheel.js';
 import { sfx } from '../audio/soundEngine.js';
 import { releaseTrafficCar } from '../vehicles/trafficSystem.js';
 
 export function createPlayer() {
   const mesh = buildCharacter(STYLES.nico); G.scene.add(mesh);
-  const p = G.p = { x: 0, y: 0, z: 0, yaw: 0, hp: 100, armor: 0, car: null, weapon: 1, owned: { 0: true, 1: true }, ammo: { pistol: 60, smg: 0, shotgun: 0 }, mesh, phase: 0, shootT: 0, aim: false, hidden: false, moving: 0, nearCar: null };
+  const p = G.p = { x: 0, y: 0, z: 0, yaw: 0, hp: 100, armor: 0, car: null, weapon: 1, owned: { 0: true, 1: true }, ammo: { pistol: 60, smg: 0, shotgun: 0, molotov: 0 }, mesh, phase: 0, shootT: 0, aim: false, hidden: false, moving: 0, nearCar: null };
   p.exitCarForced = () => exitCar(true);
   return p;
 }
@@ -43,8 +45,9 @@ export function exitCar(forced) {
 export function selectWeapon(i) { const p = G.p; if (p.owned[i]) { p.weapon = i; setGun(p.mesh, i ? WEAPONS[i].id : null); sfx.click(); } }
 export function updatePlayer(dt) {
   const p = G.p; p.shootT -= dt;
-  for (let i = 0; i < 4; i++) if (pressed(`Digit${i + 1}`)) selectWeapon(i);
-  if (input.wheel && !p.car) { let w = p.weapon; for (let k = 0; k < 4; k++) { w = (w + input.wheel + 4) % 4; if (p.owned[w]) break; } selectWeapon(w); }
+  updateWeaponWheel(); // while Tab is held the wheel takes the mouse
+  for (let i = 0; i < WEAPONS.length; i++) if (pressed(`Digit${i + 1}`)) selectWeapon(i);
+  if (input.wheel && !p.car) { let w = p.weapon; for (let k = 0; k < WEAPONS.length; k++) { w = (w + input.wheel + WEAPONS.length) % WEAPONS.length; if (p.owned[w]) break; } selectWeapon(w); }
   if (pressed('KeyF')) { if (p.car) { if (Math.abs(p.car.speed) < 9) exitCar(); } else { const c = nearestCar(p); if (c) enterCar(c); } }
   p.nearCar = p.car ? null : nearestCar(p);
   if (p.car) drive(dt, p); else foot(dt, p);
@@ -79,6 +82,7 @@ function foot(dt, p) {
   // leftPressed survives until a simulation step reads it, so a quick click between slow frames still fires.
   if ((input.left || input.leftPressed) && p.shootT <= 0 && (w.auto || input.leftPressed || p.weapon === 0) && G.mode === 'play') {
     if (p.weapon === 0) { melee(p); p.shootT = w.rate; }
+    else if (w.thrown) { if (p.ammo[w.id] > 0 && input.leftPressed) { p.ammo[w.id]--; p.shootT = w.rate; throwMolotov(p); } else if (input.leftPressed) notify('OUT OF MOLOTOVS', 'bad'); }
     else if (p.ammo[w.id] > 0) { shoot(p, w); }
     else if (input.leftPressed) { notify('OUT OF AMMO', 'bad'); }
   }
