@@ -55,7 +55,7 @@ export const roadblockStage = {
   },
   tick(M, dt) {
     if (M.car?.dead) return 'the broadcast van was destroyed';
-    tickRoadblock(M.block, dt); const pc = G.p.car;
+    tickRoadblock(M.block, dt); const pc = G.p.car; G.wanted.heat = Math.max(G.wanted.heat, 4.5); if (G.wanted.stars < 4) G.wanted.stars = 4; // Reyne has every unit on the bridge
     M.text = pc !== M.car ? 'Get back in the broadcast van' : M.block.broken ? 'Through! Reach the Gala stage at the far pylon' : 'Break the roadblock: ram the WEAK POINT (Shift nitro, X blackout)';
     return pc === M.car && pc.x > FINISH_X;
   },
