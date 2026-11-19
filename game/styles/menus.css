@@ -87,3 +87,6 @@
 #title h1.logo .l2 { background-image: linear-gradient(180deg, #f0fffa 0%, #7dffe0 40%, #2fd6c4 70%, #138a96 100%); filter: drop-shadow(5px 6px 0 #ff6f59) drop-shadow(10px 12px 0 #032028); }
 #cityMap, #pause, #crew, #garage, #shop, #settings, #controls { z-index: 5; } /* menu screens sit above the HUD */
 .menu button, .panel button { border-left: 2px solid rgba(244, 232, 204, 0.7) !important; box-shadow: inset 6px 0 0 var(--tc-coral); }
+/* Crew & Chapters, legible at thumbnail size: bigger headline, count, names and act titles; a lighter veil so the city shows */
+#crew { background: linear-gradient(180deg, rgba(4, 40, 48, 0.42), rgba(4, 30, 38, 0.12) 40%, rgba(3, 22, 30, 0.55)); }
+.cchead h2 { font-size: 62px; } .ccprog b { font-size: 52px; } .ccard .nm { font-size: 28px; } .ccard kbd { white-space: nowrap; } .act h4 { font-size: 23px; }
