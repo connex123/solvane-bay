@@ -161,7 +161,7 @@ function marketFight(api) {
   { const c = G.cars.find((k) => k.kind === 'cop' && k.ai === 'PURSUIT'); if (c) for (let k = 0; k < 24; k++) for (const sg of [-1, 1]) skidMark(c.x - Math.sin(c.heading) * (1.4 + k * 0.4) + Math.cos(c.heading) * sg * 0.85 + k * k * 0.004, c.z - Math.cos(c.heading) * (1.4 + k * 0.4) - Math.sin(c.heading) * sg * 0.85, c.heading + k * 0.01); }
   setStars(3); G.wanted.heat = 3.3; updateSirens(0.1); updateLineOfSight(1);
   say({ who: 'wren', text: 'Told you they cook on bottled gas. Now SBPD heard it too: drop the last Kings and get out of Old Town!' }); typed();
-  G.shotCam = { pos: S.cam, look: S.look, fov: S.fov, roll: -0.02 }; G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.36, threshold: 1.2, vignette: 0.3 });
+  G.shotCam = { pos: S.cam, look: S.look, fov: S.fov, roll: -0.02 }; G.exposure = 1.22; if (G.post) Object.assign(G.post.params, { bloom: 0.32, threshold: 1.3, vignette: 0.22 });
   { const [x, , z] = S.cam; thinPalms(x, z, 30, 95, 4); }
   // the low sun is behind the towers: a broad warm bounce from the sunlit lagoon and road lifts the facades and stalls out of silhouette
   { const b = new THREE.DirectionalLight(0xffd2a8, 0.85); b.position.set(S.cam[0] - 40, 30, S.cam[2] + 30); b.target.position.set(S.look[0], 0, S.look[2]); G.scene.add(b, b.target); }
