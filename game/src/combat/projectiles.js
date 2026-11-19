@@ -4,6 +4,7 @@ import { rayBuildings } from '../world/collision.js';
 import { tracer, muzzleFlash, sparks } from './effects.js';
 import { damageCar } from '../vehicles/carPhysics.js';
 import { sfx } from '../audio/soundEngine.js';
+import { rayBottles, hitBottle } from './gasBottles.js';
 
 function rayCircle(ox, oy, oz, dx, dy, dz, cx, cy, cz, r, max) {
   const lx = cx - ox, ly = cy - oy, lz = cz - oz, t = lx * dx + ly * dy + lz * dz; if (t < 0 || t > max) return -1;
@@ -19,11 +20,13 @@ export function fire(shooter, w, ox, oy, oz, dx, dy, dz, muzzle) {
     let best = Math.min(w.range, rayBuildings(ox, oy, oz, ex, ey, ez, w.range)), hit = null;
     for (const a of G.actors) { if (a === shooter || a.dead) continue; const t = rayCircle(ox, oy, oz, ex, ey, ez, a.x, a.y + 0.95, a.z, 0.5, best); if (t >= 0 && t < best) { best = t; hit = a; } }
     for (const c of G.cars) { if (c.dead && !own) continue; const t = rayCircle(ox, oy, oz, ex, ey, ez, c.x, 0.9, c.z, c.type.wid * 0.85, best); if (t >= 0 && t < best) { best = t; hit = c; } }
+    { const g = rayBottles(ox, oy, oz, ex, ey, ez, best); if (g.hit) { best = g.t; hit = g.hit; } }
     if (!own) { const p = G.p, t = rayCircle(ox, oy, oz, ex, ey, ez, p.x, p.y + 0.95, p.z, 0.55, best); if (t >= 0 && t < best) { best = t; hit = p; } }
     const hx = ox + ex * best, hy = oy + ey * best, hz = oz + ez * best;
     if (muzzle) tracer(muzzle.x, muzzle.y, muzzle.z, hx, hy, hz); else tracer(ox, oy, oz, hx, hy, hz);
     if (hit === G.p) G.hooks.hurtPlayer(w.dmg * 0.5);
     else if (hit && hit.isActor) G.hooks.hitActor(hit, w.dmg, own);
+    else if (hit && hit.isBottle) { hitBottle(hit, w.dmg); sparks(hx, hy, hz, 4); }
     else if (hit) { damageCar(hit, w.dmg * 1.5); sparks(hx, hy, hz, 3); if (own && hit.driver === 'ai') G.hooks.crime('shootcar'); }
     else sparks(hx, hy, hz, 2);
   }

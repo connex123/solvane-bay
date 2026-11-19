@@ -28,6 +28,10 @@ import { createBoat, enterBoat, updateBoats, sinkBoat } from '../vehicles/boats.
 import { boatShot } from '../combat/boatGunfight.js';
 import { mooredSpeedboat } from '../missions/ledgerHeist.js';
 import { DROP, MARINA_GATE, YACHT } from '../world/marina.js';
+import { fire as shootRay } from '../combat/projectiles.js';
+import { WEAPONS } from '../combat/weapons.js';
+import { BOTTLES, detonate, updateGasBottles } from '../combat/gasBottles.js';
+import { MARKET_ROAD, KINGS_SPOTS } from '../missions/storyMissions.js';
 
 function clearTraffic() { for (const c of G.cars.slice()) if (c.kind === 'traffic' || c.kind === 'parked') removeCar(c); for (const a of G.actors.slice()) removeActor(a); }
 function fakeMission(idx, stageIdx, text, timer) {
@@ -120,6 +124,40 @@ function boatRun(api) {
   { const [fx, fz, rx, rz] = fwd(); G.shotCam = { pos: [b.x + fx * c.f + rx * c.r, c.h, b.z + fz * c.f + rz * c.r], look: [b.x + (YACHT.x - b.x) * c.k + rx * c.lr, c.ly, b.z + (YACHT.z - b.z) * c.k + rz * c.lr], fov: c.fov, roll: c.roll }; }
   updateLineOfSight(1); G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.34, threshold: 1.2, vignette: 0.3 });
   finish(api); }
+// Chapter 3, Coral Kings Don't Share: the gunfight on the road along the Old Town lagoon market. Nico fires the SMG from
+// behind the car he skidded in sideways; his rounds just touched off the gas cage at the market's south landing, and the
+// fireball is rolling up over the Coral Kings bunched by the stalls while the others shoot back. Crown Tower stands over
+// the stilt market and the lagoon in the low sun. Camera low behind Nico's right shoulder looking east-north-east.
+const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.5, 211.5], fov: 54, nico: [-263.4, 223.6], cover: [-260.2, 222.4, Math.PI / 2 + 0.55], ride: [-246.5, 228.6, Math.PI / 2 - 0.3] };
+function marketFight(api) {
+  const p = G.p, S = SHOT3; clearTraffic(); G.mode = 'play'; G.clock = S.clock; G.magicForce = 1; G.time = 40; G.money = 6420; G.xp = 380; G.radio = 1; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
+  G.completed = ['m1', 'm2']; G.territory = null; G.crew = { cd: { wren: 0 }, swaps: 0 };
+  p.hp = 64; p.armor = 25; p.owned = { 0: 1, 1: 1, 2: 1 }; p.ammo = { pistol: 46, smg: 142 }; selectWeapon(2);
+  const park = (key, [x, z, h], col) => { const c = createCar(key, x, z, h, 'parked', col); c.mesh.position.set(x, 0, z); c.mesh.rotation.y = h; return c; };
+  park('pico', S.cover, 0x2fb89a); park('rumble', S.ride, 0xe0409a); // Nico's cover, and the Kings' pink ride
+  // the chapter's real kill stage with its four Coral Kings at their spots on the market road
+  const M = MISSIONS[2]; fakeMission(2, 1, '', 0); G.mission.enemies = KINGS_SPOTS.map(({ x, z }) => { const a = createActor('gang', x, z, STYLES.coral, {}); a.hp = 70; a.aggro = true; return a; });
+  const kings = G.mission.enemies, cage = BOTTLES.reduce((b, o) => (Math.hypot(o.x - MARKET_ROAD.x, o.z - MARKET_ROAD.z) < Math.hypot(b.x - MARKET_ROAD.x, b.z - MARKET_ROAD.z) ? o : b));
+  kings.forEach((a, i) => { a.yaw = Math.atan2(S.nico[0] - a.x, S.nico[1] - a.z) + (i - 1.5) * 0.08; a.mesh.position.set(a.x, 0, a.z); a.mesh.rotation.y = a.yaw; setGun(a.mesh, 'pistol'); animateWalk(a.mesh, i, 0, true); });
+  // Nico leaning out past the tail of his car, SMG up at the gas cage
+  [p.x, p.z] = S.nico; p.y = 0; p.yaw = Math.atan2(cage.x - p.x, cage.z - p.z); p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, true);
+  const muzzle = () => ({ x: p.x + Math.sin(p.yaw) * 0.9 + Math.cos(p.yaw) * 0.2, y: 1.35, z: p.z + Math.cos(p.yaw) * 0.9 - Math.sin(p.yaw) * 0.2 });
+  const burst = (tx, ty, tz) => { const m = muzzle(), dx = tx - m.x, dy = ty - m.y, dz = tz - m.z, l = Math.hypot(dx, dy, dz); shootRay('player', { ...WEAPONS[2], spread: 0.004 }, m.x, m.y, m.z, dx / l, dy / l, dz / l, m); };
+  const step = (n, each) => { for (let i = 0; i < n; i++) { G.time += 1 / 60; updateEffects(1 / 60); updateGasBottles(1 / 60); each?.(i); } };
+  // the burst that holes the cage, the cage going up (combat/gasBottles.js: real blast damage), the fireball rolling up
+  for (let k = 0; k < 3; k++) { burst(cage.x, cage.y, cage.z); step(4); } if (cage.live) detonate(cage);
+  step(14, (i) => { if (i % 5 === 0) burst(kings[2].x, 1.2, kings[2].z); });
+  // the Kings still standing fire back: muzzle flashes and tracers, rounds sparking off Nico's car
+  kings.filter((a) => !a.dead).forEach((a) => { const ox = a.x + Math.sin(a.yaw) * 0.6, oz = a.z + Math.cos(a.yaw) * 0.6, dx = p.x - a.x, dz = p.z - a.z, l = Math.hypot(dx, dz);
+    shootRay(a, { id: 'pistol', dmg: 0, range: 60, pellets: 1, spread: 0.02 }, ox, 1.4, oz, dx / l, -0.012, dz / l, { x: ox, y: 1.3, z: oz }); });
+  step(2); burst(kings[1].x, 1.3, kings[1].z);
+  G.mission.text = `${M.stages[1].text} (${kings.filter((a) => !a.dead).length} left)`; setStars(2); G.wanted.heat = 2.2; updateLineOfSight(1);
+  say({ who: 'wren', text: 'Told you they cook on bottled gas. Finish it before Reyne remembers where Old Town is.' }); typed();
+  G.shotCam = { pos: S.cam, look: S.look, fov: S.fov, roll: -0.02 }; G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.36, threshold: 1.2, vignette: 0.3 });
+  { const [x, , z] = S.cam; thinPalms(x, z, 30, 95, 4); }
+  // warm low sun bounce off the road onto Nico's back and the tail of his car, so he reads as a figure, not a cut-out
+  { const fill = new THREE.PointLight(0xffb27a, 140, 11, 1.3); fill.position.set(p.x - 2.4, 2.8, p.z + 3.4); G.scene.add(fill); }
+  finish(api); }
 // staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
 const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4], [398, -246, 0.55]],
   lead: [12, 7], blast: [12, -6.5], settle: 30, cam: { f: 6.7, r: 3.1, h: 2.6, k: 0.1, lr: 4.2,  ly: 2.0, fov: 54, roll: -0.02 } };
@@ -157,7 +195,7 @@ function title(api) {
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
-  G.shot = name; ({ '1-chase': chase, '2-boat': boatRun, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
+  G.shot = name; ({ '1-chase': chase, '2-boat': boatRun, '3-market': marketFight, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
   {
     const c = G.renderer.domElement, img = new Image(); img.id = 'shotImg'; img.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0';
     img.src = c.toDataURL('image/jpeg', 0.93); await img.decode(); c.style.display = 'none'; document.body.insertBefore(img, document.getElementById('hud'));

@@ -7,6 +7,8 @@ import { roadblockStage, RAMP_FOOT } from './causewayRoadblock.js';
 const P = (i, j, dx = 0, dz = 0) => ({ x: lineCoord(i) + dx, z: lineCoord(j) + dz });
 export const corner = (i, j, sx = 1, sz = 1) => P(i, j, sx * 9, sz * 9);
 export const HOME = corner(2, 6, 1, 1);
+// Chapter 3's fight: the road along the south side of the Old Town lagoon market, and where the Coral Kings stand on it
+export const MARKET_ROAD = P(0, 8, 32, 0), KINGS_SPOTS = [P(0, 8, 36, -5), P(0, 8, 39.5, -2.2), P(0, 8, 42, -4.4), P(0, 8, 38, -0.5)];
 const WREN = P(2, 3), MARINA = P(7, 1, 32, 32), TOWER = P(4, 4, 32, 32);
 export const MISSIONS = [
   { id: 'm1', chapter: 1, title: 'FRESH OFF THE FERRY', giver: 'dex', start: corner(2, 6, 1, -1), reward: { money: 800, xp: 150 },
@@ -18,8 +20,8 @@ export const MISSIONS = [
     stages: [{ type: 'collect', pts: [corner(3, 6, 1, 1), corner(4, 8, -1, -1), corner(1, 7, 1, -1), corner(3, 3, 1, 1)], text: 'Collect the four Crown envelopes' }, { type: 'goto', at: corner(2, 6, 1, -1), r: 6, time: 120, text: 'Bring them to Dex at Club Velvet' }],
     outro: [{ who: 'dex', text: 'Four shops, four friends. The Crown will notice. Good. Let them sweat.' }, { who: 'brandt', text: 'Varela. Your mother signed. Go back to the ferry while it still runs.' }] },
   { id: 'm3', chapter: 3, title: "CORAL KINGS DON'T SHARE", giver: 'wren', start: corner(2, 3, 1, 1), reward: { money: 1800, xp: 300 },
-    intro: [{ who: 'wren', text: 'The Coral Kings burned the Low Tide sign last night. They do Brandt\'s dirty work out of Port Calder.' }, { who: 'nico', text: 'How many?' }, { who: 'wren', text: 'Four in the container yard. Loud gets the SBPD. Reyne\'s boys never hurry for us.' }],
-    stages: [{ type: 'goto', at: P(2, 0, 32, 32), r: 40, text: 'Go to the Port Calder container yard' }, { type: 'kill', at: P(2, 0, 32, 32), count: 4, gang: 'coral', text: 'Take out the Coral Kings' }],
+    intro: [{ who: 'wren', text: 'The Coral Kings burned the Low Tide sign last night. Today they are squeezing the Old Town lagoon market for Brandt.' }, { who: 'nico', text: 'How many?' }, { who: 'wren', text: 'Four on the market road. Every stall cooks on bottled gas, so mind where you aim. Or do not.' }],
+    stages: [{ type: 'goto', at: MARKET_ROAD, r: 34, text: 'Go to the Old Town lagoon market' }, { type: 'kill', at: MARKET_ROAD, spots: KINGS_SPOTS, count: 4, gang: 'coral', text: 'Run the Coral Kings out of the lagoon market' }],
     outro: [{ who: 'wren', text: 'Petrol and bottles in that stash. I wrapped a few. Throw them, don\'t drop them.' }, { who: 'wren', text: 'One more thing. Sol Ortega is back on The Strand, and Brandt\'s people are hunting her.' }] },
   { id: 'm4', chapter: 4, title: 'RUN, SOL, RUN', giver: 'sol', start: corner(5, 5, 1, 1), reward: { money: 2400, xp: 380 },
     intro: [{ who: 'sol', text: 'Five years, no postcard, and you show up mid car chase. Classic Nico.' }, { who: 'nico', text: 'Missed you too. Who is on you?' }, { who: 'sol', text: "Brandt's enforcer in a black Hawke. I drive, I don't shoot. Put him in the sea and I'm yours till the Gala." }],
