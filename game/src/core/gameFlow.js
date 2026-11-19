@@ -24,7 +24,7 @@ import { renderFrame } from '../render/frameRenderer.js';
 import { showHud, updateHud } from '../ui/hud.js';
 
 const hidden = (id) => document.getElementById(id).classList.contains('hidden');
-function hurtPlayer(d) { const p = G.p; if (p.car) { damageCar(p.car, d * 3); return; } const a = Math.min(p.armor, d * 0.7); p.armor -= a; p.hp -= d - a; G.shake = Math.max(G.shake, 0.25); }
+function hurtPlayer(d) { const p = G.p; if (G.resumeGrace > 0) return; if (p.car) { damageCar(p.car, d * 3); return; } const a = Math.min(p.armor, d * 0.7); p.armor -= a; p.hp -= d - a; G.shake = Math.max(G.shake, 0.25); }
 function playerDown(kind) {
   if (G.mode !== 'play') return; G.mode = 'dead'; G.deadT = 0; G.deadKind = kind; failMission(kind.toLowerCase()); clearDialogue();
   const fee = Math.min(Math.floor(G.money), Math.max(100, Math.round(G.money * 0.05))); G.fee = fee; releaseLock();
@@ -57,11 +57,14 @@ export function startGame(load) {
     : [{ who: 'nico', text: 'Five years away and the night ferry still smells like diesel and fried fish. Home.' }, { who: 'brandt', text: 'Welcome back, Mr Varela. Your mother\'s diner belongs to the Crown now. Enjoy the Causeway Gala in seven days.' }, { who: 'dex', text: 'Nico! Gold marker outside Club Velvet. We talk before Brandt\'s people find you.' }]);
 }
 export function toTitle() { G.mode = 'title'; rig.mode = 'aerial'; showHud(false); showScreen('title'); releaseLock(); G.mission = null; clearDialogue(); }
-export function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; hideScreens(); swallowClick(); requestLock(); } }
+// Coming back from the map, pause menu or a shop, the player gets a moment to take the controls back before an arrest
+// can complete or a hit lands: the world froze mid-fight, so nothing may finish the player in the first frames back.
+const RESUME_GRACE = 1.5;
+export function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; G.resumeGrace = RESUME_GRACE; hideScreens(); swallowClick(); requestLock(); } }
 export const handlers = {
   new: () => startGame(false), continue: () => startGame(true), controls: () => { G.prevScreen = G.mode; showScreen('controls'); }, settings: () => showScreen('settings'),
   back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), crew: () => showScreen('crew'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
-  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; G.garageCam = null; hideScreens(); swallowClick(); requestLock(); },
+  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; G.resumeGrace = RESUME_GRACE; G.garageCam = null; hideScreens(); swallowClick(); requestLock(); },
 };
 window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
 input.onUnlock = () => { if (G.mode === 'play') { pause(true); G.unlockPauseAt = performance.now(); } };

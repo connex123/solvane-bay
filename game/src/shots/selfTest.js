@@ -18,6 +18,16 @@ import { wheel } from '../combat/weaponWheel.js';
 import { buyUpgrade, garageLevel } from '../shop/garageShop.js';
 import { saveGame, readSave, applySave } from '../save/saveGame.js';
 import { setPieceChecks } from './setPieceTest.js';
+import { BOTTLES, updateGasBottles } from '../combat/gasBottles.js';
+import { fire as shootRay } from '../combat/projectiles.js';
+import { WEAPONS } from '../combat/weapons.js';
+import { WREN_GARAGE } from '../shop/garageShop.js';
+import { BAY } from '../world/wrenGarage.js';
+import { blockedAt } from '../world/collision.js';
+import { createCar } from '../vehicles/carPhysics.js';
+import { enterCar } from '../characters/playerController.js';
+import { createActor } from '../characters/pedestrianSystem.js';
+import { STYLES } from '../characters/characterModel.js';
 
 // Chapters, territory, crew abilities, molotov, weapon wheel, garage and save/load, driven through the real systems.
 async function storyDepthChecks(api) {
@@ -73,6 +83,23 @@ export async function runSelfTest(api) {
     G.p.weapon = 1; input.left = true; for (let i = 0; i < 120; i++) { input.leftPressed = i % 10 === 0; api.stepGame(0.016); } input.left = false;
     crime('killcop'); crime('killcop'); crime('killcop'); crime('explosion'); crime('explosion'); for (let i = 0; i < 400; i++) api.stepGame(0.016);
     api.showScreen('cityMap'); api.showScreen('shop'); api.showScreen('pause'); api.handlers.resume(); G.hooks.playerDown('FLATLINED'); for (let i = 0; i < 260; i++) api.stepGame(0.016);
-    if (G.mode !== 'play') throw new Error('did not respawn: ' + G.mode); document.title = 'SELFTEST PASS';
+    if (G.mode !== 'play') throw new Error('did not respawn: ' + G.mode);
+    await worldPassChecks(api);
+    document.title = 'SELFTEST PASS';
   } catch (e) { console.error('CONSOLE_ERROR selftest ' + (e.stack || e)); document.title = 'SELFTEST FAIL ' + e.message; }
+}
+
+// Chapter 3's market fight, the gas bottles, Wren's garage view and the grace after leaving a menu.
+async function worldPassChecks(api) {
+  const m3 = MISSIONS[2].stages[1]; if (!m3.spots || m3.spots.some((q) => blockedAt(q.x, q.z))) throw new Error('Coral Kings spots blocked');
+  const b = BOTTLES.find((o) => o.y < 1.5); if (!b || BOTTLES.length < 7) throw new Error('gas bottles missing');
+  const king = createActor('gang', b.x + 1.5, b.z + 2.5, STYLES.coral, {}); king.hp = 70; const ox = b.x - 8, oz = b.z + 6;
+  for (let k = 0; k < 6 && b.live; k++) { const dx = b.x - ox, dy = b.y - 1.4, dz = b.z - oz, l = Math.hypot(dx, dy, dz); shootRay('player', { ...WEAPONS[2], spread: 0 }, ox, 1.4, oz, dx / l, dy / l, dz / l, null); }
+  if (b.live || !(king.hp < 70)) throw new Error('gas bottles did not blow: live ' + b.live + ' king ' + king.hp);
+  updateGasBottles(121); if (!b.live) throw new Error('gas bottles did not restock');
+  const car = createCar('veloce', WREN_GARAGE.x, WREN_GARAGE.z + 1, Math.PI, 'parked'); enterCar(car); G.hooks.openGarage();
+  if (G.mode !== 'pause' || !G.garageCam || Math.hypot(car.x - BAY.x, car.z - BAY.z) > 0.01 || document.querySelectorAll('#garageStats .gstat').length !== 4) throw new Error('garage view');
+  api.handlers.closeShop(); if (G.mode !== 'play' || G.garageCam || !(G.resumeGrace > 0)) throw new Error('garage close');
+  const hp = G.p.car.hp; G.hooks.hurtPlayer(40); if (G.p.car.hp !== hp) throw new Error('hit landed inside the resume grace');
+  for (let i = 0; i < 100; i++) api.stepGame(0.016); if (G.resumeGrace > 0) throw new Error('resume grace did not run out');
 }

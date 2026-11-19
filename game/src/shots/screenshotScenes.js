@@ -30,7 +30,7 @@ import { mooredSpeedboat } from '../missions/ledgerHeist.js';
 import { DROP, MARINA_GATE, YACHT } from '../world/marina.js';
 import { fire as shootRay } from '../combat/projectiles.js';
 import { WEAPONS } from '../combat/weapons.js';
-import { BOTTLES, detonate, updateGasBottles } from '../combat/gasBottles.js';
+import { BOTTLES, updateGasBottles } from '../combat/gasBottles.js';
 import { MARKET_ROAD, KINGS_SPOTS } from '../missions/storyMissions.js';
 import { WORKSHOP } from '../world/wrenGarage.js';
 import { WREN_GARAGE } from '../shop/garageShop.js';
@@ -147,7 +147,7 @@ function marketFight(api) {
   const burst = (tx, ty, tz) => { const m = muzzle(), dx = tx - m.x, dy = ty - m.y, dz = tz - m.z, l = Math.hypot(dx, dy, dz); shootRay('player', { ...WEAPONS[2], spread: 0.004 }, m.x, m.y, m.z, dx / l, dy / l, dz / l, m); };
   const step = (n, each) => { for (let i = 0; i < n; i++) { G.time += 1 / 60; updateEffects(1 / 60); updateGasBottles(1 / 60); each?.(i); } };
   // the burst that holes the cage, the cage going up (combat/gasBottles.js: real blast damage), the fireball rolling up
-  for (let k = 0; k < 3; k++) { burst(cage.x, cage.y, cage.z); step(4); } if (cage.live) detonate(cage);
+  for (let k = 0; k < 8 && cage.live; k++) { burst(cage.x, cage.y, cage.z); step(4); }
   step(14, (i) => { if (i % 5 === 0) burst(kings[2].x, 1.2, kings[2].z); });
   // the Kings still standing fire back: muzzle flashes and tracers, rounds sparking off Nico's car
   kings.filter((a) => !a.dead).forEach((a) => { const ox = a.x + Math.sin(a.yaw) * 0.6, oz = a.z + Math.cos(a.yaw) * 0.6, dx = p.x - a.x, dz = p.z - a.z, l = Math.hypot(dx, dz);

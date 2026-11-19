@@ -18,7 +18,7 @@ export function createCar(key, x, z, heading, kind = 'parked', tint) {
 }
 export function removeCar(car) { car.mesh.removeFromParent(); removeSiren(car); const i = G.cars.indexOf(car); if (i >= 0) G.cars.splice(i, 1); }
 export function damageCar(car, amt) {
-  if (car.dead) return; car.hp -= amt * (car.driver === 'player' ? car.armourMul || 1 : 1); car.hitT = 4;
+  if (car.dead || car.driver === 'player' && G.resumeGrace > 0) return; car.hp -= amt * (car.driver === 'player' ? car.armourMul || 1 : 1); car.hitT = 4;
   if (car.hp <= 0) wreck(car);
 }
 export function wreck(car) {

@@ -124,8 +124,8 @@ function lagoonMarket(scene, B, rng) {
     for (let k = 0; k < 3; k++) pushBox(B, cx - 2 + k * 2, 2.8, cz - 2.2, 0.9, 0.5, 0.9, [0xff8a3d, 0x7ed68a, 0xffd23c][(i + k) % 3]); // produce crates
   });
   // a cluster of cooking-gas bottles on each stall deck, at the corner nearest the street (combat/gasBottles.js)
-  // and a gas cage on the rim at each landing of the long boardwalk
-  buildGasBottles(scene, [...stalls.map(([dx, dz]) => [x + dx + 3.0, 1.8, z + dz + (dz < 0 ? -2.7 : 2.7)]), [x + 3.5, 0.7, z + 24.5], [x - 3.5, 0.7, z - 24.5]]);
+  // and a gas cage on the kerb outside each landing of the long boardwalk
+  buildGasBottles(scene, [...stalls.map(([dx, dz]) => [x + dx + 3.0, 1.8, z + dz + (dz < 0 ? -2.7 : 2.7)]), [x + 3.5, 0.1, z + 25.7], [x - 3.5, 0.1, z - 25.7]]);
   // boardwalks from the street into the market, and a rowboat or two
   pushBox(B, x, 1.4, z - 2.5, 3, 0.25, 50, 0xb08a5a); pushBox(B, x, 1.4, z - 2.5, 38, 0.25, 3, 0xb08a5a);
   for (let k = 0; k < 2; k++) { const bx = x - 8 + k * 17, bz = z + 18 - k * 2; pushBox(B, bx, 0.1, bz, 4.4, 0.7, 1.7, k ? 0xe8604c : 0x2fb8a8); pushBox(B, bx, 0.5, bz, 3.6, 0.3, 1.2, 0xf6ead2); }
