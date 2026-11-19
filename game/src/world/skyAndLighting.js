@@ -13,13 +13,17 @@ function ramp(e, idx, out) {
   return out.copy(a[idx]).lerp(b[idx], t);
 }
 export function createSky(scene) {
-  const u = { top: { value: new THREE.Color() }, hor: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(1, 0.1, 0) }, sunCol: { value: new THREE.Color() } };
+  const u = { magic: { value: 0 }, top: { value: new THREE.Color() }, hor: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(1, 0.1, 0) }, sunCol: { value: new THREE.Color() } };
   const mat = new THREE.ShaderMaterial({ uniforms: u, side: THREE.BackSide, depthWrite: false, fog: false,
     vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
-    fragmentShader: `uniform vec3 top; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vD;
+    fragmentShader: `uniform float magic; uniform vec3 top; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vD;
       void main(){ vec3 d = normalize(vD); float h = d.y; float s = max(dot(d, normalize(sunDir)), 0.0);
         vec3 mid = mix(top, vec3(0.62, 0.78, 1.0), 0.55);
         vec3 c = mix(hor, mid, smoothstep(0.0, 0.22, h)); c = mix(c, top, smoothstep(0.12, 0.75, h));
+        // magic hour: molten orange at the horizon, hot magenta band, deep violet overhead, hotter toward the sun
+        vec3 mh = mix(vec3(1.0, 0.42, 0.16), vec3(1.0, 0.24, 0.52), smoothstep(0.02, 0.2, h)); mh = mix(mh, vec3(0.42, 0.2, 0.7), smoothstep(0.16, 0.6, h)); mh = mix(mh, vec3(0.16, 0.1, 0.42), smoothstep(0.55, 1.0, h));
+        mh = mix(mh, vec3(1.0, 0.6, 0.22), pow(s, 4.0) * (1.0 - smoothstep(0.0, 0.45, h)) * 0.8);
+        c = mix(c, mh, magic);
         c = mix(c, sunCol * 1.05, pow(s, 3.0) * (1.0 - smoothstep(0.0, 0.5, h)) * 0.6);
         c = mix(c, hor * 0.75, clamp(-h * 3.0, 0.0, 1.0));
         c += vec3(1.0, 0.92, 0.75) * smoothstep(0.99935, 0.99955, s) * 5.0 + sunCol * (pow(s, 300.0) * 0.8 + pow(s, 30.0) * 0.35 + pow(s, 5.0) * 0.1);
@@ -37,13 +41,15 @@ export function createSky(scene) {
       dir.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.7 + 0.32, 0.12).normalize();
       if (e < 0.02) dir.set(-Math.cos(ang) * 0.5, 0.6, -0.3).normalize();
       ramp(e, 1, u.top.value); ramp(e, 2, u.hor.value); ramp(e, 3, u.sunCol.value);
+      // magic hour peaks while the sun sits low (about 16:45-18:30); shot scenes may force it with G.magicForce
+      const mg = G.magicForce ?? Math.max(0, Math.min(1, (e + 0.06) / 0.1, (0.36 - e) / 0.14)); G.magic = mg; u.magic.value = mg;
       u.sunDir.value.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.62 - (e < 0 ? 0.3 : 0), -0.03).normalize();
-      scene.fog.color.copy(u.hor.value).lerp(tmpA.set('#ffe2c4'), e > 0 ? 0.35 : 0); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
+      scene.fog.color.copy(u.hor.value).lerp(tmpA.set('#ffe2c4'), e > 0 ? 0.35 : 0).lerp(tmpA.set('#e8709a'), mg * 0.55); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
       if (G.mode === 'title') { scene.fog.near = 300; scene.fog.far = 1500; } else { scene.fog.near = 180; scene.fog.far = 950; }
       for (const hm of G.hillMats || []) hm.color.setScalar((G.mode === 'title' ? 1 : 0.78) * Math.max(0.35, Math.min(1, 0.45 + (e + 0.1) * 1.4)));
       const day = Math.max(0.28, Math.min(1, (e + 0.08) * 5));
-      sun.color.copy(u.sunCol.value); sun.intensity = e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1);
-      hemi.color.copy(u.top.value).lerp(tmpA.set('#d8e8ff'), 0.55); hemi.intensity = 0.4 + day * 1.0;
+      sun.color.copy(u.sunCol.value).lerp(tmpA.set('#ff8a40'), mg * 0.5); sun.intensity = e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1);
+      hemi.color.copy(u.top.value).lerp(tmpA.set('#d8e8ff'), 0.55); hemi.intensity = 0.4 + day * 1.0; hemi.color.lerp(tmpA.set('#9a86ff'), mg * 0.6); hemi.groundColor.set(0xc89878).lerp(tmpA.set('#a05aa0'), mg * 0.6);
       sun.position.set(focus.x + dir.x * 160, dir.y * 160, focus.z + dir.z * 160); sun.target.position.set(focus.x, 0, focus.z);
       dome.position.copy(camera.position);
       sunV.copy(u.sunDir.value).multiplyScalar(600).add(camera.position).project(camera); camera.getWorldDirection(fwd); const fa = fwd.dot(u.sunDir.value);

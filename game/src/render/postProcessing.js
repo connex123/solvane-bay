@@ -20,7 +20,7 @@ void main(){ vec3 c = texture2D(tSrc, vUv).rgb * 0.2270270270;
 
 const COPY = 'uniform sampler2D tSrc; varying vec2 vUv; void main(){ gl_FragColor = vec4(texture2D(tSrc, vUv).rgb, 1.0); }';
 
-const COMPOSITE = `uniform sampler2D tScene, tB1, tB2, tB3; uniform float uBloom, uExposure, uFringe, uVignette, uTime, uWarm;
+const COMPOSITE = `uniform sampler2D tScene, tB1, tB2, tB3; uniform float uBloom, uExposure, uFringe, uVignette, uTime, uWarm, uMagic;
 varying vec2 vUv;
 vec3 aces(vec3 x){ // Narkowicz fit of the ACES filmic curve, with the RRT/ODT input/output matrices
   const mat3 I = mat3(0.59719, 0.07600, 0.02840, 0.35458, 0.90834, 0.13383, 0.04823, 0.01566, 0.83777);
@@ -41,6 +41,12 @@ void main(){
   float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col = mix(vec3(l), col, 1.12);
   col *= mix(vec3(0.97, 0.99, 1.04), vec3(1.05, 1.0, 0.92), smoothstep(0.05, 0.8, l) * uWarm + (1.0 - uWarm) * 0.5);
+  // magic-hour grade: richer saturation, purple-blue shadows, hot coral highlights and a gentle S-curve
+  if (uMagic > 0.001) { float m = uMagic, lm = dot(clamp(col, 0.0, 1.0), vec3(0.2126, 0.7152, 0.0722));
+    col = mix(vec3(lm), col, 1.0 + 0.32 * m);
+    vec3 tone = mix(vec3(0.84, 0.76, 1.12), vec3(1.08, 0.97, 0.88), smoothstep(0.08, 0.7, lm));
+    col *= mix(vec3(1.0), tone, m);
+    col = mix(col, col * col * (3.0 - 2.0 * col), 0.35 * m); }
   col = clamp(col, 0.0, 1.0);
   col *= mix(1.0, smoothstep(0.95, 0.18, r2 * 2.2), uVignette);
   col = toSRGB(col);
@@ -61,7 +67,7 @@ export function createPostProcessing(renderer, opts = {}) {
   const bright = mat(BRIGHT, { tSrc: { value: null }, uThreshold: { value: 1.0 }, uKnee: { value: 0.5 } });
   const blur = mat(BLUR, { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } });
   const copy = mat(COPY, { tSrc: { value: null } });
-  const comp = mat(COMPOSITE, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null }, uBloom: { value: 0.55 }, uExposure: { value: 1.0 }, uFringe: { value: 0 }, uVignette: { value: 0.55 }, uTime: { value: 0 }, uWarm: { value: 1 } });
+  const comp = mat(COMPOSITE, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null }, uBloom: { value: 0.55 }, uExposure: { value: 1.0 }, uFringe: { value: 0 }, uVignette: { value: 0.55 }, uTime: { value: 0 }, uWarm: { value: 1 }, uMagic: { value: 0 } });
   const pass = (m, target) => { quad.material = m; renderer.setRenderTarget(target); renderer.render(fsScene, camera); };
 
   function setSize(w, h) {
@@ -85,7 +91,7 @@ export function createPostProcessing(renderer, opts = {}) {
       src = L.a;
     }
     const u = comp.uniforms; u.tScene.value = sceneRT.texture; u.tB1.value = levels[0].a.texture; u.tB2.value = levels[1].a.texture; u.tB3.value = levels[2].a.texture;
-    u.uBloom.value = params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100;
+    u.uBloom.value = params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0;
     pass(comp, null); renderer.toneMapping = prevTM;
   }
   const size = renderer.getDrawingBufferSize(new THREE.Vector2()); setSize(size.x, size.y);

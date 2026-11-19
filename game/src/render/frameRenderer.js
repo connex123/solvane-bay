@@ -11,7 +11,7 @@ function titleCamera() {
 }
 function draw() {
   if (postOn()) {
-    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; G.post.params.fringe = G.mode === 'play' ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; G.post.params.exposure = G.exposure || 1.25; G.post.render(G.scene, G.camera, G.time); return; }
+    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; G.post.params.fringe = G.mode === 'play' ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; G.post.params.exposure = G.exposure || 1.25; G.post.params.magic = G.magic || 0; G.post.render(G.scene, G.camera, G.time); return; }
     catch (e) { console.warn('post-processing disabled: ' + e.message); G.post = null; }
   }
   G.renderer.setRenderTarget(null); G.renderer.render(G.scene, G.camera);
