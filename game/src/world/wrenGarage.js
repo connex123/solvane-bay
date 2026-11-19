@@ -10,6 +10,7 @@ import { addBox } from './collision.js';
 // footprint: x0..x1 along the avenue, back wall at z0, open front at z1 facing the avenue (south)
 export const WORKSHOP = { x0: lineCoord(2) - 24, x1: lineCoord(2) - 10, z0: lineCoord(3) - 22, z1: lineCoord(3) - 8, h: 5.4 };
 export const BAY = { x: (WORKSHOP.x0 + WORKSHOP.x1) / 2, z: WORKSHOP.z0 + 7.5 }; // where the car stands on the lift
+export const LIFT = { y: 1.0, track: 0.85, half: 2.7 }; // runway top height, runway centre offset, half length
 const PAINTS = [0xd01020, 0x2fd6c4, 0xffd23c, 0x15151a, 0xff6a4f, 0xf0f0f0];
 
 function signTexture() {
@@ -27,8 +28,15 @@ export function buildWrenGarage(scene) {
   for (const x of [x0 + 0.2, x1 - 0.2]) { pushBox(B, x, 0, (z0 + z1) / 2, 0.4, h, d, 0xead2a4); pushBox(B, x, 0, (z0 + z1) / 2, 0.46, 0.9, d + 0.06, 0xff6a4f); } // side walls with a coral skirting
   pushBox(B, cx, h, (z0 + z1) / 2, w + 0.8, 0.35, d + 0.8, 0xe8dccb); pushBox(B, cx, h - 0.9, z1 + 0.1, w + 0.8, 0.9, 0.3, 0x0f4650); // roof and fascia under the sign
   for (const x of [x0 + 0.3, x1 - 0.3]) pushBox(B, x, 0, z1 + 0.05, 0.7, h, 0.7, 0xfff4e6); // front pillars
-  // the lift: low yellow pads and dark arms under the car; the tool wall (pegboard and tools) on the east wall
-  for (const sx of [-1, 1]) { pushBox(B, BAY.x + sx, 0.36, BAY.z, 0.3, 0.16, 4.2, 0x3a3f44); for (const sz of [-1.5, 1.5]) pushBox(B, BAY.x + sx * 1.1, 0.36, BAY.z + sz, 0.6, 0.2, 0.6, 0xffc93c); }
+  // the lift: a four-post drive-on lift, two yellow runways the tyres stand on, a steel drip tray between them, yellow posts
+  // with crossbeams at both ends, ramps down to the floor on the street side and an oil-dark patch under it all
+  const { y: ry, track, half } = LIFT;
+  for (const sx of [-1, 1]) { pushBox(B, BAY.x + sx * track, ry - 0.2, BAY.z, 0.6, 0.2, half * 2, 0xffc93c); pushBox(B, BAY.x + sx * (track + 0.33), ry - 0.12, BAY.z, 0.06, 0.2, half * 2, 0x2a2e33); // runway and its lip
+    for (let k = 0; k < 3; k++) pushBox(B, BAY.x + sx * track, 0.36, BAY.z + half + 0.3 + k * 0.55, 0.6, (ry - 0.36) * (3 - k) / 4, 0.55, 0xe0b030); // stepped ramp
+    for (const sz of [-1, 1]) { pushBox(B, BAY.x + sx * 1.55, 0.36, BAY.z + sz * (half + 0.05), 0.2, 2.5, 0.2, 0xffc93c); pushBox(B, BAY.x + sx * 1.55, 2.86, BAY.z + sz * (half + 0.05), 0.28, 0.08, 0.28, 0x2fb8a8); } }
+  for (const sz of [-1, 1]) pushBox(B, BAY.x, ry - 0.34, BAY.z + sz * (half + 0.05), 3.3, 0.16, 0.24, 0xb8bec4); // crossbeams under the runway ends
+  pushBox(B, BAY.x, ry - 0.2, BAY.z, track * 2 - 0.6, 0.06, half * 2 - 0.6, 0xa8b0b6); // drip tray
+  pushBox(B, BAY.x, 0.36, BAY.z, 3.4, 0.01, half * 2 + 0.4, 0xa29a8c); // the floor stain under the lift
   pushBox(B, x1 - 0.46, 1.1, z0 + 4.2, 0.12, 2.2, 5.6, 0x3a4a50); // pegboard
   const tools = [0xff6a4f, 0xffd23c, 0x2fd6c4, 0xf0f0f0, 0xe8402c, 0x9aa4b0];
   for (let k = 0; k < 14; k++) pushBox(B, x1 - 0.56, 1.35 + Math.floor(k / 7) * 0.95, z0 + 1.8 + (k % 7) * 0.8, 0.08, 0.55 - (k % 2) * 0.2, 0.16 + (k % 3) * 0.1, tools[k % tools.length]);

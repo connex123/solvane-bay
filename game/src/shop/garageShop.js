@@ -3,7 +3,7 @@
 // Driving into the workshop (world/wrenGarage.js) and opening the garage rolls the car onto the lift and frames it from
 // inside the shop, with the street behind it, beside the upgrade panel (stat bars, prices, paint swatches).
 import { G, notify } from '../core/gameState.js';
-import { WORKSHOP, BAY } from '../world/wrenGarage.js';
+import { WORKSHOP, BAY, LIFT } from '../world/wrenGarage.js';
 import { addMarker } from '../missions/markers.js';
 import { sfx } from '../audio/soundEngine.js';
 
@@ -36,7 +36,7 @@ export function garageStats() {
 export function garageView() {
   const c = G.p.car, { x0, x1, z0, z1 } = WORKSHOP; G.garageCam = null;
   if (!c || c.x < x0 || c.x > x1 || c.z < z0 || c.z > z1 + 3) return false;
-  c.x = BAY.x; c.z = BAY.z; c.heading = Math.PI; c.vx = c.vz = c.speed = 0; c.mesh.position.set(c.x, c.y || 0, c.z); c.mesh.rotation.set(0, c.heading, 0);
+  c.x = BAY.x; c.z = BAY.z; c.heading = Math.PI; c.vx = c.vz = c.speed = 0; c.mesh.position.set(c.x, LIFT.y, c.z); c.mesh.rotation.set(0, c.heading, 0); // tyres on the runways
   G.garageCam = { pos: [x0 + 1.3, 2.7, z0 + 1.4], look: [x1 + 3.5, 0.9, z1 + 7], fov: 62 }; return true;
 }
 export function fillGarage() {

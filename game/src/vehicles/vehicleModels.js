@@ -184,6 +184,16 @@ function busDetail(grp, t) {
   const f = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.33), board); f.position.set(0, 2.2, 2.93); f.rotation.x = -0.18; grp.add(f);
   const r = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.3), board); r.position.set(0, 2.1, -3.27); r.rotation.y = Math.PI; grp.add(r);
 }
+// Contact shadow: a soft dark footprint under the body with denser patches under the four tyres, so every car sits on
+// whatever it stands on (road, ramp, Wren's lift) even where the sun's shadow map cannot reach (under roofs, at range).
+let contactMat = null; const contactGeo = {};
+function contactShadow(key, t) {
+  contactMat = contactMat || new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthWrite: false, opacity: 0.62, polygonOffset: true, polygonOffsetFactor: -4, map: canvasTex(64, 128, (g) => {
+    g.clearRect(0, 0, 64, 128); g.filter = 'blur(6px)'; g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.roundRect(10, 10, 44, 108, 14); g.fill();
+    g.filter = 'blur(3px)'; g.fillStyle = 'rgba(255,255,255,0.95)'; for (const y of [26, 102]) for (const x of [9, 55]) { g.beginPath(); g.ellipse(x, y, 6, 11, 0, 0, 7); g.fill(); } }, false) });
+  const geo = contactGeo[key] || (contactGeo[key] = new THREE.PlaneGeometry(t.wid + 0.25, t.len * 1.07).rotateX(-Math.PI / 2).translate(0, 0.025, 0));
+  const m = new THREE.Mesh(geo, contactMat); m.renderOrder = 1; return m;
+}
 export function buildCarMesh(key, tint) {
   const g = geoCache[key] || (geoCache[key] = build(key)); const t = CAR_TYPES[key], m = sharedMats();
   const c = t.police ? t.tint : key === 'tupelo' || key === 'tidebus' ? t.tint : tint ?? t.tint;
@@ -192,6 +202,7 @@ export function buildCarMesh(key, tint) {
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
   a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a; grp.userData.lightsMesh = li; grp.userData.glassMesh = gl;
   grp.userData.fw = g.front.map((f) => { const w = new THREE.Mesh(f.geo, m.trim); w.position.set(f.x, f.y, f.z); w.castShadow = true; grp.add(w); return w; });
+  grp.add(grp.userData.contact = contactShadow(key, t));
   if (pr_sport(key)) sportRear(grp, key);
   if (t.police) {
     const lv = livery();
