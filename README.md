@@ -6,8 +6,10 @@
 
 SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + mouse): a sun-soaked low-poly coastal city you explore on foot and by car, as newcomer Nico Varela working up from Dex's Club Velvet to a marina heist.
 
-- Procedural three.js city at golden hour: azure-to-peach sky dome with the sun setting over the sea, pastel art-deco stucco blocks (balconies, awnings, cornices, rooftop AC units and water tanks), glass towers downtown, curved-trunk palm boulevards, bus stops, benches, hydrants, our own billboard ads, beach, marina, neon nightlife district, docks, parks; day/night clock, lit windows
-- Hand-written post-processing: HDR render target, bright-pass bloom pyramid, ACES filmic tone mapping, warm colour grade with a saturated magic-hour look at sunset (magenta-to-orange sky, purple-blue shadows), vignette and a speed-driven chromatic fringe ; Settings > Graphics quality defaults to Auto, which steps resolution, shadows and bloom down until the frame rate holds
+- Procedural three.js city in a teal-and-coral colour script: each story act has its own grade (Act I morning mint, Act II golden hour, Act III dusk teal sky into a coral horizon), long teal shadows, an amber sun low over a turquoise sea
+- Landmarks: the coral-red cable-stayed Causeway with two pylons and cable fans over the sea, the striped Point Wren light with a lamp glow and turning beam, Crown Tower (tallest glass tower in Crown Heights, gold crown crest that glows at dusk), the Old Town lagoon market on stilts
+- Street life: yellow TIDE BUS minibuses in traffic, moto-taxis with riders weaving through, beach-goers, umbrellas, lifeguard towers and a volleyball net along the Strand
+- Hand-written post-processing: HDR render target, controlled bright-pass bloom pyramid, ACES filmic tone mapping, the act grade from render/colourScript.js, vignette and speed fringe
 - Sleek extruded car models with clearcoat paint, tinted glass, spoked rims and glowing head/tail lights: VELOCE GT sports car, SBPD cruisers in a navy/teal livery with red/blue light bars, taxi, van, SUV, compact, convertible
 - Smooth low-poly people: rounded heads with faces and hair styles, open jackets with collars, hands and shoes; varied pedestrian outfits, SBPD officers in navy uniforms with caps and badges, Nico in a teal bomber over a white tee
 - Third-person on foot (WASD, aim, SMG/pistol/shotgun/fists) and arcade driving with drift, damage, smoke, explosions, skid marks, chase camera with speed FOV
@@ -21,9 +23,9 @@ SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + 
 - Five weapon slots (fists, pistol, SMG, shotgun, thrown MOLOTOV that sets cars alight), HUD slot bar and a Tab weapon wheel; rep levels unlock guns at Calder Arms; Glow Coat Respray clears heat; health/armor pickups
 - Crew & Chapters screen (J or pause menu): crew cards, act/chapter list, territory, days to the Gala, unlocks
 - Wren's garage at Point Wren: engine, armour plating, nitro tank and respray upgrades; save/load covers chapters, territory, crew, weapons and garage
-- Game HUD in condensed display type with colour-coded cards: huge money with +gains, WANTED with big stars and the line-of-sight tag, RESPECT level bar, weapon card with drawn icon and mag/reserve ammo, car card with speed, CONDITION and NITRO bars, mission card with stage bar, timer and NEXT step; mission card, SBPD response list, radio card, speedometer, on-screen waypoint with distance, and a rotating minimap with the road network, parks, beach and sea, a GPS route along the streets, north marker, icon blips (flashing police, objective star, shops), district name and a red/blue rim when wanted
-- City map (M) with street names and clear district labels, pause menu, save/load, three synthesized radio stations
-- Fixed-step simulation (1/60 s with an accumulator) so low frame rates never run in slow motion; menu clicks never fire the gun
+- "Tide Chart" HUD language: one card system for the HUD and every menu (deep-teal glass, cream keyline, coral accent stripe, condensed display numbers, mint money, gold stars); illustrated portraits with distinct silhouettes in the crew stack, dialogue and Crew & Chapters
+- City map (M) drawn as a nautical chart: sounding contours and depth figures, lagoon basin, districts tinted by territory holder, landmark symbols, compass rose and a large legend; pause menu, save/load, three synthesized radio stations
+- Fixed-step simulation (1/60 s with an accumulator) so low frame rates never run in slow motion; boot shader warm-up and quality calibration so play never stalls on shader compiles; menu clicks never fire the gun
 - No build step, no network, no binary assets: all geometry, textures and sound are generated at run time
 
 ## Run it
