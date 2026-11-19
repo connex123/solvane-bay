@@ -2,23 +2,24 @@
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
 import { LANE, lineCoord, HALF, N } from '../core/config.js';
-import { createCar } from '../vehicles/carPhysics.js';
+import { createCar, wreck } from '../vehicles/carPhysics.js';
 import { placeTraffic } from '../vehicles/trafficSystem.js';
 import { enterCar, selectWeapon } from '../characters/playerController.js';
 import { spawnPed, createActor } from '../characters/pedestrianSystem.js';
-import { STYLES, setGun, animateWalk } from '../characters/characterModel.js';
+import { STYLES, setGun, animateWalk, randomStyle } from '../characters/characterModel.js';
 import { spawnCop } from '../police/policeDispatch.js';
 import { createHeli, placeCone } from '../police/helicopterUnit.js';
 import { setStars } from '../police/wantedSystem.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { refreshStartMarker } from '../missions/missionRunner.js';
 import { dlg, say } from '../story/dialogue.js';
-import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters, skidMark } from '../combat/effects.js';
+import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters, skidMark, updateEffects, explosion } from '../combat/effects.js';
 import { rig } from '../camera/cameraRig.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
 import { seedSave } from '../save/saveGame.js';
 import { addMarker } from '../missions/markers.js';
+import { rnd } from '../core/random.js';
 import { createSpikeStrip } from '../police/spikeStrip.js';
 import { updateLineOfSight } from '../police/lineOfSight.js';
 import { popup } from '../vehicles/driftScoring.js';
@@ -58,31 +59,34 @@ function chase(api) {
   G.exposure = 1.12; G.shotCam = { pos: [x0 - 8.2, 2.85, zc - 2.0], look: [x0 + 40, 0.9, zc + 5], fov: 56, roll: 0.03 };
   const rim = new THREE.PointLight(0xffe0c0, 60, 14, 1.6); rim.position.set(car.x - 3.5, 3.2, car.z - 2.5); G.scene.add(rim);
   finish(api); }
+// Daylight firefight on the Palmetto Beach road: Nico fires on SBPD officers behind their cruiser while a car they hit
+// goes up in a fireball; beachgoers flee across the sand, the sea and the palms on the right.
 function onfoot(api) {
-  const p = G.p, z0 = lineCoord(7); clearTraffic(); G.mode = 'play'; G.clock = 17.3; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
-  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16 }; p.hp = 72; p.armor = 45; G.camDistAim = 4.3; p.x = -199; p.z = z0 + 0.4; p.yaw = Math.PI / 2 - 0.3; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI / 2 - 0.05; G.cam.pitch = 0.16;
+  const p = G.p, X = HALF; clearTraffic(); G.mode = 'play'; G.clock = 16.2; G.magicForce = 0.5; G.time = 0.1; G.money = 3240; G.xp = 720; G.radio = 2; api.showHud(true); rig.mode = 'auto';
+  p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16 }; p.hp = 72; p.armor = 45; G.camDistAim = 4.4; p.x = X - 1.2; p.z = 46; p.yaw = Math.PI + 0.12; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI - 0.22; G.cam.pitch = 0.1;
   animateWalk(p.mesh, 0.6, 0.0, true); p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg');
-  // two SBPD officers in uniform, in frame and returning fire
-  const cops = [[-187.5, z0 + 2.5], [-184.5, z0 + 5.3]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: -Math.PI / 2 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = -Math.PI / 2 + (i ? 0.12 : -0.06); return a; });
-  // crashed patrol car with a live light bar, against the kerb
-  const cr = spawnCop(-181, z0 - 4.9, -Math.PI / 2 + 0.85, 'PURSUIT'); cr.mesh.position.set(cr.x, 0, cr.z); cr.heading = -Math.PI / 2 + 0.85; cr.mesh.rotation.set(0.03, cr.heading, 0.07); cr.speed = 0; cr.vx = cr.vz = 0;
-  const cc = spawnCop(-146, z0 + 3.4, -Math.PI / 2, 'ARRIVING'); cc.mesh.position.set(cc.x, 0, cc.z); cc.heading = -Math.PI / 2; cc.mesh.rotation.y = cc.heading;
-  const stolen = createCar('cadia', -168, z0 + 6.3, Math.PI / 2 - 0.05, 'parked', 0x2fb89a); stolen.mesh.rotation.y = stolen.heading;
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 1.3), new THREE.MeshLambertMaterial({ color: 0x2fb89a })); door.position.set(1.15, 0.85, 0.5); door.rotation.y = 0.9; stolen.mesh.add(door);
-  const tc = (key, x, dir, col) => { const c = placeTraffic('x', 7, x, dir, key, 'traffic', col); c.nav.spd = 6; return c; };
-  tc('marlin', -128, 1, 0xf2c230); tc('rumble', -118, -1, 0xff4fd8);
-  [[-205, 1, 1], [-198, -1, -1], [-192, 1, 1], [-186, -1, 1], [-181, 1, -1], [-176, -1, 1], [-170, 1, 1], [-164, -1, -1], [-158, 1, 1], [-209, -1, 1], [-178, -1, -1], [-168, 1, -1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 7, x, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  for (const [c, x, z] of [[0xff4fd8, -192, z0 - 9], [0x4fd8ff, -180, z0 + 9], [0xffa030, -168, z0 - 9], [0xff4fd8, -206, z0 + 9]]) { const L = new THREE.PointLight(c, c === 0x4fd8ff ? 70 : 140, 42, 2); L.position.set(x, 5, z); G.scene.add(L); }
-  setStars(3); G.wanted.heat = 3.2; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0);
-  for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); }
-  updateSirens(0.1);
+  // the SBPD cruiser slewed across the road, officers firing over and beside it
+  const cr = spawnCop(X - 1.5, 27, Math.PI / 2 + 0.25, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
+  const cr2 = spawnCop(X + 4.2, 19, Math.PI - 0.5, 'PURSUIT'); cr2.speed = 0; cr2.deployed = true;
+  const cops = [[X - 3.6, 25.2], [X + 1.2, 25.0], [X + 3.4, 23.2]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: 0 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = Math.atan2(p.x - x, p.z - z) + (i - 1) * 0.08; return a; });
+  // the car that caught the stray rounds: a real wreck (burnt shell, fireball, blast) on the kerb behind the line
+  const boom = createCar('rumble', X + 5.6, 35, -0.6, 'parked', 0xff8a3d); boom.mesh.position.set(boom.x, 0, boom.z); boom.mesh.rotation.y = boom.heading;
+  const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; c.nav.spd = 0; return c; };
+  tc('tupelo', -30, 1, 0xf6c21c); tc('pico', -60, -1, 0xff4fd8); tc('marlin', 70, -1, 0x2f7fd8);
+  [[40, 1, 1], [34, 1, 1], [30, -1, 1], [52, 1, 1], [20, 1, -1], [58, -1, 1], [44, -1, 1], [14, -1, -1], [62, 1, 1]].forEach(([z, s, d], i) => { const a = spawnPed('z', N, z, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  for (const [x, z, yw] of [[X + 14, 38, 0.6], [X + 18, 30, -0.4], [X + 22, 44, 0.9], [X + 12, 22, 0.2], [X + 26, 36, -0.8]]) { const a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); a.scared = 6; animateWalk(a.mesh, x * 0.7, 0.95, false); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = yw; }
+  setStars(3); G.wanted.heat = 3.4; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0); G.mission.def = { ...G.mission.def };
+  for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); c.mesh.rotation.y = c.heading; }
+  wreck(boom); layoutFloaters(5); for (let k = 0; k < 4; k++) updateEffects(0.04); explosion(boom.x, 1.0, boom.z); for (let k = 0; k < 3; k++) updateEffects(0.04);
+  setStars(3); G.wanted.heat = 3.4; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0); G.toasts.length = 0;
+  for (const a of cops) { a.dead = false; a.hp = Math.max(a.hp || 0, 40); }
+  G.cars.forEach((c) => { if (c !== boom) { c.dead = false; c.hp = Math.max(c.hp, 400); } });
+  updateSirens(0.1); updateLineOfSight(1);
   const gx = p.x + Math.sin(p.yaw) * 1.1, gz = p.z + Math.cos(p.yaw) * 1.1; muzzleFlash(gx, 1.38, gz);
-  cops.forEach((c, i) => { const fx = c.x - 0.7, fz = c.z; muzzleFlash(fx, 1.38, fz); tracer(fx, 1.38, fz, p.x + 0.3, 1.2 + i * 0.3, p.z - 0.2 + i * 0.2); sparks(c.x - 0.3, 1.1, c.z, 5); });
-  tracer(gx, 1.38, gz, -187.9, 1.3, z0 + 2.4); sparks(-187.9, 1.3, z0 + 2.4, 6); tracer(gx, 1.38, gz, -184.9, 1.2, z0 + 5.2); sparks(-184.9, 1.1, z0 + 5.2, 4);
-  sparks(-180, 0.9, z0 - 3.5, 10); sparks(-178.6, 0.6, z0 - 5.6, 6); smoke(-178.9, 1.4, z0 - 3.8, 0x555555); smoke(-178.6, 2.4, z0 - 3.6, 0x666666); smoke(-179, 3.4, z0 - 3.9, 0x777777);
+  cops.forEach((c, i) => { const fx = c.x + Math.sin(c.mesh.rotation.y) * 0.7, fz = c.z + Math.cos(c.mesh.rotation.y) * 0.7; muzzleFlash(fx, 1.38, fz); tracer(fx, 1.38, fz, p.x + 0.3 - i * 0.3, 1.2 + i * 0.2, p.z - 0.4); });
+  tracer(gx, 1.38, gz, cops[0].x, 1.3, cops[0].z); sparks(cops[0].x, 1.3, cops[0].z, 6); tracer(gx, 1.38, gz, cops[1].x, 1.2, cops[1].z); sparks(cr.x + 0.5, 0.9, cr.z + 0.9, 10);
   G.shake = 0; G.toasts.push({ text: 'WANTED LEVEL 3', kind: 'wanted', t: 9 });
-  // tame the low sun's bloom down the street so the officers and neon read; flashes and tracers are far brighter and keep theirs
-  G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.42, threshold: 1.15 });
+  G.exposure = 1.18; if (G.post) Object.assign(G.post.params, { bloom: 0.5, threshold: 1.05 });
   rig.mode = 'auto'; finish(api);
   floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
 function map(api) {

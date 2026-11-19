@@ -28,8 +28,11 @@ export function sparks(x, y, z, n = 6) { for (let i = 0; i < n; i++) particle({ 
 export const smoke = (x, y, z, c = 0x333333) => particle({ x, y, z, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - .5) * 1.5, life: 1.6, size: 1.2, grow: 2.5, color: c, op: 0.7 });
 export const tyreSmoke = (x, z) => particle({ x, y: 0.4, z, vx: (Math.random() - .5) * 1.2, vy: 0.6 + Math.random() * 0.8, vz: (Math.random() - .5) * 1.2, life: 1.4, size: 1.1, grow: 2.6, color: 0xf0e8f0, op: 0.55 });
 export function explosion(x, y, z) {
-  for (let i = 0; i < 18; i++) particle({ x, y: y + 0.5, z, vx: (Math.random() - .5) * 12, vy: Math.random() * 9, vz: (Math.random() - .5) * 12, life: 0.7, size: 3, grow: 4, color: 0xff8a2a, add: true });
-  for (let i = 0; i < 12; i++) particle({ x, y: y + 1, z, vx: (Math.random() - .5) * 8, vy: 3 + Math.random() * 6, vz: (Math.random() - .5) * 8, life: 2, size: 3, grow: 4, color: 0x222222, op: 0.8 });
+  const R = Math.random;
+  particle({ x, y: y + 1, z, life: 0.35, size: 4.5, grow: 5, color: 0xfff0c0, add: true, op: 0.8 }); // white-hot flash core
+  for (let i = 0; i < 26; i++) particle({ x: x + (R() - .5) * 1.5, y: y + 0.4 + R(), z: z + (R() - .5) * 1.5, vx: (R() - .5) * 11, vy: 2 + R() * 9, vz: (R() - .5) * 11, life: 0.6 + R() * 0.5, size: 2.2 + R() * 2, grow: 5, color: [0xff8a2a, 0xffc040, 0xff3a10][i % 3], add: i % 2 === 0, op: 0.92 }); // half additive glow, half solid flame so it reads in daylight
+  for (let i = 0; i < 16; i++) particle({ x, y: y + 1, z, vx: (R() - .5) * 7, vy: 3 + R() * 6, vz: (R() - .5) * 7, life: 2.6, size: 3 + R(), grow: 5, color: i % 2 ? 0x2a2228 : 0x4a3a3a, op: 0.85 });
+  for (let i = 0; i < 14; i++) particle({ x, y: y + 0.8, z, vx: (R() - .5) * 22, vy: 5 + R() * 10, vz: (R() - .5) * 22, g: 14, life: 1.3, size: 0.4, color: 0xffb040, add: true }); // burning debris
   sparks(x, y + 1, z, 14); G.shake = Math.max(G.shake, 1);
 }
 export function tracer(ax, ay, az, bx, by, bz) {
