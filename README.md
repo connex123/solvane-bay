@@ -26,9 +26,11 @@ SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + 
 - Five weapon slots (fists, pistol, SMG, shotgun, thrown MOLOTOV that sets cars alight), HUD slot bar and a Tab weapon wheel; rep levels unlock guns at Calder Arms; Glow Coat Respray clears heat; health/armor pickups
 - Crew & Chapters screen (J or pause menu): crew cards, act/chapter list, territory, days to the Gala, unlocks
 - Driving juice: DRIFT xN chains, NEAR MISS, TRADE PAINT (hard contact with a cruiser, with a spray of sparks) and a COMBO header when stunts chain; wrecked cars go up in a fireball with burning debris and a warm smoke column
-- AIR-1 sweeps a cool-white searchlight cone with a pool of light on the ground
+- AIR-1 is a proper police helicopter: slim cabin with a glass canopy, long tail boom with a swept fin and tail rotor, skids, a pale spinning rotor disc, SBPD white with a teal belt and coral tail band; its nose searchlight sweeps a cool-white cone with a pool of light on the ground
 - Gunfights on the water: harbour launch bow gunners fire bursts with tracers and white bullet splashes, Nico fires back over the stern with the gun in hand, and a holed launch sinks in a fireball and keeps burning on the water; the SBPD RESPONSE card lists the launches (HL-n)
-- Wren's garage at Point Wren: engine, armour plating, nitro tank and respray upgrades; save/load covers chapters, territory, crew, weapons and garage
+- Wren's garage at Point Wren, an open-front workshop on the avenue (sign, tool wall, tool chest, tyres, paint shelf, lift, warm strip lights): drive in and press E, the car rolls onto the lift and the garage panel docks beside it with stat bars (acceleration, top speed, armour, nitro), engine / armour plating / nitro tank upgrades with prices, and six named respray colours; save/load covers chapters, territory, crew, weapons and garage
+- Chapter 3 is a street gunfight with the Coral Kings at the Old Town lagoon market; every stall cooks on bottled gas, and a shot gas cage goes up in a fireball that hurts everyone close, burns for a few seconds and is restocked later
+- Coming back from the map, pause menu or a shop gives 1.5 s of grace: an arrest in progress starts over and no hit lands in the first moment back
 - "Tide Chart" HUD language: one card system for the HUD and every menu (deep-teal glass, cream keyline, coral accent stripe, condensed display numbers, mint money, gold stars); illustrated portraits with distinct silhouettes in the crew stack, dialogue and Crew & Chapters
 - City map (M) drawn as a nautical chart: sounding contours and depth figures, lagoon basin, districts tinted by territory holder, landmark symbols, compass rose and a large legend; pause menu, save/load, three synthesized radio stations
 - Fixed-step simulation (1/60 s with an accumulator) so low frame rates never run in slow motion; boot shader warm-up and quality calibration so play never stalls on shader compiles; menu clicks never fire the gun
@@ -40,7 +42,7 @@ SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + 
 node serve.ts   # then open http://localhost:8080 in desktop Chrome
 ```
 
-Checks: `?selftest=1` (page title SELFTEST PASS/FAIL; also covers boarding the yacht, the speedboat, the Causeway roadblock and both finale chapter cards; `node tools/run-selftest.mjs` runs it headless), `node tools/playtest.mjs` (drives the real game over the Chrome DevTools Protocol: New Game, walk, sprint, shoot, wanted level and police, steal a car, drive, map, pause, resume; prints errors and fps), `node tools/take-screenshots.mjs [scene]`.
+Checks: `?selftest=1` (page title SELFTEST PASS/FAIL; also covers boarding the yacht, the speedboat, the Causeway roadblock, both finale chapter cards, the market gas bottles, the garage lift view and the resume grace; `node tools/run-selftest.mjs` runs it headless), `node tools/playtest.mjs` (drives the real game over the Chrome DevTools Protocol: New Game, walk, sprint, shoot, wanted level and police, steal a car, drive, map, pause, resume; prints errors and fps), `node tools/take-screenshots.mjs [scene]`.
 
 ---
 
