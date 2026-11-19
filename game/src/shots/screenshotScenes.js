@@ -24,6 +24,9 @@ import { createSpikeStrip } from '../police/spikeStrip.js';
 import { updateLineOfSight } from '../police/lineOfSight.js';
 import { popup } from '../vehicles/driftScoring.js';
 import { stageMoto } from '../vehicles/motoTaxis.js';
+import { createBoat, enterBoat, updateBoats } from '../vehicles/boats.js';
+import { mooredSpeedboat } from '../missions/ledgerHeist.js';
+import { DROP, MARINA_GATE, YACHT } from '../world/marina.js';
 
 function clearTraffic() { for (const c of G.cars.slice()) if (c.kind === 'traffic' || c.kind === 'parked') removeCar(c); for (const a of G.actors.slice()) removeActor(a); }
 function fakeMission(idx, stageIdx, text, timer) {
@@ -63,7 +66,7 @@ function chase(api) {
   // AIR-1 side-on in open sky between the city and the first pylon, its searchlight on the car
   { const b = 25 * Math.PI / 180, d = 36, hx = px + Math.sin(b) * d, hz = pz - Math.cos(b) * d; G.heli = createHeli(hx, hz); G.heli.y = 11.5; G.heli.mesh.position.set(hx, 11.5, hz);
     G.heli.mesh.rotation.order = 'YXZ'; G.heli.mesh.rotation.set(0.14, Math.PI - (b + 1.35), 0.16); G.heli.rotor.rotation.y = 0.5; placeCone(G.heli, car.x, car.z); } G.shotLock = true;
-  { const [x, z] = T(158, 0.5); addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); } setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, 'Shake Reyne\'s units before the marina gate', 0);
+  { const { x, z } = MARINA_GATE; addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); } setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, 'Shake Reyne\'s units before the marina gate', 0);
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   updateSirens(0.1); updateLineOfSight(1);
   // the drift so far: twin skid marks curving in from the right behind the rear wheels; tyre smoke rolls off away from the camera
@@ -79,41 +82,30 @@ function chase(api) {
   G.shotCam = { pos: [px, camY, pz], look: [lx, 0.9, lz], fov: 54, roll: 0.025 };
   const rim = new THREE.PointLight(0xffe0c0, 50, 14, 1.6); { const [x, z] = T(-3, -2); rim.position.set(x, 3.2, z); } G.scene.add(rim);
   finish(api); }
-// Chapter 2, Collection Day: the Crown envelope stop at the Old Town lagoon market goes loud. Nico fires across the
-// turquoise water at SBPD officers on Brandt's payroll on the boardwalk, a car burns at the corner, stallholders run,
-// and Crown Tower's gold crest stands over Old Town behind them.
-function onfoot(api) {
-  const p = G.p, LX = -256, LZ = 192; clearTraffic(); G.mode = 'play'; G.clock = 16.3; G.magicForce = 0.55; G.time = 0.1; G.money = 3240; G.xp = 320; G.radio = 2; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
-  p.owned = { 0: 1, 1: 1, 2: 1 }; p.ammo = { pistol: 60, smg: 118 }; G.completed = ['m1']; G.territory = null; G.crew = { cd: {} }; p.hp = 72; p.armor = 45; G.camDistAim = 3.4;
-  const camYaw = Math.PI - 0.7; p.x = LX - 6; p.z = LZ + 27; p.yaw = Math.PI - 0.36; p.aim = true; selectWeapon(2); G.cam.yaw = camYaw; G.cam.pitch = -0.02;
-  animateWalk(p.mesh, 0.6, 0.0, true); p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg');
-  // a cruiser slewed across the corner road beyond the market, its officers firing from the boardwalk and its door
-  const cr = spawnCop(LX + 30, LZ - 6, Math.PI / 2 + 0.5, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
-  const DECK = 1.8, cops = [[LX + 2, LZ + 15, DECK], [LX + 16, LZ + 9, DECK], [LX + 28, LZ - 1.5, 0]].map(([x, z, y], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: 0 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, y, z); a.y = y; a.mesh.rotation.y = Math.atan2(p.x - x, p.z - z) + (i - 1) * 0.08; return a; });
-  // the car that caught the stray rounds burns at the north-east corner
-  const boom = createCar('rumble', LX + 28.5, LZ + 8, 0.9, 'parked', 0xff8a3d); boom.mesh.position.set(boom.x, 0, boom.z); boom.mesh.rotation.y = boom.heading;
-  const tc = (axis, line, t, dir, key, col) => { const c = placeTraffic(axis, line, t, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; c.nav.spd = 0; return c; };
-  tc('z', 1, LZ + 60, 1, 'tidebus'); tc('x', 7, LX + 70, -1, 'pico', 0xff4fd8); tc('x', 8, LX + 40, 1, 'tupelo', 0xf6c21c);
-  // stallholders and shoppers running off the boardwalks, passers-by fleeing along the sidewalks
-  for (const [x, z, yw, y] of [[LX - 4, LZ - 2.5, -2.4, 1.65], [LX - 12, LZ - 2.2, -1.9, 1.65], [LX + 0.4, LZ - 8, 3.0, 1.65], [LX - 14, LZ + 8.5, -2.8, DECK], [LX - 12, LZ + 4.5, -2.2, DECK], [LX + 12, LZ + 8, 2.6, DECK], [LX - 16, LZ + 27, -1.6, 0], [LX + 6, LZ + 27.5, 1.7, 0], [LX + 10, LZ + 28, 1.5, 0]]) {
-    const a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); a.scared = 6; animateWalk(a.mesh, x * 0.7 + z, 0.95, false); a.mesh.position.set(x, y, z); a.y = y; a.mesh.rotation.y = yw; }
-  [[LZ - 20, 1, 1], [LZ - 6, -1, -1], [LZ + 14, 1, 1], [LZ + 2, 1, -1]].forEach(([z, s, d], i) => { const a = spawnPed('z', 1, z, s, d); a.scared = 6; a.nav.dir = d; animateWalk(a.mesh, i * 1.7, 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  setStars(2); G.wanted.heat = 2.4; fakeMission(1, 0, 'Collect the four Crown envelopes (2/4)', 0); G.mission.collected = 2;
-  for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); c.mesh.rotation.y = c.heading; }
-  // the wreck has been burning a few seconds: the fireball has rolled away, flames and a lit smoke column remain
-  wreck(boom); layoutFloaters(5); for (let k = 0; k < 30; k++) { fire(boom.x, 1.1, boom.z); if (k % 2) fire(boom.x + 0.6, 1.0, boom.z - 0.4); updateEffects(0.05); }
-  setStars(2); G.wanted.heat = 2.4; fakeMission(1, 0, 'Collect the four Crown envelopes (2/4)', 0); G.mission.collected = 2; G.toasts.length = 0;
-  for (const a of cops) { a.dead = false; a.hp = Math.max(a.hp || 0, 40); }
-  G.cars.forEach((c) => { if (c !== boom) { c.dead = false; c.hp = Math.max(c.hp, 400); } });
-  updateSirens(0.1); updateLineOfSight(1);
-  const gx = p.x + Math.sin(p.yaw) * 1.1, gz = p.z + Math.cos(p.yaw) * 1.1; muzzleFlash(gx, 1.38, gz); thinPalms(p.x - 3.2, p.z + 6.4, 28, 75, 6);
-  cops.forEach((c, i) => { const fx = c.x + Math.sin(c.mesh.rotation.y) * 0.7, fz = c.z + Math.cos(c.mesh.rotation.y) * 0.7, fy = c.y + 1.38; muzzleFlash(fx, fy, fz); });
-  tracer(gx, 1.38, gz, cops[0].x, DECK + 1.3, cops[0].z); sparks(cops[0].x, DECK + 1.3, cops[0].z, 6); tracer(gx, 1.38, gz, cops[1].x, DECK + 1.2, cops[1].z); sparks(cr.x - 0.5, 0.9, cr.z + 0.9, 10);
-  G.shake = 0; G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.35, threshold: 1.2, vignette: 0.35 });
-  // camera low behind Nico's right, Nico full-length on the left third, the market and Crown Tower's crest ahead
-  { const b = Math.PI / 180 * 26.6, f = Math.PI / 180 * 40.6, cx = p.x - Math.sin(b) * 7, cz = p.z + Math.cos(b) * 7; G.shotCam = { pos: [cx, 3.4, cz], look: [cx + Math.sin(f) * 40, 3.4 + 40 * Math.tan(0.052), cz - Math.cos(f) * 40], fov: 60 }; }
-  rig.mode = 'auto'; finish(api);
-  floatText(cops[0].x, DECK + 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, DECK + 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
+// Chapter 7, The Ledger: Nico runs the stolen ledger out of Marina Cala in the Skipjack speedboat, banking hard with a
+// white wake curling back past Brandt's yacht, the CROWN JEWEL, and an SBPD harbour launch on his tail.
+// The boats are driven by the real boat physics and pursuit AI for a few seconds so the wake and spray are genuine.
+function boatRun(api) {
+  const p = G.p; clearTraffic(); G.mode = 'play'; G.clock = 17.2; G.magicForce = 0.7; G.time = 5; G.money = 31650; G.xp = 1900; G.radio = 1; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
+  G.completed = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; G.territory = null; G.crew = { cd: { wren: 12 }, swaps: 1 };
+  p.hp = 78; p.armor = 40; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 72, smg: 180, shotgun: 18, molotov: 2 };
+  const S = SHOT2, b = mooredSpeedboat(); b.x = S.start[0]; b.z = S.start[1]; b.heading = S.start[2]; b.vx = Math.sin(b.heading) * S.v0; b.vz = Math.cos(b.heading) * S.v0; enterBoat(b); b.input.throttle = 1;
+  const launches = S.launches.map(([x, z, h]) => { const l = createBoat('patrol', x, z, h, 'ai'); l.driver = 'ai'; l.vx = Math.sin(h) * 26; l.vz = Math.cos(h) * 26; return l; });
+  for (let i = 0; i < S.steps; i++) { b.input.steer = i > S.turnAt ? S.steer : 0; b.input.hand = i > S.turnAt ? 1 : 0; G.time += 1 / 60; updateBoats(1 / 60); updateEffects(1 / 60); }
+  p.x = b.x; p.z = b.z; setStars(3); G.wanted.heat = 3.2; fakeMission(6, 6, 'Outrun the harbour launches: run the ledger to Sol at the Point Wren light', 0);
+  addMarker({ x: DROP.x, z: DROP.z, kind: 'obj', label: 'Point Wren light', color: 0xffd23c, auto: false });
+  say({ who: 'sol', text: 'Harbour launches off your stern! Hug the Causeway pylons, they turn like bathtubs.' }); typed();
+  // the lead launch closes in on Nico's stern quarter; a few more real steps lay its own wake while Nico straightens up
+  const fwd = () => [Math.sin(b.heading), Math.cos(b.heading), Math.cos(b.heading), -Math.sin(b.heading)], c = S.cam;
+  { const l = launches[0], [fx, fz, rx, rz] = fwd(), [bk, sd] = S.lead; l.x = b.x - fx * bk + rx * sd; l.z = b.z - fz * bk + rz * sd; l.heading = b.heading + 0.15; l.vx = Math.sin(l.heading) * 29; l.vz = Math.cos(l.heading) * 29; l.trail = []; }
+  b.input.steer = 0; b.input.hand = 0; for (let i = 0; i < S.settle; i++) { G.time += 1 / 60; updateBoats(1 / 60); updateEffects(1 / 60); } p.x = b.x; p.z = b.z;
+  // camera ahead of the bow and off to one side, looking back past the boat toward the yacht at Marina Cala
+  { const [fx, fz, rx, rz] = fwd(); G.shotCam = { pos: [b.x + fx * c.f + rx * c.r, c.h, b.z + fz * c.f + rz * c.r], look: [b.x + (YACHT.x - b.x) * c.k + rx * c.lr, c.ly, b.z + (YACHT.z - b.z) * c.k + rz * c.lr], fov: c.fov, roll: c.roll }; }
+  G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.3, threshold: 1.25, vignette: 0.3 });
+  finish(api); }
+// staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
+const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4]],
+  lead: [12, 7], settle: 30, cam: { f: 9.5, r: 4, h: 3.2, k: 0.1, lr: 5,  ly: 2.0, fov: 56, roll: -0.02 } };
 // Crew & Chapters screen opened from a ride on The Strand: six chapters done, Dex has turned, Sol's HOT SWAP cooling down.
 function crewScreen(api) {
   const p = G.p, done = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; clearTraffic(); G.mode = 'pause'; G.clock = 17.1; G.magicForce = 0.6; G.completed = done; G.territory = null; G.xp = 2200; G.money = 21400; G.crew = { cd: { sol: 18 }, swaps: 1 }; G.wanted.stars = 0;
@@ -144,7 +136,7 @@ function title(api) {
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
-  G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
+  G.shot = name; ({ '1-chase': chase, '2-boat': boatRun, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
   {
     const c = G.renderer.domElement, img = new Image(); img.id = 'shotImg'; img.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0';
     img.src = c.toDataURL('image/jpeg', 0.93); await img.decode(); c.style.display = 'none'; document.body.insertBefore(img, document.getElementById('hud'));

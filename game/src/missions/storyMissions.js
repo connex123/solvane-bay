@@ -1,10 +1,13 @@
 // The eight chapters of SOLVANE BAY: LOW TIDE as data: givers, dialogue, objective stages, rewards.
 // A stage may carry `stars` to put the SBPD on Nico when it starts (on top of the escape stage type).
 import { lineCoord, HALF } from '../core/config.js';
+import { MARINA_GATE, GANGWAY, YACHT, GUARD_SPOTS, SAFE, DROP } from '../world/marina.js';
+import { boardSpeedboat, boatEscape } from './ledgerHeist.js';
+import { roadblockStage, RAMP_FOOT } from './causewayRoadblock.js';
 const P = (i, j, dx = 0, dz = 0) => ({ x: lineCoord(i) + dx, z: lineCoord(j) + dz });
 export const corner = (i, j, sx = 1, sz = 1) => P(i, j, sx * 9, sz * 9);
 export const HOME = corner(2, 6, 1, 1);
-const WREN = P(2, 3), MARINA = P(7, 1, 32, 32), TOWER = P(4, 4, 32, 32), CAUSEWAY = { x: HALF - 4, z: lineCoord(8) };
+const WREN = P(2, 3), MARINA = P(7, 1, 32, 32), TOWER = P(4, 4, 32, 32);
 export const MISSIONS = [
   { id: 'm1', chapter: 1, title: 'FRESH OFF THE FERRY', giver: 'dex', start: corner(2, 6, 1, -1), reward: { money: 800, xp: 150 },
     intro: [{ who: 'dex', text: 'Nico Varela, off the night ferry. Five years and you still walk like you owe somebody money.' }, { who: 'nico', text: "Where's my mother, Dex? The Low Tide has Crown paper on the windows." }, { who: 'dex', text: 'Brandt "bought" it. She is fine, she is angry. You need wheels and friends. Old Wren has neither. Fix that.' }, { who: 'dex', text: 'Red Marlin by the taco stand. Take it to Wren at Point Wren. Not a scratch.' }],
@@ -31,12 +34,16 @@ export const MISSIONS = [
     stages: [{ type: 'goto', at: MARINA, r: 40, text: "Meet Dex's buyer at the Marina Cala docks" }, { type: 'kill', at: MARINA, count: 5, gang: 'brandt', text: "It's a setup: survive Brandt's ambush" }, { type: 'escape', stars: 4, text: "Reyne's units are on the pier: lose 4 stars" }, { type: 'goto', at: corner(1, 4, 1, 1), r: 7, car: 'any', text: 'Reach the Point Wren safehouse' }],
     outro: [{ who: 'dex', text: 'Nothing personal, Nico. Brandt offered a seat at the Gala. You offered a bad week.' }, { who: 'sol', text: "Dex just sold you for a dinner invitation. We still have four days. Let's make them count." }] },
   { id: 'm7', chapter: 7, title: 'THE LEDGER', giver: 'tamsin', start: corner(2, 2, 1, 1), reward: { money: 4200, xp: 620 },
-    intro: [{ who: 'tamsin', text: "Brandt writes every bribe down. Old habit. The ledger lives in the safe on his yacht, the Crown Jewel." }, { who: 'wren', text: 'His blue Veloce GT has a dock pass on the dash. Guards wave it straight through.' }, { who: 'nico', text: 'Steal his car, rob his boat. Gentle start to the week.' }],
-    stages: [{ type: 'steal', key: 'veloce', tint: 0x2f7fd8, at: { ...P(4, 4, 5.4, 22), h: 0 }, text: "Steal Brandt's blue Veloce GT", stars: 1 }, { type: 'goto', at: MARINA, r: 30, car: 'mission', text: 'Drive through the marina gate to the Crown Jewel' }, { type: 'kill', at: MARINA, count: 4, gang: 'brandt', text: 'Clear the yacht deck' }, { type: 'collect', pts: [MARINA], text: 'Crack the safe: grab the ledger' }, { type: 'escape', stars: 3, text: 'Lose the SBPD (3 stars)' }, { type: 'goto', at: WREN, r: 7, car: 'any', text: "Hide the ledger at Wren's garage" }],
+    intro: [{ who: 'tamsin', text: "Brandt writes every bribe down. Old habit. The ledger lives in the safe on his yacht, the Crown Jewel, at Marina Cala." }, { who: 'wren', text: 'His blue Veloce GT has a dock pass on the dash. Guards wave it straight through.' }, { who: 'sol', text: 'I will wait at the Point Wren light. Come by sea, the roads will be crawling.' }, { who: 'nico', text: 'Steal his car, rob his boat, borrow his speedboat. Gentle start to the week.' }],
+    stages: [{ type: 'steal', key: 'veloce', tint: 0x2f7fd8, at: { ...P(4, 4, 5.4, 22), h: 0 }, text: "Steal Brandt's blue Veloce GT", stars: 1 }, { type: 'goto', at: MARINA_GATE, r: 10, car: 'mission', text: 'Drive the Veloce through the Marina Cala gate' },
+      { type: 'goto', at: GANGWAY, r: 3, foot: true, text: 'On foot: walk pier nine and board the Crown Jewel' }, { type: 'kill', at: YACHT, spots: GUARD_SPOTS, count: 4, gang: 'brandt', text: "Take out Brandt's deck guards" },
+      { type: 'collect', pts: [SAFE], text: 'Crack the safe on the aft deck: grab the ledger' }, { type: 'boat', stars: 3, text: 'Alarm! Jump in the speedboat at the end of pier nine', ...boardSpeedboat },
+      { type: 'goto', at: DROP, r: 10, car: 'boat', text: 'Outrun the harbour launches: run the ledger to Sol at the Point Wren light', ...boatEscape }],
     outro: [{ who: 'tamsin', text: "Page one: Captain Hollis Reyne, forty thousand a month. He's going to have a very public Gala." }, { who: 'reyne', text: 'Varela. Every unit in the Bay has your face. You will not reach that bridge.' }] },
   { id: 'm8', chapter: 8, title: 'CAUSEWAY GALA', giver: 'sol', start: corner(5, 5, 1, 1), reward: { money: 9000, xp: 900 },
     intro: [{ who: 'sol', text: 'Gala night. Brandt cuts the ribbon on the Causeway at nine, cameras everywhere.' }, { who: 'tamsin', text: "The van broadcasts on 88.1 while it moves. Keep it rolling, I read the ledger, the whole Bay listens." }, { who: 'nico', text: 'For the Low Tide. For Mom. Let us go be loud.' }],
-    stages: [{ type: 'steal', key: 'cadia', tint: 0x4fd8ff, at: { ...P(5, 6, 5.4, -22), h: 0 }, text: 'Get in the TIDE FM broadcast van' }, { type: 'goto', at: CAUSEWAY, r: 12, car: 'mission', time: 200, stars: 4, text: 'On air: drive the van to the Causeway while Reyne hunts you' }, { type: 'escape', stars: 5, text: 'Reyne sends everything: lose 5 stars' }, { type: 'goto', at: HOME, r: 7, car: 'any', text: 'Go home to the Low Tide' }],
+    stages: [{ type: 'steal', key: 'cadia', tint: 0x4fd8ff, at: { ...P(5, 6, 5.4, -22), h: 0 }, text: 'Get in the TIDE FM broadcast van' }, { type: 'goto', at: RAMP_FOOT, r: 12, car: 'mission', stars: 3, text: 'On air: drive the van to the Causeway on-ramp' },
+      { type: 'roadblock', text: 'Break the roadblock: ram the WEAK POINT', ...roadblockStage }],
     outro: [{ who: 'reyne', text: 'All units... stand down. That is an order. I said stand down!' }, { who: 'tamsin', text: 'And that was page forty. Viktor, wave to the cameras.' }, { who: 'nico', text: 'Mom. Put the coffee on. We are open.' }] },
 ];
 export const missionById = (id) => MISSIONS.find((m) => m.id === id);

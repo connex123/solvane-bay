@@ -6,6 +6,7 @@ import { resolveCircle } from '../world/collision.js';
 import { sparks, smoke, explosion, skidMark, addSiren, removeSiren, tyreSmoke, fire } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
 import { conditionEffects } from './vehicleCondition.js';
+import { deckHeight, RAMP } from '../world/causewayDeck.js';
 
 export function createCar(key, x, z, heading, kind = 'parked', tint) {
   const type = CAR_TYPES[key], mesh = buildCarMesh(key, tint);
@@ -56,12 +57,12 @@ export function stepCar(car, dt) {
   car.hitT = Math.max(0, car.hitT - dt);
   conditionEffects(car, dt);
   if (car.dead) { car.wreckT -= dt; if (Math.random() < dt * 6) smoke(car.x, 1.6, car.z, 0x151515); if (car.wreckT > 26 && Math.random() < dt * 14) fire(car.x, 1.1, car.z); if (car.wreckT < 0 && car !== G.p.car) removeCar(car); }
-  const m = car.mesh; for (const w of m.userData.fw || []) w.rotation.y = car.steerA * 0.9; m.position.set(car.x, 0, car.z); m.rotation.y = car.heading; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
+  const m = car.mesh; for (const w of m.userData.fw || []) w.rotation.y = car.steerA * 0.9; car.y = deckHeight(car.x, car.z); m.position.set(car.x, car.y + (car.airY || 0), car.z); m.rotation.order = 'YXZ'; m.rotation.y = car.heading; m.rotation.x = car.y > 0 && car.x < RAMP.x1 ? -0.21 * Math.sin(car.heading) : 0; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
 }
 export function carCollisions() {
   const cs = G.cars;
   for (let a = 0; a < cs.length; a++) for (let b = a + 1; b < cs.length; b++) {
-    const A = cs[a], B = cs[b], dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 5.5 || Math.abs(dz) > 5.5) continue;
+    const A = cs[a], B = cs[b], dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 5.5 || Math.abs(dz) > 5.5 || Math.abs((A.y || 0) - (B.y || 0)) > 2.5) continue;
     // three circles per car along its axis
     let best = null;
     for (const ao of [-1.5, 0, 1.5]) for (const bo of [-1.5, 0, 1.5]) {

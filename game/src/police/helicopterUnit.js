@@ -31,7 +31,7 @@ export function updateHeli(dt) {
   h.mesh.position.set(h.x, h.y, h.z); h.mesh.rotation.y = Math.atan2(h.x - ox, h.z - oz) || h.mesh.rotation.y; h.mesh.rotation.z = 0.12; h.rotor.rotation.y += dt * 40;
   placeCone(h, tx, tz);
 }
-export function placeCone(h, tx, tz) {
-  const v = new THREE.Vector3(tx - h.x, -h.y, tz - h.z), len = v.length(); h.cone.position.set(h.x + v.x / 2, h.y + v.y / 2, h.z + v.z / 2);
+export function placeCone(h, tx, tz, ty = 0) {
+  const v = new THREE.Vector3(tx - h.x, ty - h.y, tz - h.z), len = v.length(); h.cone.position.set(h.x + v.x / 2, h.y + v.y / 2, h.z + v.z / 2);
   h.cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.clone().multiplyScalar(-1).normalize()); h.cone.scale.set(5, len, 5);
 }

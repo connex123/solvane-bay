@@ -32,18 +32,19 @@ export function startMission(def) {
 }
 function clearObj() { objMarkers.forEach(removeMarker); objMarkers = []; }
 function nextStage() {
-  const M = G.mission; clearObj(); M.idx++;
+  const M = G.mission; M.stage?.end?.(M, false); clearObj(); M.idx++;
   if (M.idx >= M.def.stages.length) return complete();
   const s = M.stage = M.def.stages[M.idx]; M.text = s.text; M.timer = s.time || 0; M.stageDone = false; sfx.pickup();
   if (s.type === 'steal') { const car = createCar(s.key, s.at.x, s.at.z, s.at.h || 0, 'parked', s.tint); car.missionCar = true; M.car = car; objMarkers.push(addMarker({ follow: car, x: car.x, z: car.z, color: 0xff3a5c, r: 0, label: 'CAR', auto: true })); }
-  else if (s.type === 'goto') objMarkers.push(addMarker({ ...s.at, color: 0xffd23c, r: s.r || 6, label: 'GO', needCar: !!s.car, onEnter: (m) => { if (s.car === 'mission' && G.p.car !== M.car) return; M.stageDone = true; } }));
+  else if (s.type === 'goto') objMarkers.push(addMarker({ ...s.at, color: 0xffd23c, r: s.r || 6, label: 'GO', needCar: !!s.car, needFoot: !!s.foot, onEnter: (m) => { if (s.car === 'mission' && G.p.car !== M.car) return; if (s.car === 'boat' && !G.p.car?.isBoat) return; M.stageDone = true; } }));
   else if (s.type === 'collect') { M.collected = 0; s.pts.forEach((pt) => objMarkers.push(addMarker({ ...pt, color: 0x4fe0c0, r: 3, label: 'PICKUP', onEnter: (m) => { removeMarker(m); objMarkers = objMarkers.filter((o) => o !== m); M.collected++; sfx.pickup(); notify(`${M.collected}/${s.pts.length}`, 'good'); if (M.collected >= s.pts.length) M.stageDone = true; } }))); }
-  else if (s.type === 'kill') { M.enemies = []; for (let k = 0; k < s.count; k++) { const a = createActor('gang', s.at.x + rnd.range(-14, 14), s.at.z + rnd.range(-14, 14), s.gang === 'brandt' || s.gang === undefined && false ? STYLES.suit : (s.gang === 'brandt' ? STYLES.suit : STYLES.coral), {}); a.hp = 70; M.enemies.push(a); } objMarkers.push(addMarker({ ...s.at, color: 0xff3a5c, r: 0, label: 'TARGETS' })); }
+  else if (s.type === 'kill') { M.enemies = []; for (let k = 0; k < s.count; k++) { const sp = s.spots?.[k % s.spots.length], a = createActor('gang', sp ? sp.x : s.at.x + rnd.range(-14, 14), sp ? sp.z : s.at.z + rnd.range(-14, 14), s.gang === 'brandt' || s.gang === undefined && false ? STYLES.suit : (s.gang === 'brandt' ? STYLES.suit : STYLES.coral), {}); a.hp = 70; M.enemies.push(a); } objMarkers.push(addMarker({ ...s.at, color: 0xff3a5c, r: 0, label: 'TARGETS' })); }
   else if (s.type === 'chase') { const pt = s.at, line = nearestLine(pt.z), car = placeTraffic('x', line, pt.x, 1, s.key, 'target', s.tint); car.hp = car.maxHp = 700; M.target = car; M.car = car; objMarkers.push(addMarker({ follow: car, x: car.x, z: car.z, color: 0xff3a5c, r: 0, label: 'TARGET' })); }
   else if (s.type === 'escape') { setStars(s.stars); }
   if (s.stars && s.type !== 'escape' && G.wanted.stars < s.stars) setStars(s.stars);
+  s.begin?.(M);
 }
-function fail(why) { if (!G.mission) return; notify(`MISSION FAILED: ${why}`, 'bad'); clearObj(); G.mission = null; refreshStartMarker(); }
+function fail(why) { if (!G.mission) return; G.mission.stage?.end?.(G.mission, true); notify(`MISSION FAILED: ${why}`, 'bad'); clearObj(); G.mission = null; refreshStartMarker(); }
 export const failMission = fail;
 function complete() {
   const M = G.mission, d = M.def; clearObj(); G.mission = null; G.money += d.reward.money; const lv = levelFromXp(G.xp); G.xp += d.reward.xp; sfx.pickup();
@@ -62,6 +63,8 @@ export function updateMission(dt) {
   if (s.type === 'chase') { const t = M.target; if (t.dead) M.stageDone = true; else if (!G.cars.includes(t) || Math.hypot(t.x - p.x, t.z - p.z) > 280) return fail('the target got away'); }
   if (s.type === 'kill') { const left = M.enemies.filter((a) => !a.dead).length; M.text = `${s.text} (${left} left)`; if (!left) M.stageDone = true; objMarkers.forEach((m) => m.hidden = Math.hypot(m.x - p.x, m.z - p.z) < 25); }
   if (s.type === 'escape') { if (G.wanted.stars === 0) M.stageDone = true; }
+  if (s.type === 'goto' && s.car === 'boat') M.text = p.car?.isBoat ? s.text : 'Get back in the speedboat';
+  if (s.tick && !M.stageDone) { const r = s.tick(M, dt); if (typeof r === 'string') return fail(r); if (r) M.stageDone = true; }
   if (s.type === 'steal' && M.car?.dead) return fail('the car was destroyed');
   if (M.stageDone) nextStage();
 }

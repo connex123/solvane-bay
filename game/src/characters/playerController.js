@@ -16,6 +16,9 @@ import { throwMolotov } from '../combat/molotov.js';
 import { updateWeaponWheel } from '../combat/weaponWheel.js';
 import { sfx } from '../audio/soundEngine.js';
 import { releaseTrafficCar } from '../vehicles/trafficSystem.js';
+import { nearestBoat, enterBoat, exitBoat } from '../vehicles/boats.js';
+import { surfaceHeight } from '../world/marina.js';
+import { deckHeight } from '../world/causewayDeck.js';
 
 export function createPlayer() {
   const mesh = buildCharacter(STYLES.nico); G.scene.add(mesh);
@@ -48,8 +51,8 @@ export function updatePlayer(dt) {
   updateWeaponWheel(); // while Tab is held the wheel takes the mouse
   for (let i = 0; i < WEAPONS.length; i++) if (pressed(`Digit${i + 1}`)) selectWeapon(i);
   if (input.wheel && !p.car) { let w = p.weapon; for (let k = 0; k < WEAPONS.length; k++) { w = (w + input.wheel + WEAPONS.length) % WEAPONS.length; if (p.owned[w]) break; } selectWeapon(w); }
-  if (pressed('KeyF')) { if (p.car) { if (Math.abs(p.car.speed) < 9) exitCar(); } else { const c = nearestCar(p); if (c) enterCar(c); } }
-  p.nearCar = p.car ? null : nearestCar(p);
+  if (pressed('KeyF')) { if (p.car?.isBoat) { if (Math.abs(p.car.speed) < 7) exitBoat(); } else if (p.car) { if (Math.abs(p.car.speed) < 9) exitCar(); } else { const c = nearestCar(p), b = nearestBoat(p.x, p.z); if (b && (!c || Math.hypot(b.x - p.x, b.z - p.z) < Math.hypot(c.x - p.x, c.z - p.z))) enterBoat(b); else if (c) enterCar(c); } }
+  p.nearCar = p.car ? null : nearestCar(p) || nearestBoat(p.x, p.z);
   if (p.car) drive(dt, p); else foot(dt, p);
   p.armor = Math.max(0, p.armor);
 }
@@ -77,7 +80,7 @@ function foot(dt, p) {
   for (const c of G.cars) { if (Math.abs(c.x - p.x) > 4 || Math.abs(c.z - p.z) > 4) continue; const q = circlePushCar(p.x, p.z, 0.45, c); if (q) { p.x += q.dx; p.z += q.dz; if (Math.abs(c.speed) > 7 && c.kind !== 'parked') { p.hp -= Math.abs(c.speed) * 1.2; } } }
   p.phase += dt * (p.moving ? p.moving * 1.4 : 0); animateWalk(p.mesh, p.phase, p.moving ? 0.8 : 0, aim && p.weapon > 0);
   setGun(p.mesh, p.weapon ? WEAPONS[p.weapon].id : null);
-  p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw;
+  p.y = Math.max(surfaceHeight(p.x, p.z), deckHeight(p.x, p.z)); p.mesh.position.set(p.x, p.y, p.z); p.mesh.rotation.y = p.yaw;
   const w = WEAPONS[p.weapon];
   // leftPressed survives until a simulation step reads it, so a quick click between slow frames still fires.
   if ((input.left || input.leftPressed) && p.shootT <= 0 && (w.auto || input.leftPressed || p.weapon === 0) && G.mode === 'play') {

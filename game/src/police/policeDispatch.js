@@ -1,6 +1,6 @@
 // SBPD response: spawns patrol cars that pursue and ram, roadblocks at 3+ stars, officers on foot, and busting.
 import { G, notify } from '../core/gameState.js';
-import { clamp, wrapAngle, HALF, lineCoord } from '../core/config.js';
+import { clamp, wrapAngle, HALF, lineCoord, SEA_X } from '../core/config.js';
 import { rnd } from '../core/random.js';
 import { randomRoadPoint, nearestLine } from '../world/cityLayout.js';
 import { blockedAt } from '../world/collision.js';
@@ -27,7 +27,7 @@ function copInput(c, dt, tx, tz) {
   if (c.stuck > 1.2) { c.rev = 1.1; c.stuck = 0; } if (c.rev > 0) { c.rev -= dt; i.throttle = 0; i.brake = 1; i.steer = -i.steer; }
 }
 export function updatePolice(dt) {
-  const p = G.p, st = G.wanted.stars, tx = p.car ? p.car.x : p.x, tz = p.car ? p.car.z : p.z, cops = copCars();
+  const p = G.p, st = G.wanted.stars, tx = p.car ? (p.car.isBoat ? Math.min(p.car.x, SEA_X - 12) : p.car.x) : p.x, tz = p.car ? p.car.z : p.z, cops = copCars();
   let minD = 999;
   for (const c of cops) {
     const d = Math.hypot(c.x - tx, c.z - tz); minD = Math.min(minD, d);

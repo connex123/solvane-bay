@@ -30,6 +30,8 @@ import { runShot } from './shots/screenshotScenes.js';
 import { runSelfTest } from './shots/selfTest.js';
 import { initMolotovGlow } from './combat/molotov.js';
 import { buildLandmarks } from './world/landmarks.js';
+import { buildMarina } from './world/marina.js';
+import { buildCausewayRamp } from './world/causewayDeck.js';
 import { buildBeachLife } from './world/beachLife.js';
 import { initMotoTaxis } from './vehicles/motoTaxis.js';
 import { warmUpShaders } from './render/shaderWarmup.js';
@@ -48,7 +50,7 @@ async function boot() {
   G.settings.post = params.get('post') !== '0';
   initInput(canvas);
   buildLayout(rng); const tex = { facade: facadeMaps() };
-  G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); buildLandmarks(scene, rng); buildBeachLife(scene, rng); initMotoTaxis(scene); initEffects(scene); initMolotovGlow(scene);
+  G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); buildLandmarks(scene, rng); buildMarina(scene); buildCausewayRamp(scene); buildBeachLife(scene, rng); initMotoTaxis(scene); initEffects(scene); initMolotovGlow(scene);
   createPlayer(); populateParked(40); initSideActivities(); initGarage(); initMenus(handlers);
   for (let k = 0; k < 18; k++) spawnTrafficNear(0, 0, 20, 280); for (let k = 0; k < 22; k++) spawnPedsNear(0, 0, 10, 250);
   const api = { stepGame, renderFrame, startGame, showScreen, showHud, updateHud, handlers };

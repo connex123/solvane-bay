@@ -1,4 +1,4 @@
-// Ground, beach strip with umbrellas, animated sea, marina piers with boats, distant hills and port cranes.
+// Ground, beach strip with umbrellas, animated sea, distant hills and port cranes (the marina lives in marina.js).
 import * as THREE from 'three';
 import { HALF, SEA_X, lineCoord } from '../core/config.js';
 import { newBuf, pushBox, toGeometry } from '../core/geometryUtils.js';
@@ -16,11 +16,7 @@ export function buildBeachAndSea(scene, rng) {
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400).rotateX(-Math.PI / 2), new THREE.MeshPhongMaterial({ map: wt, color: 0x9fe0f0, emissiveMap: wt, emissive: 0x6a9cb4, shininess: 90, specular: 0xffb090 }));
   sea.position.set(SEA_X + 1200, 0.03, 0); scene.add(sea);
   const B = newBuf(); // piers, boats, umbrellas, huts, cranes
-  for (let k = 0; k < 4; k++) {
-    const z = lineCoord(0) + 40 + k * 64; pushBox(B, SEA_X + 4, -0.1, z, 70, 0.6, 4, 0x9a7650);
-    for (let b = 0; b < 4; b++) { const bz = z + (b % 2 ? 4.5 : -4.5), bx = SEA_X - 10 + b * 14, c = rng.pick([0xffffff, 0xf4a6a0, 0x8fd3c8, 0xf6e3b4]);
-      pushBox(B, bx, 0, bz, 9, 1.3, 3, c); pushBox(B, bx - 1, 1.3, bz, 3, 1.1, 2, 0xf8f8f8); pushBox(B, bx + 1, 1.3, bz, 0.2, 7, 0.2, 0xdddddd); }
-  }
+  for (let k = 0; k < 16; k++) rng(); // the old pier boats' draws: keeps the seeded layout downstream unchanged
   for (let k = 0; k < 26; k++) { const x = HALF + rng.range(10, 36), z = rng.range(-HALF + 20, HALF); const c = rng.pick([0xff5a7a, 0x2fc4b2, 0xffb02e, 0xffffff]);
     pushBox(B, x, 0, z, 0.12, 2.4, 0.12, 0xeeeeee); pushBox(B, x, 2.3, z, 2.8, 0.3, 2.8, c); pushBox(B, x + 2.2, 0.05, z, 0.9, 0.12, 2.0, 0xffe9c0); }
   for (let k = 0; k < 3; k++) { const x = lineCoord(1) + k * 90, z = lineCoord(0) + 20;
