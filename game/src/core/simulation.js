@@ -23,6 +23,7 @@ import { updateCrew } from '../crew/crewAbilities.js';
 import { updateMotoTaxis } from '../vehicles/motoTaxis.js';
 import { updateMolotovs } from '../combat/molotov.js';
 import { updateBoats } from '../vehicles/boats.js';
+import { updateBoatGunfight } from '../combat/boatGunfight.js';
 import { updateMarina } from '../world/marina.js';
 
 let pedT = 0;
@@ -30,7 +31,7 @@ export function stepGame(dt) {
   const p = G.p; G.time += dt;
   if (G.mode === 'play') { G.clock = (G.clock + dt / 60) % 24; updatePlayer(dt); updateDialogue(dt); }
   if (G.mode === 'play' || G.mode === 'title' || G.mode === 'dead') {
-    updateTraffic(dt); updateMotoTaxis(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateBoats(dt); updateActors(dt); updateMarina();
+    updateTraffic(dt); updateMotoTaxis(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateBoats(dt); updateBoatGunfight(dt); updateActors(dt); updateMarina();
     pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); }
   }
   if (G.mode === 'play') {

@@ -32,7 +32,12 @@ export function particle(o) {
 }
 export const muzzleFlash = (x, y, z) => { particle({ x, y, z, life: 0.07, size: 1.5, color: 0xffd070, add: true, hdr: 2 }); particle({ x, y, z, life: 0.07, size: 0.6, color: 0xffffff, add: true, hdr: 3 }); };
 export function sparks(x, y, z, n = 6) { for (let i = 0; i < n; i++) particle({ x, y, z, vx: (Math.random() - .5) * 9, vy: Math.random() * 6, vz: (Math.random() - .5) * 9, g: 18, life: 0.5, size: 0.25, color: 0xffc060, add: true, hdr: 2 }); }
-export const smoke = (x, y, z, c = 0x333333) => particle({ x, y, z, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - .5) * 1.5, life: 1.6, size: 1.2, grow: 2.5, color: c, op: 0.7, tex: 'puff', spin: 0.4 });
+// a bullet or debris hitting the sea: a plume of white water thrown up and falling back
+export function splash(x, z, big = 1) {
+  const R = Math.random; for (let i = 0; i < 6 + big * 3; i++) particle({ x: x + (R() - .5) * 0.4 * big, y: 0.2, z: z + (R() - .5) * 0.4 * big, vx: (R() - .5) * 1.2 * big, vy: (5 + R() * 5) * big, vz: (R() - .5) * 1.2 * big, g: 16, life: 0.75, size: (0.3 + R() * 0.25) * big, grow: 0.5 * big, color: 0xffffff, hdr: 2, op: 0.95 });
+  particle({ x, y: 0.15, z, life: 0.5, size: 1.2 * big, grow: 2 * big, color: 0xffffff, hdr: 1.4, op: 0.7, tex: 'puff' });
+}
+export const smoke =(x, y, z, c = 0x333333) => particle({ x, y, z, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - .5) * 1.5, life: 1.6, size: 1.2, grow: 2.5, color: c, op: 0.7, tex: 'puff', spin: 0.4 });
 export const tyreSmoke = (x, z) => particle({ x, y: 0.4, z, vx: (Math.random() - .5) * 1.2, vy: 0.6 + Math.random() * 0.8, vz: (Math.random() - .5) * 1.2, life: 1.4, size: 1.1, grow: 2.6, color: 0xfff4f0, op: 0.5, tex: 'puff', spin: 0.3 });
 // flames licking off a burning wreck
 export const fire = (x, y, z) => { const R = Math.random; particle({ x: x + (R() - .5) * 1.4, y, z: z + (R() - .5) * 1.4, vy: 2 + R() * 1.5, life: 0.6 + R() * 0.3, size: 1 + R() * 0.6, grow: 0.8, color: 0xffd060, c2: 0x9a1808, hdr: 1.8, op: 0.95, tex: 'puff', spin: 1 }); };
@@ -44,7 +49,7 @@ export function explosion(x, y, z) {
   for (let i = 0; i < 22; i++) { const a = R() * 6.283, sp = 3 + R() * 5; particle({ x: x + Math.cos(a) * 0.8, y: y + 0.5 + R() * 1.6, z: z + Math.sin(a) * 0.8, vx: Math.cos(a) * sp, vy: 2 + R() * 6, vz: Math.sin(a) * sp, life: 0.9 + R() * 0.6, size: 1.8 + R() * 1.6, grow: 3.2, color: [0xffd050, 0xffa030, 0xff7a20][i % 3], c2: 0x5a1208, hdr: 1.9, hdr2: 0.7, op: 0.95, tex: P, spin: (R() - .5) * 2, drag: 2.2 }); }
   for (let i = 0; i < 8; i++) particle({ x: x + (R() - .5) * 2, y: y + 1 + R(), z: z + (R() - .5) * 2, vx: (R() - .5) * 5, vy: 2 + R() * 4, vz: (R() - .5) * 5, life: 0.7, size: 3 + R() * 2, grow: 3, color: 0xff7020, hdr: 1.4, add: true, op: 0.5, tex: P, drag: 2 });
   // billowing smoke column rising above the fireball: warm grey, fire-lit and see-through rather than a flat black mass
-  for (let i = 0; i < 18; i++) particle({ x: x + (R() - .5) * 2, y: y + 2 + i * 0.35 + R(), z: z + (R() - .5) * 2, vx: (R() - .5) * 1.6, vy: 2.5 + R() * 2.5, vz: (R() - .5) * 1.6, life: 3 + R(), size: 2.6 + i * 0.12 + R(), grow: 2.4, color: i % 3 ? 0x6a5450 : 0x8a6c60, c2: 0xb4aaa6, op: 0.5, tex: P, spin: (R() - .5) * 0.6, drag: 0.6 });
+  for (let i = 0; i < 18; i++) particle({ x: x + (R() - .5) * 2, y: y + 2 + i * 0.35 + R(), z: z + (R() - .5) * 2, vx: (R() - .5) * 1.6, vy: 2.5 + R() * 2.5, vz: (R() - .5) * 1.6, life: 3 + R(), size: 2.6 + i * 0.12 + R(), grow: 2.4, color: i % 3 ? 0x8a6656 : 0xa8785c, c2: 0xc8b4a4, op: 0.5, tex: P, spin: (R() - .5) * 0.6, drag: 0.6 });
   // flying burning debris trailing glow, dark chunks, sparks and a ground glow
   for (let i = 0; i < 16; i++) { const vx = (R() - .5) * 22, vy = 6 + R() * 10, vz = (R() - .5) * 22; particle({ x, y: y + 0.8, z, vx, vy, vz, g: 14, life: 1.3, size: 0.55, color: 0xffb040, hdr: 2.2, add: true }); particle({ x, y: y + 0.8, z, vx: vx * 0.9, vy: vy * 0.9, vz: vz * 0.9, g: 14, life: 1.2, size: 0.32, color: 0x1a1210 }); }
   sparks(x, y + 1, z, 26);

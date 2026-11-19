@@ -13,7 +13,7 @@ import { setStars } from '../police/wantedSystem.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { refreshStartMarker } from '../missions/missionRunner.js';
 import { dlg, say } from '../story/dialogue.js';
-import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters, skidMark, updateEffects, explosion, fire } from '../combat/effects.js';
+import { muzzleFlash, tracer, sparks, smoke, particle, splash, updateSirens, floatText, layoutFloaters, skidMark, updateEffects, explosion, fire } from '../combat/effects.js';
 import { rig } from '../camera/cameraRig.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
@@ -24,7 +24,8 @@ import { createSpikeStrip } from '../police/spikeStrip.js';
 import { updateLineOfSight } from '../police/lineOfSight.js';
 import { popup } from '../vehicles/driftScoring.js';
 import { stageMoto } from '../vehicles/motoTaxis.js';
-import { createBoat, enterBoat, updateBoats } from '../vehicles/boats.js';
+import { createBoat, enterBoat, updateBoats, sinkBoat } from '../vehicles/boats.js';
+import { boatShot } from '../combat/boatGunfight.js';
 import { mooredSpeedboat } from '../missions/ledgerHeist.js';
 import { DROP, MARINA_GATE, YACHT } from '../world/marina.js';
 
@@ -101,13 +102,19 @@ function boatRun(api) {
   const fwd = () => [Math.sin(b.heading), Math.cos(b.heading), Math.cos(b.heading), -Math.sin(b.heading)], c = S.cam;
   { const l = launches[0], [fx, fz, rx, rz] = fwd(), [bk, sd] = S.lead; l.x = b.x - fx * bk + rx * sd; l.z = b.z - fz * bk + rz * sd; l.heading = b.heading + 0.15; l.vx = Math.sin(l.heading) * 29; l.vz = Math.cos(l.heading) * 29; l.trail = []; }
   b.input.steer = 0; b.input.hand = 0; for (let i = 0; i < S.settle; i++) { G.time += 1 / 60; updateBoats(1 / 60); updateEffects(1 / 60); } p.x = b.x; p.z = b.z;
+  // the gunfight (combat/boatGunfight.js): Nico's rounds have just holed the second launch's fuel tank and it goes up beside
+  // the wake; the lead launch's bow gunner walks a burst across the water at the Skipjack while Nico fires back over the stern
+  { const l = launches[1], [fx, fz, rx, rz] = fwd(), [bk, sd] = S.blast; l.x = b.x - fx * bk + rx * sd; l.z = b.z - fz * bk + rz * sd; l.heading = b.heading - 0.5; l.mesh.position.set(l.x, 0, l.z); l.mesh.rotation.y = l.heading; l.trail = []; sinkBoat(l); }
+  const lead = launches[0], bow = () => [lead.x + Math.sin(lead.heading) * 3.6, 1.9, lead.z + Math.cos(lead.heading) * 3.6];
+  for (let i = 0; i < 12; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i % 3 === 0) { boatShot(...bow(), b, 3.2, 0); { const a = Math.random() * 6.283, r = 4.5 + Math.random() * 4; splash(b.x + Math.cos(a) * r, b.z + Math.sin(a) * r); } } }
+  for (let k = 0; k < 2; k++) { boatShot(...bow(), b, 2.4, 0); boatShot(b.x, 1.7, b.z, lead, 2, 0); }
   // camera ahead of the bow and off to one side, looking back past the boat toward the yacht at Marina Cala
   { const [fx, fz, rx, rz] = fwd(); G.shotCam = { pos: [b.x + fx * c.f + rx * c.r, c.h, b.z + fz * c.f + rz * c.r], look: [b.x + (YACHT.x - b.x) * c.k + rx * c.lr, c.ly, b.z + (YACHT.z - b.z) * c.k + rz * c.lr], fov: c.fov, roll: c.roll }; }
   G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.3, threshold: 1.25, vignette: 0.3 });
   finish(api); }
 // staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
 const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4]],
-  lead: [12, 7], settle: 30, cam: { f: 7.4, r: 3.4, h: 2.7, k: 0.1, lr: 4.2,  ly: 2.0, fov: 56, roll: -0.02 } };
+  lead: [12, 7], blast: [12, -6.5], settle: 30, cam: { f: 7.4, r: 3.4, h: 2.7, k: 0.1, lr: 4.2,  ly: 2.0, fov: 56, roll: -0.02 } };
 // Crew & Chapters screen opened from a ride on The Strand: six chapters done, Dex has turned, Sol's HOT SWAP cooling down.
 function crewScreen(api) {
   const p = G.p, done = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; clearTraffic(); G.mode = 'pause'; G.clock = 17.1; G.magicForce = 0.6; G.completed = done; G.territory = null; G.xp = 2200; G.money = 21400; G.crew = { cd: { sol: 18 }, swaps: 1 }; G.wanted.stars = 0;
