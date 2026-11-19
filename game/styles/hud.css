@@ -148,3 +148,12 @@
 .wt.sel { background: var(--tc-gold); border-color: var(--tc-cream); }
 .crewc .ring { background: rgba(244, 232, 204, 0.5); } .crewc.ready .ring { background: var(--tc-mint); box-shadow: none; }
 #minimap, #mapWrap { border-color: var(--tc-cream) !important; }
+/* Cover-grade layout: a slimmer left column and compact police rows and crew cards, so mission, police list, crew,
+   minimap and district card stack without touching and the centre of the screen stays a clear view of the world. */
+#leftCol { width: 300px; gap: 8px; }
+#policeCard { padding: 6px 10px 6px 16px; background: linear-gradient(165deg, rgba(10, 64, 72, 0.78), rgba(5, 36, 46, 0.7)); }
+#policeCard .hdr { font-size: 14px; margin-bottom: 2px; }
+.prow { font-size: 14px; padding: 1px 0; gap: 6px; } .prow .cs { width: 46px; } .prow .d { width: 46px; } .tag { font-size: 12px; padding: 0 6px; }
+#crewStack { gap: 5px; }
+.crewc { width: 168px; gap: 6px; padding: 3px 6px 3px 3px; background: linear-gradient(165deg, rgba(10, 64, 72, 0.8), rgba(5, 36, 46, 0.72)); }
+.crewc .ring, .crewc canvas { width: 38px; height: 38px; } .crewc .cinfo b { font-size: 16px; } .crewc kbd { font-size: 17px; padding: 0 6px; }

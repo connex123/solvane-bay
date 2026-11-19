@@ -18,13 +18,16 @@ import { updateCrewCards } from './crewCardStack.js';
 import { shares } from '../story/territoryControl.js';
 import { galaLabel } from '../story/chapterArc.js';
 
-const wpV = { x: 0, y: 0, z: 0 };
+const wpV = { x: 0, y: 0, z: 0 }, HUD_RECTS = ['leftCol', 'crewStack', 'bottomLeft', 'topRight', 'rightCol', 'dialog'];
 // Screen-space waypoint diamond with distance over the GPS target (clamped to the screen edges).
 function updateWaypoint() {
   const t = G.mode === 'play' ? gpsTarget() : null, el = $('waypoint'); if (!t) { el.style.display = 'none'; return; }
   const v = G.camera.position.clone().set(t.x, 5, t.z).project(G.camera), behind = v.z > 1; let x = (v.x * 0.5 + 0.5) * innerWidth, y = (0.5 - v.y * 0.5) * innerHeight;
   if (behind) { x = innerWidth - x; y = innerHeight - 90; }
   x = Math.max(40, Math.min(innerWidth - 40, x)); y = Math.max(70, Math.min(innerHeight - 90, y));
+  // never sit on a HUD card: push the diamond (and its distance label) out toward the screen centre
+  for (const id of HUD_RECTS) { const e = $(id); if (!e || !e.offsetParent) continue; const r = e.getBoundingClientRect();
+    if (x > r.left - 22 && x < r.right + 22 && y > r.top - 16 && y < r.bottom + 34) { if (r.left + r.right < innerWidth) x = r.right + 30; else x = r.left - 30; } }
   el.style.display = 'block'; el.style.transform = `translate(${x.toFixed(0)}px, ${y.toFixed(0)}px)`; el.classList.toggle('start', t.kind === 'start');
   set('wpDist', `${Math.round(Math.hypot(t.x - G.p.x, t.z - G.p.z))} m`);
 }
