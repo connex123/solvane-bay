@@ -13,7 +13,7 @@ const server = createServer((req, res) => {
   try { if (!p.startsWith(root) || !statSync(p).isFile()) throw 0; res.writeHead(200, { 'content-type': MIME[extname(p)] || 'application/octet-stream' }); createReadStream(p).pipe(res); } catch { res.writeHead(404); res.end(); }
 });
 await new Promise((r) => server.listen(0, r)); const port = server.address().port;
-const scenes = process.argv.slice(2).length ? process.argv.slice(2) : ['1-chase', '2-boat', '3-crew', '4-title'];
+const scenes = process.argv.slice(2).length ? process.argv.slice(2) : ['1-chase', '2-boat', '3-market', '4-garage'];
 mkdirSync(shots, { recursive: true }); mkdirSync('/tmp/solvane-shots', { recursive: true });
 const flags = ['--headless=new', '--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--hide-scrollbars', '--window-size=1280,800', '--virtual-time-budget=20000', '--enable-logging=stderr', '--v=0'];
 for (const s of scenes) {
