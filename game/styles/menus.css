@@ -86,3 +86,4 @@
 #title h1.logo .l1 { background-image: linear-gradient(180deg, #fff6d8 0%, #ffd06a 40%, #ff8a4a 70%, #ff6f59 100%); filter: drop-shadow(5px 6px 0 #0a4a54) drop-shadow(10px 12px 0 #032028); }
 #title h1.logo .l2 { background-image: linear-gradient(180deg, #f0fffa 0%, #7dffe0 40%, #2fd6c4 70%, #138a96 100%); filter: drop-shadow(5px 6px 0 #ff6f59) drop-shadow(10px 12px 0 #032028); }
 #cityMap, #pause, #crew, #garage, #shop, #settings, #controls { z-index: 5; } /* menu screens sit above the HUD */
+.menu button, .panel button { border-left: 2px solid rgba(244, 232, 204, 0.7) !important; box-shadow: inset 6px 0 0 var(--tc-coral); }
