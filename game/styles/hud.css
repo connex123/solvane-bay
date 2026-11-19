@@ -79,8 +79,8 @@
 #glare i::before { content: ''; position: absolute; left: 120px; right: 120px; top: 498px; height: 4px; background: linear-gradient(90deg, transparent, rgba(255,200,140,0.75) 40%, rgba(255,250,230,0.95) 50%, rgba(255,200,140,0.75) 60%, transparent); filter: blur(1.5px); }
 #glare i::after { content: ''; position: absolute; left: 470px; top: 120px; width: 60px; height: 760px; background: linear-gradient(0deg, transparent, rgba(255,210,150,0.28) 50%, transparent); filter: blur(6px); }
 #speedfx { position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0; mix-blend-mode: screen;
-  background: repeating-conic-gradient(from 0deg at 50% 44%, transparent 0deg 1.3deg, rgba(255,235,220,0.5) 1.5deg 1.7deg, transparent 1.9deg 3.9deg), repeating-conic-gradient(from 1deg at 50% 44%, transparent 0deg 2.6deg, rgba(255,196,110,0.45) 2.8deg 3.1deg, transparent 3.3deg 7.1deg);
-  -webkit-mask-image: radial-gradient(ellipse 70% 75% at 50% 44%, transparent 55%, #000 100%); mask-image: radial-gradient(ellipse 70% 75% at 50% 44%, transparent 55%, #000 100%); }
+  background: repeating-conic-gradient(from 0deg at 50% 44%, transparent 0deg 1.3deg, rgba(255,235,220,0.5) 1.55deg 1.65deg, transparent 1.75deg 3.9deg), repeating-conic-gradient(from 1deg at 50% 44%, transparent 0deg 2.75deg, rgba(255,196,110,0.45) 2.85deg 2.98deg, transparent 3.1deg 7.1deg);
+  -webkit-mask-image: radial-gradient(ellipse 72% 76% at 50% 46%, transparent 74%, #000 104%); mask-image: radial-gradient(ellipse 72% 76% at 50% 46%, transparent 74%, #000 104%); }
 #waypoint { position: absolute; left: 0; top: 0; display: none; pointer-events: none; text-align: center; width: 0; }
 #waypoint i { display: block; width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #ff4fd8; border: 3px solid #fff; transform: rotate(45deg); box-shadow: 0 0 14px #ff4fd8, 0 2px 6px rgba(0, 0, 0, 0.6); }
 #waypoint span { display: block; width: 80px; margin: 8px 0 0 -40px; font-size: 13px; font-weight: 900; color: #fff; text-shadow: 0 1px 3px #000, 0 0 6px #000; }

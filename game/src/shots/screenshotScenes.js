@@ -46,12 +46,14 @@ function thinPalms(cx, cz, b0, b1, minD) {
 // the coral Causeway pylon, an SBPD cruiser sideswiping its left front in a spray of sparks, another chasing on the right,
 // a third wrecked and burning on the kerb, AIR-1 low overhead with its searchlight on the car.
 // Staging numbers in the avenue's frame: u metres east (forward), v metres south (to the right of the camera).
-const COVER = { clock: 17.62, drift: 0.62, car: [0, 1.75], cam: [-8.0, 1.5, 1.75], look: [40, 0.9, 2.75], fov: 45, roll: 0.035,
-  rammer: [3.4, -2.5, -0.62], second: [9, 4.8, -0.05], burner: [22, 6.4, 0.9], heli: [22, -3.0, 9.8], spot: [7, -1.2], roadblock: 166 };
+// Framed so the hero car sits centre-low, ~40% of the frame wide and clear of the HUD cards; the wreck burns off to the right,
+// AIR-1 hangs large above the left lane with its cone on the road ahead of the car.
+const COVER = { clock: 17.62, drift: 0.62, car: [0, 1.75], cam: [-8, 1.9, 1.1], look: [40, 2.4, 0.2], fov: 40, roll: 0.035,
+  rammer: [3.0, -2.25, -0.5], second: [14, 4.0, -0.05], burner: [26, 9.0, 0.9], heli: [18, -2.8, 5.9], spot: [10, -1.8], roadblock: 166, paint: 0xf22a1c };
 function chase(api) {
   const p = G.p, C = COVER, X0 = 112, ZA = lineCoord(3), T = (u, v) => [X0 + u, ZA + v], H = (d) => Math.PI / 2 + d; clearTraffic();
   G.mode = 'play'; G.clock = C.clock; G.magicForce = 1; G.time = 12; G.money = 48250; G.xp = 760; G.radio = 1; G.shotCrisp = true; api.showHud(true);
-  const [cx, cz] = T(C.car[0], C.car[1]), car = createCar('veloce', cx, cz, H(C.drift), 'parked', 0xd01020); enterCar(car); car.vx = 41; car.vz = -2; car.speed = 41; car.steerA = 0.4; car.input.throttle = 1;
+  const [cx, cz] = T(C.car[0], C.car[1]), car = createCar('veloce', cx, cz, H(C.drift), 'parked', C.paint); enterCar(car); car.vx = 41; car.vz = -2; car.speed = 41; car.steerA = 0.4; car.input.throttle = 1;
   car.hp = car.maxHp * 0.68; car.nitro = 0.58; car.boosting = true; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24, molotov: 3 };
   // same story moment as the Crew & Chapters shot: six chapters done (Dex has turned), chapter 7 in progress
   G.completed = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; G.territory = null; G.crew = { cd: { sol: 22 }, swaps: 1 };
@@ -64,7 +66,7 @@ function chase(api) {
   // the third cruiser lost it on the kerb: wrecked, nose up on the palm planter, and it just went up (the real wreck + explosion)
   burner.mesh.rotation.z = 0.22; burner.mesh.position.y = 0.35; wreck(burner);
   for (let i = 0; i < 9; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i % 3 === 0) fire(burner.x, 1.2, burner.z); }
-  for (let i = 0; i < 4; i++) fire(burner.x, 1.4, burner.z);
+  for (let i = 0; i < 10; i++) fire(burner.x, 1.4 + i * 0.25, burner.z);
   // AIR-1 low over the boulevard, nose swinging toward the camera, searchlight on the road beside the car
   { const [hx, hz] = T(C.heli[0], C.heli[1]); G.heli = createHeli(hx, hz); G.heli.y = C.heli[2]; G.heli.mesh.position.set(hx, C.heli[2], hz);
     G.heli.mesh.rotation.order = 'YXZ'; G.heli.mesh.rotation.set(0.12, Math.PI / 2 + 0.75, 0.18); G.heli.rotor.rotation.y = 0.5; const [sx, sz] = T(C.spot[0], C.spot[1]); placeCone(G.heli, sx, sz); } G.shotLock = true;
@@ -73,17 +75,20 @@ function chase(api) {
   // the drift so far: twin skid marks behind the rear wheels; thick tyre smoke rolling back off them
   const fx = Math.sin(car.heading), fz = Math.cos(car.heading), rx = car.x - fx * 1.45, rz = car.z - fz * 1.45;
   for (let k = 0; k < 50; k++) { const q = k / 50, [x, z] = T(C.car[0] - 1.6 - q * 34, C.car[1] + q * q * 2.5); for (const sg of [-1, 1]) skidMark(x - Math.sin(C.drift * (1 - q)) * sg * 0.4, z + sg * 0.85, H(C.drift * (1 - q))); }
-  for (let k = 0; k < 16; k++) { const b = k * 0.55; for (const sg of [-1, 1]) particle({ x: rx - b * 0.9 + sg * fz * 0.9, y: 0.4 + k * 0.07, z: rz + sg * -fx * 0.9 + b * (0.35 + sg * 0.15), life: 1.5, size: 1.2 + k * 0.32, color: 0xfff2e6, hdr: 1.25, op: 0.5 - k * 0.026, tex: 'puff' }); }
+  for (let k = 0; k < 6; k++) { const b = k * 0.55; for (const sg of [-1, 1]) particle({ x: rx - b * 0.9 + sg * fz * 0.9, y: 0.4 + k * 0.07, z: rz + sg * -fx * 0.9 + b * (0.35 + sg * 0.15), life: 1.5, size: 1.1 + k * 0.3, color: 0xfff2e6, hdr: 1.1, op: 0.26 - k * 0.03, tex: 'puff' }); } // kept short of the lens
   // nitro: blue-white exhaust flame
-  for (let k = 0; k < 6; k++) particle({ x: car.x - fx * (2.5 + k * 0.3), y: 0.36, z: car.z - fz * (2.5 + k * 0.3), life: 0.3, size: 0.85 - k * 0.09, color: 0x7fc8ff, add: true, hdr: 1.8 });
+  for (let k = 0; k < 7; k++) particle({ x: car.x - fx * (2.45 + k * 0.32), y: 0.38, z: car.z - fz * (2.45 + k * 0.32), life: 0.3, size: 1.05 - k * 0.1, color: k < 2 ? 0xe8f6ff : 0x7fc8ff, add: true, hdr: 2.4 });
   // the sideswipe: sparks where the cruiser's push bar grinds the left front wing (stepped a few frames so they streak out)
-  { const hx = (car.x + fx * 1.4 + rammer.x) / 2, hz = (car.z + fz * 1.4 + rammer.z) / 2; sparks(hx, 0.7, hz, 34); for (let i = 0; i < 3; i++) { G.time += 1 / 60; updateEffects(1 / 60); sparks(hx, 0.7, hz, 14); }
-    particle({ x: hx, y: 0.75, z: hz, life: 1, size: 2.2, color: 0xffc070, add: true, hdr: 1.6 }); }
+  { const hx = (car.x + fx * 1.4 + rammer.x) / 2, hz = (car.z + fz * 1.4 + rammer.z) / 2; sparks(hx, 0.7, hz, 40); for (let i = 0; i < 3; i++) { G.time += 1 / 60; updateEffects(1 / 60); sparks(hx, 0.7, hz, 18); }
+    particle({ x: hx, y: 0.75, z: hz, life: 1, size: 1.2, color: 0xffc070, add: true, hdr: 1.6 }); }
   G.money = 47995; api.updateHud(0.016); popup('DRIFT x4', 180, 'drift'); popup('TRADE PAINT', 75, 'ram');
   say({ who: 'sol', text: 'Dex sold us out! Cut down to the Strand and floor it for the marina gate!' }); typed();
-  G.exposure = 1.08; if (G.post) Object.assign(G.post.params, { bloom: 0.5, threshold: 1.05, vignette: 0.42 });
+  G.exposure = 1.05; if (G.post) Object.assign(G.post.params, { bloom: 0.32, threshold: 1.3, vignette: 0.38 }); // crisp: bloom only on the hot spots
   const [px, pz] = T(C.cam[0], C.cam[1]), [lx, lz] = T(C.look[0], C.look[1]); G.shotCam = { pos: [px, C.cam[2], pz], look: [lx, C.look[2], lz], fov: C.fov, roll: C.roll };
-  const rim = new THREE.PointLight(0xffb070, 140, 12, 1.4); { const [x, z] = T(0.5, -2.6); rim.position.set(x, 2.4, z); } G.scene.add(rim);
+  const rim = new THREE.PointLight(0xffb070, 160, 12, 1.4); { const [x, z] = T(0.5, -2.6); rim.position.set(x, 2.4, z); } G.scene.add(rim);
+  // warm bounce off the sunlit asphalt onto the tail and right flank, so the paint reads glossy coral instead of backlit dark
+  const fill = new THREE.PointLight(0xffc89a, 35, 13, 1.3); { const [x, z] = T(-4.2, 3.6); fill.position.set(x, 2.6, z); } G.scene.add(fill);
+  { const [x, z] = T(C.cam[0], C.cam[1]); thinPalms(x, z, 58, 84, 0); thinPalms(x, z, 88, 97, 0); } // palms would cover AIR-1 and the pylon
   finish(api); }
 // Chapter 7, The Ledger: Nico runs the stolen ledger out of Marina Cala in the Skipjack speedboat, banking hard with a
 // white wake curling back past Brandt's yacht, the CROWN JEWEL, and an SBPD harbour launch on his tail.

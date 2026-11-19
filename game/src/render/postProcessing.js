@@ -33,9 +33,11 @@ void main(){
   if (uFringe > 0.001) { vec2 off = d * uFringe * r2 * 0.035;
     col = vec3(texture2D(tScene, vUv + off).r, texture2D(tScene, vUv).g, texture2D(tScene, vUv - off).b); }
   else col = texture2D(tScene, vUv).rgb;
-  // at-speed radial blur: the frame edges smear out from the vanishing point (6 taps, only while fast or on nitro)
-  if (uRadial > 0.001) { vec2 dir = vUv - uCenter; float w = smoothstep(0.24, 0.72, length(dir * vec2(1.5, 1.0))) * uRadial; vec3 acc = col;
-    for (int i = 1; i < 7; i++) acc += texture2D(tScene, vUv - dir * (float(i) * 0.0075 * w)).rgb; col = acc / 7.0; }
+  // at-speed radial blur, edges only: zero over the central ~60% of the frame (a squircle), ramping up to the frame border,
+  // so the car, the pursuers and the skyline stay sharp while the periphery streaks (6 taps, only while fast or on nitro)
+  if (uRadial > 0.001) { vec2 dir = vUv - uCenter, e = abs(d) * 2.0; e *= e; float L = sqrt(sqrt(dot(e, e)));
+    float w = smoothstep(0.6, 1.02, L) * uRadial; vec3 acc = col;
+    if (w > 0.001) { for (int i = 1; i < 7; i++) acc += texture2D(tScene, vUv - dir * (float(i) * 0.0075 * w)).rgb; col = acc / 7.0; } }
   vec3 bloom = texture2D(tB1, vUv).rgb * 0.5 + texture2D(tB2, vUv).rgb * 0.8 + texture2D(tB3, vUv).rgb * 1.1;
   col += bloom * uBloom;
   col *= uExposure;

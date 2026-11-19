@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { G } from '../core/gameState.js';
 
 export function createHeli(x, z) {
-  const g = new THREE.Group(), body = new THREE.MeshLambertMaterial({ color: 0xf2f4ee, emissive: 0x5e6a68 }) /* white SBPD air unit livery: reads against a bright sky */, glass = new THREE.MeshLambertMaterial({ color: 0x1f5a6c });
+  const g = new THREE.Group(), body = new THREE.MeshLambertMaterial({ color: 0xf2f4ee, emissive: 0x8e9896 }) /* white SBPD air unit livery: reads against a bright sky */, glass = new THREE.MeshLambertMaterial({ color: 0x1f5a6c });
   const cab = new THREE.Mesh(new THREE.SphereGeometry(1.5, 10, 8), body); cab.scale.set(1, 0.9, 1.5); g.add(cab);
   const win = new THREE.Mesh(new THREE.SphereGeometry(1.1, 8, 6), glass); win.position.set(0, 0.25, 0.9); win.scale.set(1, 0.8, 1); g.add(win);
   const tail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.4, 4.5), body); tail.position.set(0, 0.2, -3.8); g.add(tail);
@@ -17,9 +17,9 @@ export function createHeli(x, z) {
   const tr = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.2, 0.22), dark); tr.position.set(0.22, 0.9, -5.9); g.add(tr);
   const disc = new THREE.Mesh(new THREE.CircleGeometry(5.5, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x30393c, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide })); disc.position.y = 1.5; g.add(disc);
   const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.05, 0.25, 1.2), new THREE.MeshBasicMaterial({ color: 0xff3040 })); stripe.position.set(0, -0.3, 0); g.add(stripe);
-  const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.24, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   // the pool of searchlight on the ground under the cone
-  const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xe4f6ff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
+  const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.85, 2.1) /* HDR: blooms under the warm grade */, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
   cone.add(spot); spot.position.y = -0.5; spot.scale.set(0.95, 1, 0.95);
   G.scene.add(g, cone);
   return { x, z, y: 40, ang: Math.random() * 6, mesh: g, rotor, cone };
