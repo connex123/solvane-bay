@@ -50,7 +50,7 @@ export function toTitle() { G.mode = 'title'; rig.mode = 'aerial'; showHud(false
 export function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; hideScreens(); swallowClick(); requestLock(); } }
 export const handlers = {
   new: () => startGame(false), continue: () => startGame(true), controls: () => { G.prevScreen = G.mode; showScreen('controls'); }, settings: () => showScreen('settings'),
-  back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
+  back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), crew: () => showScreen('crew'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
   quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); swallowClick(); requestLock(); },
 };
 window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
@@ -60,7 +60,8 @@ input.onUnlock = () => { if (G.mode === 'play') pause(true); };
 export function handleGlobalKeys() {
   if (pressed('Escape')) { if (G.mode === 'play') pause(true); else if (G.mode === 'pause') { if (!hidden('cityMap') || !hidden('pause')) pause(false); else showScreen('pause'); } }
   if (pressed('KeyM') && G.mode === 'play') { G.mode = 'pause'; showScreen('cityMap'); releaseLock(); } else if (pressed('KeyM') && G.mode === 'pause' && !hidden('cityMap')) pause(false);
+  if (pressed('KeyJ') && G.mode === 'play') { G.mode = 'pause'; showScreen('crew'); releaseLock(); } else if (pressed('KeyJ') && G.mode === 'pause' && !hidden('crew')) pause(false);
   if (pressed('KeyR') && G.mode === 'play') { cycleRadio(); sfx.click(); }
   if (G.mode === 'play' && !input.locked && input.leftPressed && hidden('dialog')) requestLock();
-  for (const k of ['Escape', 'KeyM', 'KeyR']) input.edge.delete(k); // consumed here; other edges wait for the next simulation step
+  for (const k of ['Escape', 'KeyM', 'KeyR', 'KeyJ']) input.edge.delete(k); // consumed here; other edges wait for the next simulation step
 }

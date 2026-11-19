@@ -7,7 +7,7 @@ export function drawPortrait(canvas, id) {
   g.fillStyle = c.shirt; g.beginPath(); g.moveTo(w * 0.08, h); g.quadraticCurveTo(w * 0.1, h * 0.68, w * 0.5, h * 0.66); g.quadraticCurveTo(w * 0.9, h * 0.68, w * 0.92, h); g.fill();
   g.fillStyle = 'rgba(0,0,0,0.18)'; g.beginPath(); g.moveTo(w * 0.38, h * 0.67); g.lineTo(w * 0.5, h * 0.85); g.lineTo(w * 0.62, h * 0.67); g.fill();
   g.fillStyle = c.skin; g.fillRect(w * 0.42, h * 0.55, w * 0.16, h * 0.14);
-  if (c.style === 'long') { g.fillStyle = c.hair; g.fillRect(w * 0.2, h * 0.2, w * 0.6, h * 0.62); }
+  if (c.style === 'long') { g.fillStyle = c.hair; g.beginPath(); g.moveTo(w * 0.24, h * 0.86); g.quadraticCurveTo(w * 0.12, h * 0.4, w * 0.3, h * 0.2); g.quadraticCurveTo(w * 0.5, h * 0.08, w * 0.7, h * 0.2); g.quadraticCurveTo(w * 0.88, h * 0.4, w * 0.76, h * 0.86); g.closePath(); g.fill(); }
   g.fillStyle = c.skin; g.beginPath(); g.ellipse(w * 0.5, h * 0.4, w * 0.2, h * 0.24, 0, 0, 7); g.fill();
   g.fillStyle = 'rgba(0,0,0,0.12)'; g.beginPath(); g.ellipse(w * 0.58, h * 0.42, w * 0.1, h * 0.2, 0, -1.2, 1.2); g.fill();
   g.fillStyle = c.hair;

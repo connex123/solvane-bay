@@ -91,9 +91,15 @@ function onfoot(api) {
   G.exposure = 1.18; if (G.post) Object.assign(G.post.params, { bloom: 0.5, threshold: 1.05 });
   rig.mode = 'auto'; finish(api);
   floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }
-function map(api) {
-  const p = G.p; seedSave(({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 3, 5, 9, 11], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Neon Row', at: '2026-11-18 17:35' })); clearTraffic(); G.mode = 'pause'; G.clock = 17.6; G.completed = ['m1', 'm2']; G.xp = 520; G.money = 9150; G.packages = [0, 3, 5, 9, 11]; p.x = 118; p.z = lineCoord(6) + 1.5; p.yaw = -Math.PI / 2;
-  refreshStartMarker(); G.markers.forEach((m) => { m.mesh.visible = false; }); G.wanted.stars = 0; api.showHud(false); rig.mode = 'auto'; api.renderFrame(); api.showScreen('cityMap'); finish(api, 1); }
+// Crew & Chapters screen opened from a ride on The Strand: six chapters done, Dex has turned, Sol's HOT SWAP cooling down.
+function crewScreen(api) {
+  const p = G.p, done = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; clearTraffic(); G.mode = 'pause'; G.clock = 17.1; G.magicForce = 0.6; G.completed = done; G.territory = null; G.xp = 2200; G.money = 21400; G.crew = { cd: { sol: 18 }, swaps: 1 }; G.wanted.stars = 0;
+  const car = createCar('veloce', HALF - 3.4, 40, 0.1, 'parked', 0xd01020); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  p.x = HALF - 1; p.z = 30; p.yaw = 0.3; G.cam.yaw = Math.PI + 0.5; G.cam.pitch = 0.12; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
+  tc('tupelo', 70, 1, 0xf6c21c); tc('pico', 110, -1, 0xff8a3d);
+  refreshStartMarker(); G.markers.forEach((m) => { if (m.mesh) m.mesh.visible = false; }); api.showHud(false); rig.mode = 'auto'; G.exposure = 1.2;
+  for (let i = 0; i < 3; i++) api.renderFrame(true); api.showScreen('crew'); finish(api, 1); }
 // Key art: low angle on the beach road at golden hour, the VELOCE GT and Nico in front, palms, skyline and marina behind.
 function title(api) {
   clearTraffic(); seedSave({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Palmetto Beach', at: '2026-11-18 17:35' });
@@ -110,8 +116,8 @@ function title(api) {
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
-  G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-map': map, '4-title': title }[name] || title)(api);
-  if (name !== '3-map') {
+  G.shot = name; ({ '1-chase': chase, '2-onfoot': onfoot, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
+  {
     const c = G.renderer.domElement, img = new Image(); img.id = 'shotImg'; img.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0';
     img.src = c.toDataURL('image/jpeg', 0.93); await img.decode(); c.style.display = 'none'; document.body.insertBefore(img, document.getElementById('hud'));
   }

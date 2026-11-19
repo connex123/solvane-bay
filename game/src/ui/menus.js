@@ -8,9 +8,10 @@ const titleCase = (t) => t.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCa
 export function saveLine(sv) { const done = (sv.completed || []).length, m = MISSIONS[Math.min(done, MISSIONS.length - 1)]; const pct = Math.round(100 * (0.8 * done / MISSIONS.length + 0.2 * (sv.packages || []).length / 12)); return `CH ${m.chapter} \u00b7 ${titleCase(m.title)} \u00b7 ${pct}%`; }
 import { setVolume, sfx } from '../audio/soundEngine.js';
 import { drawCityMap } from './cityMap.js';
+import { fillCrewChapters } from './crewChaptersScreen.js';
 import { setQuality } from '../render/qualityGovernor.js';
 
-const $ = (id) => document.getElementById(id); const ALL = ['title', 'pause', 'controls', 'settings', 'shop', 'cityMap', 'dead'];
+const $ = (id) => document.getElementById(id); const ALL = ['title', 'pause', 'controls', 'settings', 'shop', 'cityMap', 'dead', 'crew'];
 const KEYS = [['W A S D', 'Move / drive'], ['Shift', 'Sprint / nitro in a car'], ['Mouse', 'Look and aim'], ['L-Click', 'Shoot / punch'], ['R-Click', 'Aim'], ['1 – 5', 'Fists, pistol, SMG, shotgun, molotov'], ['Tab (hold)', 'Weapon wheel'], ['Z / X / C', 'Crew: Hot Swap, Blackout, Patch Up'], ['J', 'Crew & Chapters'], ['F', 'Enter or steal nearest car / exit'], ['E', 'Interact, talk, advance dialogue'], ['Space', 'Handbrake (drift)'], ['H', 'Horn'], ['R', 'Radio station'], ['M', 'City map'], ['Esc', 'Pause'], ['Walk into gold markers', 'Start missions']];
 export function initMenus(handlers) {
   $('keysList').innerHTML = KEYS.map(([k, t]) => `<div><b>${k}</b>${t}</div>`).join('');
@@ -19,7 +20,7 @@ export function initMenus(handlers) {
   $('setFx').addEventListener('change', (e) => setQuality(e.target.value));
 }
 export function showScreen(id) {
-  ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = readSave(); $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop();
+  ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = readSave(); $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop(); if (id === 'crew') fillCrewChapters();
 }
 export const hideScreens = () => ALL.forEach((s) => $(s).classList.add('hidden'));
 export function showDead(title, sub) { showScreen('dead'); $('deadTitle').textContent = title; $('deadTitle').style.color = title === 'CUFFED' ? '#5a8aff' : '#ff3a55'; $('deadSub').textContent = sub; }

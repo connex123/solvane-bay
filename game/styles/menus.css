@@ -38,3 +38,32 @@
 #title .menu button { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; border-left: 5px solid #ff4fd8; border-radius: 6px; padding: 9px 18px; }
 #title .menu button:first-child { background: linear-gradient(90deg, #ff9a3c, #ff4fd8); border-color: #ffd23c; }
 #title .kicker { margin-bottom: 34px; text-shadow: 0 2px 6px #000; }
+/* Crew & Chapters: bold cards over a dimmed view of the city, same condensed type and accents as the HUD. */
+#crew { background: linear-gradient(180deg, rgba(8, 20, 30, 0.62), rgba(16, 8, 30, 0.35) 45%, rgba(16, 8, 30, 0.7)); font-family: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', 'Liberation Sans Narrow', sans-serif; --big: 'Anton', Impact, 'Arial Narrow', sans-serif; }
+.crewpanel { width: 1220px; display: flex; flex-direction: column; gap: 12px; }
+.cchead { display: flex; align-items: flex-end; gap: 26px; } .cchead .kick { font-size: 15px; font-weight: 800; letter-spacing: 5px; color: #2fd6c4; }
+.cchead h2 { margin: 0; font: 52px/1 var(--big); letter-spacing: 2px; color: #fff; text-shadow: 3px 3px 0 #ff6a4f; font-style: italic; }
+.ccprog { margin-left: auto; text-align: center; line-height: 1; } .ccprog b { display: block; font: 40px var(--big); color: #ffd23c; } .ccprog span { font-size: 13px; font-weight: 800; letter-spacing: 3px; color: #d8d0ee; }
+.ccturf { width: 380px; background: rgba(16, 10, 34, 0.85); border-left: 5px solid #2fd6c4; border-radius: 6px; padding: 8px 12px; } .ccturf .trow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 16px; font-weight: 800; letter-spacing: 2px; color: #bff6ef; }
+.ccturf em { font: 20px var(--big); font-style: normal; color: #1a0c08; background: linear-gradient(90deg, #ffb35a, #ff6a4f); padding: 0 10px; border-radius: 3px; letter-spacing: 1px; } .ccturf .turf { height: 14px; } .ccturf .turflab { font-size: 17px; }
+.crewrow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.ccard { position: relative; background: linear-gradient(170deg, rgba(30, 20, 56, 0.95), rgba(14, 10, 28, 0.95)); border-radius: 10px; padding: 12px; border-top: 5px solid #4fe08a; min-height: 236px; box-sizing: border-box; }
+.ccard canvas { width: 92px; height: 92px; border-radius: 50%; border: 3px solid #4fe08a; display: block; margin-bottom: 6px; }
+.ccard .nm { font: 25px/1 var(--big); color: #fff; letter-spacing: 1px; } .ccard .rl { font-size: 14px; font-weight: 700; color: #bdb2dc; margin: 2px 0 6px; }
+.ccard .ab { display: flex; align-items: center; gap: 6px; } .ccard .ab b { font: 19px var(--big); color: #ffd23c; letter-spacing: 1px; } .ccard p { margin: 3px 0 26px; font-size: 14px; font-weight: 600; color: #e6def8; line-height: 1.15; }
+.ccard kbd { font: 17px var(--big); background: #fff; color: #1a1030; border-radius: 4px; padding: 0 7px; box-shadow: 0 2px 0 #9a90b8; }
+.ccard .stt { position: absolute; left: 12px; right: 12px; bottom: 10px; font-size: 14px; font-weight: 800; letter-spacing: 1.5px; color: #4fe08a; }
+.ccard.you { border-top-color: #2fd6c4; } .ccard.you canvas { border-color: #2fd6c4; } .ccard.you .stt { color: #2fd6c4; }
+.ccard.ally { border-top-color: #b06aff; } .ccard.ally canvas { border-color: #b06aff; } .ccard.ally .stt { color: #d0a8ff; }
+.ccard.traitor { border-top-color: #ff2a40; } .ccard.traitor canvas { border-color: #ff2a40; filter: grayscale(0.6); } .ccard.traitor .stt { color: #ff5a6a; }
+.ccard.locked { border-top-color: #5a5470; } .ccard.locked canvas { border-color: #5a5470; filter: grayscale(1) brightness(0.55); } .ccard.locked .nm, .ccard.locked p { opacity: 0.6; } .ccard.locked .stt { color: #a8a0c0; }
+.actrow { display: grid; grid-template-columns: 1fr 1fr 1fr 0.9fr; gap: 10px; }
+.act { background: rgba(16, 10, 34, 0.8); align-self: start; border-radius: 10px; padding: 10px 12px; } .act h4 { margin: 0 0 8px; font: 20px var(--big); letter-spacing: 1.5px; color: #ffb35a; }
+.chrow { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); } .chrow i { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 15px var(--big); font-style: normal; background: #3a3456; color: #bdb2dc; }
+.chrow b { display: block; font-size: 17px; font-weight: 800; letter-spacing: 0.5px; color: #fff; } .chrow span { display: block; font-size: 13px; font-weight: 600; color: #cfc6e8; line-height: 1.15; margin-top: 2px; }
+.chrow.done i { background: #4fe08a; color: #08261a; } .chrow.done b { color: #b8f5cf; }
+.chrow.cur { background: linear-gradient(90deg, rgba(255, 154, 60, 0.25), transparent); border-radius: 6px; padding-left: 4px; } .chrow.cur i { background: #ff9a3c; color: #1a0c08; } .chrow.cur span { color: #ffe2b8; }
+.chrow.lock { opacity: 0.55; }
+.act.side .vill { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; } .vill canvas { width: 46px; height: 46px; border-radius: 50%; border: 2px solid #e0463c; } .vill b { display: block; font: 16px var(--big); color: #fff; letter-spacing: 0.5px; } .vill span { font-size: 12px; font-weight: 700; color: #ff9a8a; }
+.unl { display: flex; flex-wrap: wrap; gap: 4px; } .unl i { font-style: normal; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 3px; background: #2fd6c4; color: #08262c; } .unl span { color: #a8a0c0; font-size: 13px; }
+.crewfoot { display: flex; justify-content: flex-end; align-items: center; gap: 14px; font-size: 14px; font-weight: 700; color: #bdb2dc; letter-spacing: 1px; } .crewfoot button { background: rgba(14, 12, 28, 0.85); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 8px; padding: 8px 18px; font-size: 16px; font-weight: 700; }
