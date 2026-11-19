@@ -86,10 +86,12 @@ function build(key) {
     for (const sx of [-0.42, 0.42]) { trim.push([B(0.55, 0.12, 0.6, sx, 0.8, -0.35), 0x5a2a1a], [B(0.55, 0.62, 0.14, sx, 1.05, -0.62, 0.15), 0x5a2a1a], [B(0.08, 0.4, 0.08, sx, 1.1, -0.95), CH]); }
     trim.push([B(W * 0.86, 0.06, 1.3, 0, 0.9, -0.2), 0x2a1a14]);
   }
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { // wheels: tyre, sidewall, spoked rim, hub
-    const wide = pr.sport && sz < 0, x = sx * (W / 2 - (wide ? 0.13 : 0.15)), z = sz * wz, ox = x + sx * (wide ? 0.18 : 0.14);
-    trim.push([cyl(pr.r, wide ? 0.38 : 0.3, x, pr.r, z, 16), 0x111113], [cyl(pr.r * 0.72, 0.02, ox, pr.r, z, 16), 0x2a2a2e], [cyl(pr.r * 0.66, 0.03, ox + sx * 0.005, pr.r, z, 16), [0.55, 0.57, 0.6]], [cyl(0.07, 0.05, ox + sx * 0.02, pr.r, z, 8), CH]);
-    for (let k = 0; k < 5; k++) { const sp = new THREE.BoxGeometry(0.03, pr.r * 1.25, 0.07); sp.rotateX(k / 5 * Math.PI); sp.translate(ox + sx * 0.02, pr.r, z); trim.push([sp, CH]); }
+  const front = [];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { // wheels: tyre, sidewall, spoked rim, hub (front pair kept separate so they steer)
+    const wide = pr.sport && sz < 0, x = sx * (W / 2 - (wide ? 0.13 : 0.15)), z = sz * wz, ox = x + sx * (wide ? 0.18 : 0.14), wt = sz > 0 ? [] : trim;
+    if (sz > 0) front.push({ parts: wt, x, y: pr.r, z });
+    wt.push([cyl(pr.r, wide ? 0.38 : 0.3, x, pr.r, z, 16), 0x111113], [cyl(pr.r * 0.72, 0.02, ox, pr.r, z, 16), 0x2a2a2e], [cyl(pr.r * 0.66, 0.03, ox + sx * 0.005, pr.r, z, 16), [0.55, 0.57, 0.6]], [cyl(0.07, 0.05, ox + sx * 0.02, pr.r, z, 8), CH]);
+    for (let k = 0; k < 5; k++) { const sp = new THREE.BoxGeometry(0.03, pr.r * 1.25, 0.07); sp.rotateX(k / 5 * Math.PI); sp.translate(ox + sx * 0.02, pr.r, z); wt.push([sp, CH]); }
     if (pr.sport) paint.push(B(wide ? 0.2 : 0.12, wide ? 0.2 : 0.16, wide ? 1.05 : 0.95, sx * (W / 2 + (wide ? 0.02 : -0.02)), pr.r + (wide ? 0.33 : 0.36), z)); // fender flare lip, wider haunches at the rear
   }
   const fz = pr.top[0][0], rz = pr.top[pr.top.length - 1][0], hy = pr.hy, ty = pr.ty;
@@ -119,7 +121,7 @@ function build(key) {
     trim.push([B(1.5, 0.08, 0.36, 0, t.roof + 0.0, -0.45), DK]); // light bar base
     lights.push([B(0.16, 0.08, 0.06, 0.4, hy + 0.02, fz + 0.18), [0.4, 0.8, 5]], [B(0.16, 0.08, 0.06, -0.4, hy + 0.02, fz + 0.18), [5, 0.4, 0.4]]); // grille strobes
   }
-  return { paint: merge(paint.map((g) => [g, 0xffffff])), glass: merge(glass.map((g) => [g, 0xffffff])), trim: merge(trim), lights: merge(lights) };
+  return { paint: merge(paint.map((g) => [g, 0xffffff])), glass: merge(glass.map((g) => [g, 0xffffff])), trim: merge(trim), lights: merge(lights), front: front.map((f) => ({ geo: merge(f.parts).translate(-f.x, -f.y, -f.z), x: f.x, y: f.y, z: f.z })) };
 }
 
 // SBPD livery: navy lower panel, teal sweep, shield badge and lettering, drawn on a canvas decal.
@@ -171,6 +173,7 @@ export function buildCarMesh(key, tint) {
   const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.45 }));
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
   a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a;
+  grp.userData.fw = g.front.map((f) => { const w = new THREE.Mesh(f.geo, m.trim); w.position.set(f.x, f.y, f.z); w.castShadow = true; grp.add(w); return w; });
   if (pr_sport(key)) sportRear(grp, key);
   if (t.police) {
     const lv = livery();

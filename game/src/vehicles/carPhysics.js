@@ -3,7 +3,7 @@ import { G, notify } from '../core/gameState.js';
 import { clamp, wrapAngle } from '../core/config.js';
 import { CAR_TYPES, buildCarMesh, burntMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
-import { sparks, smoke, explosion, skidMark, addSiren, removeSiren } from '../combat/effects.js';
+import { sparks, smoke, explosion, skidMark, addSiren, removeSiren, tyreSmoke } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
 import { conditionEffects } from './vehicleCondition.js';
 
@@ -34,19 +34,19 @@ export function stepCar(car, dt) {
   const i = car.input, t = car.type, sn = Math.sin(car.heading), cs = Math.cos(car.heading);
   let vF = car.vx * sn + car.vz * cs, vL = car.vx * cs - car.vz * sn;
   if (car.dead) { i.throttle = 0; i.brake = 0.6; }
-  const mx = t.max * (car.kind === 'cop' ? 0.97 : 1);
+  const mx = t.max * (car.kind === 'cop' ? 0.97 : 1) * (car.tyresBurst ? 0.55 : 1);
   if (i.throttle > 0) vF += t.acc * i.throttle * dt * clamp(1 - Math.max(0, vF) / mx, 0.05, 1) * (vF < 0 ? 2 : 1);
   if (i.brake > 0) { if (vF > 0.8) vF -= 32 * i.brake * dt; else vF = Math.max(vF - t.acc * 0.55 * i.brake * dt, -11); }
   if (!i.throttle && !i.brake) vF -= Math.sign(vF) * Math.min(Math.abs(vF), 3.5 * dt);
   vF *= 1 - 0.12 * dt;
   if (i.hand) vF -= Math.sign(vF) * Math.min(Math.abs(vF), 9 * dt);
-  const grip = i.hand ? 1.4 : t.grip; vL *= Math.exp(-grip * dt);
+  const grip = (i.hand ? 1.4 : t.grip) * (car.tyresBurst ? 0.5 : 1); vL *= Math.exp(-grip * dt);
   const target = i.steer * t.steer / (1 + Math.abs(vF) * 0.05); car.steerA += (target - car.steerA) * Math.min(1, dt * 9);
   car.heading += car.steerA * vF / (t.len * 0.8) * (i.hand ? 1.5 : 1) * dt; if (car.dead) car.heading += 0;
   const s2 = Math.sin(car.heading), c2 = Math.cos(car.heading);
   car.vx = vF * s2 + vL * c2; car.vz = vF * c2 - vL * s2; car.speed = vF; car.lat = vL;
   car.x += car.vx * dt; car.z += car.vz * dt;
-  if ((Math.abs(vL) > 3.2 || (i.hand && Math.abs(vF) > 8)) && Math.abs(vF) > 6) { for (const sg of [-1, 1]) skidMark(car.x - s2 * t.len * 0.32 + c2 * sg * 0.85, car.z - c2 * t.len * 0.32 - s2 * sg * 0.85, car.heading); if (car === G.p.car) car.skidding = true; }
+  if ((Math.abs(vL) > 3.2 || (i.hand && Math.abs(vF) > 8)) && Math.abs(vF) > 6) { for (const sg of [-1, 1]) { const wx = car.x - s2 * t.len * 0.32 + c2 * sg * 0.85, wz = car.z - c2 * t.len * 0.32 - s2 * sg * 0.85; skidMark(wx, wz, car.heading); if (Math.random() < dt * 14) tyreSmoke(wx, wz); } if (car === G.p.car) car.skidding = true; }
   else car.skidding = false;
   for (const off of [-t.len * 0.32, 0, t.len * 0.32]) {
     const r = resolveCircle(car.x + s2 * off, car.z + c2 * off, t.wid / 2 + 0.15);
@@ -56,7 +56,7 @@ export function stepCar(car, dt) {
   car.hitT = Math.max(0, car.hitT - dt);
   conditionEffects(car, dt);
   if (car.dead) { car.wreckT -= dt; if (Math.random() < dt * 6) smoke(car.x, 1.2, car.z, 0x151515); if (car.wreckT < 0 && car !== G.p.car) removeCar(car); }
-  const m = car.mesh; m.position.set(car.x, 0, car.z); m.rotation.y = car.heading; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
+  const m = car.mesh; for (const w of m.userData.fw || []) w.rotation.y = car.steerA * 0.9; m.position.set(car.x, 0, car.z); m.rotation.y = car.heading; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
 }
 export function carCollisions() {
   const cs = G.cars;

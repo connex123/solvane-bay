@@ -11,7 +11,7 @@ export function createHeli(x, z) {
   const rotor = new THREE.Group(); const blade = new THREE.Mesh(new THREE.BoxGeometry(11, 0.06, 0.35), new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.55 }));
   const b2 = blade.clone(); b2.rotation.y = Math.PI / 2; rotor.add(blade, b2); rotor.position.y = 1.55; g.add(rotor);
   const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.05, 0.25, 1.2), new THREE.MeshBasicMaterial({ color: 0xff3040 })); stripe.position.set(0, -0.3, 0); g.add(stripe);
-  const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.055, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.085, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   G.scene.add(g, cone);
   return { x, z, y: 40, ang: Math.random() * 6, mesh: g, rotor, cone };
 }

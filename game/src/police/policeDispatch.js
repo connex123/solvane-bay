@@ -7,6 +7,7 @@ import { blockedAt } from '../world/collision.js';
 import { createCar, removeCar, stepCar } from '../vehicles/carPhysics.js';
 import { createActor, removeActor } from '../characters/pedestrianSystem.js';
 import { STYLES } from '../characters/characterModel.js';
+import { createSpikeStrip } from './spikeStrip.js';
 
 let callN = 11, spawnT = 0, blockT = 15;
 export const copCars = () => G.cars.filter((c) => c.kind === 'cop' && !c.dead);
@@ -47,7 +48,8 @@ export function updatePolice(dt) {
   if (st >= 3 && blockT <= 0 && G.mode === 'play') {
     blockT = 28; const sp = p.car ? p.car.speed : 0, hx = p.car ? Math.sin(p.car.heading) : 0, hz = p.car ? Math.cos(p.car.heading) : 1, ax = tx + hx * 110, az = tz + hz * 110;
     const horiz = Math.abs(hx) > Math.abs(hz), lc = horiz ? lineCoord(nearestLine(az)) : lineCoord(nearestLine(ax)), pos = horiz ? ax : az;
-    if (Math.abs(lc) < HALF && Math.abs(pos) < HALF && (pos + HALF) % 64 > 14 && (pos + HALF) % 64 < 50) for (const o of [-2.6, 2.6]) { const c = spawnCop(horiz ? pos : lc + o, horiz ? lc + o : pos, horiz ? 0 : Math.PI / 2, 'ROADBLOCK'); c.rbT = 40; c.heading += rnd.range(-0.2, 0.2); }
+    if (Math.abs(lc) < HALF && Math.abs(pos) < HALF && (pos + HALF) % 64 > 14 && (pos + HALF) % 64 < 50) { for (const o of [-2.6, 2.6]) { const c = spawnCop(horiz ? pos : lc + o, horiz ? lc + o : pos, horiz ? 0 : Math.PI / 2, 'ROADBLOCK'); c.rbT = 40; c.heading += rnd.range(-0.2, 0.2); }
+      const back = horiz ? -Math.sign(hx) * 7 : -Math.sign(hz) * 7; createSpikeStrip(horiz ? pos + back : lc, horiz ? lc : pos + back, horiz ? 0 : Math.PI / 2, 11); }
   }
   if (st === 0) for (const a of G.actors) if (a.kind === 'cop' && (a.idle || 0) > 8) removeActor(a);
   // busting

@@ -26,6 +26,7 @@ export function particle(o) {
 export const muzzleFlash = (x, y, z) => particle({ x, y, z, life: 0.07, size: 1.3, color: 0xffd070, add: true });
 export function sparks(x, y, z, n = 6) { for (let i = 0; i < n; i++) particle({ x, y, z, vx: (Math.random() - .5) * 9, vy: Math.random() * 6, vz: (Math.random() - .5) * 9, g: 18, life: 0.5, size: 0.25, color: 0xffc060, add: true }); }
 export const smoke = (x, y, z, c = 0x333333) => particle({ x, y, z, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - .5) * 1.5, life: 1.6, size: 1.2, grow: 2.5, color: c, op: 0.7 });
+export const tyreSmoke = (x, z) => particle({ x, y: 0.4, z, vx: (Math.random() - .5) * 1.2, vy: 0.6 + Math.random() * 0.8, vz: (Math.random() - .5) * 1.2, life: 1.4, size: 1.1, grow: 2.6, color: 0xf0e8f0, op: 0.55 });
 export function explosion(x, y, z) {
   for (let i = 0; i < 18; i++) particle({ x, y: y + 0.5, z, vx: (Math.random() - .5) * 12, vy: Math.random() * 9, vz: (Math.random() - .5) * 12, life: 0.7, size: 3, grow: 4, color: 0xff8a2a, add: true });
   for (let i = 0; i < 12; i++) particle({ x, y: y + 1, z, vx: (Math.random() - .5) * 8, vy: 3 + Math.random() * 6, vz: (Math.random() - .5) * 8, life: 2, size: 3, grow: 4, color: 0x222222, op: 0.8 });
