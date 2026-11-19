@@ -170,6 +170,20 @@ function sportRear(grp, key) {
     grp.add(f);
   }
 }
+// TIDE BUS minibus detail: a band of side windows with cream pillars, lit amber TIDE BUS destination boards front and
+// rear, and a teal waistline stripe.
+let busWinTex = null, busBoardTex = null;
+function busDetail(grp, t) {
+  busWinTex ||= canvasTex(512, 64, (g) => { g.fillStyle = '#f6ead2'; g.fillRect(0, 0, 512, 64); for (let k = 0; k < 6; k++) { const gr = g.createLinearGradient(0, 4, 0, 60); gr.addColorStop(0, '#2c6f80'); gr.addColorStop(1, '#0f3440'); g.fillStyle = gr; g.fillRect(8 + k * 84, 6, 74, 52); g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(14 + k * 84, 10, 20, 44); } });
+  busBoardTex ||= canvasTex(256, 56, (g) => { g.fillStyle = '#141414'; g.fillRect(0, 0, 256, 56); g.fillStyle = '#ffb21c'; g.font = 'bold 40px Arial Black, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('TIDE BUS', 128, 30); });
+  const win = new THREE.MeshBasicMaterial({ map: busWinTex }), board = new THREE.MeshBasicMaterial({ map: busBoardTex, toneMapped: false }), stripe = new THREE.MeshLambertMaterial({ color: 0x1fa8a0 });
+  for (const sd of [-1, 1]) {
+    const w = new THREE.Mesh(new THREE.PlaneGeometry(5.3, 0.72), win); w.position.set(sd * (t.wid / 2 + 0.025), 1.78, -0.35); w.rotation.y = sd * Math.PI / 2; grp.add(w);
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(6.3, 0.2), stripe); s.position.set(sd * (t.wid / 2 + 0.025), 0.62, 0); s.rotation.y = sd * Math.PI / 2; grp.add(s);
+  }
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.33), board); f.position.set(0, 2.2, 2.93); f.rotation.x = -0.18; grp.add(f);
+  const r = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.3), board); r.position.set(0, 2.1, -3.27); r.rotation.y = Math.PI; grp.add(r);
+}
 export function buildCarMesh(key, tint) {
   const g = geoCache[key] || (geoCache[key] = build(key)); const t = CAR_TYPES[key], m = sharedMats();
   const c = t.police ? t.tint : key === 'tupelo' || key === 'tidebus' ? t.tint : tint ?? t.tint;
@@ -190,6 +204,7 @@ export function buildCarMesh(key, tint) {
     grp.userData.bar = { r: bar(0xff3040, -0.38), b: bar(0x4080ff, 0.38) };
   }
   if (key === 'tidebus') { const bm = new THREE.MeshBasicMaterial({ map: busTex() }); for (const sd of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 0.5), bm); b.position.set(sd * (t.wid / 2 + 0.02), 1.0, -0.3); b.rotation.y = sd * Math.PI / 2; grp.add(b); } }
+  if (key === 'tidebus') busDetail(grp, t);
   if (key === 'tupelo') { const s = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.3), new THREE.MeshBasicMaterial({ map: taxiTex() })); s.position.set(0, t.roof + 0.18, -0.3); grp.add(s); }
   return grp;
 }

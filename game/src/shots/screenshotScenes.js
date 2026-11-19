@@ -61,25 +61,25 @@ function chase(api) {
   // beach-goers on the sand turning to watch
   for (const [u, v, yw] of [[14, 16, -1.2], [22, 22, -1.6], [30, 14, -0.9], [18, 28, -1.9], [40, 24, -1.4], [8, 20, -1.0], [48, 32, -1.7]]) { const [x, z] = T(u, v), a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); animateWalk(a.mesh, x * 0.7, u % 3 ? 0 : 0.6, false); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = yw; }
   // camera low beside and behind the left rear, looking north-east so the car crosses the frame against the sea and the Causeway
-  const [px, pz] = T(-7.4, -3.2), [lx, lz] = T(20, 14.6), camY = 3.1;
+  const [px, pz] = T(-10.6, -3.0), [lx, lz] = T(20, 21.5), camY = 3.4;
   thinPalms(px, pz, 10, 62, 10);
   // AIR-1 side-on in open sky between the city and the first pylon, its searchlight on the car
   { const b = 25 * Math.PI / 180, d = 36, hx = px + Math.sin(b) * d, hz = pz - Math.cos(b) * d; G.heli = createHeli(hx, hz); G.heli.y = 11.5; G.heli.mesh.position.set(hx, 11.5, hz);
     G.heli.mesh.rotation.order = 'YXZ'; G.heli.mesh.rotation.set(0.14, Math.PI - (b + 1.35), 0.16); G.heli.rotor.rotation.y = 0.5; placeCone(G.heli, car.x, car.z); } G.shotLock = true;
-  { const { x, z } = MARINA_GATE; addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); } setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, 'Shake Reyne\'s units before the marina gate', 0);
+  { const { x, z } = MARINA_GATE; addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); } setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, MISSIONS[6].stages[1].text, 0);
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   updateSirens(0.1); updateLineOfSight(1);
   // the drift so far: twin skid marks curving in from the right behind the rear wheels; tyre smoke rolls off away from the camera
   for (let k = 0; k < 60; k++) { const q = k / 60, u = -2 - q * 30, v = 1.4 + q * q * 3.5, h = Math.PI / 2 + DRIFT * (1 - q) - 0.15 * q; for (const sg of [-1, 1]) { const [x, z] = T(u + Math.cos(h) * sg * 0.85, v - Math.sin(h) * sg * 0.85); skidMark(x, z, H(h)); } }
   const sn = Math.sin(car.heading), cs = Math.cos(car.heading), rx = car.x - sn * 1.45, rz = car.z - cs * 1.45;
-  for (let k = 0; k < 8; k++) { const back = k * 0.55; particle({ x: rx + 1.2 + back * 0.5, y: 0.3 + k * 0.06, z: rz + 0.8 + back, life: 1.4, size: 0.8 + k * 0.2, color: 0xfff0e4, hdr: 1.3, op: 0.3 - k * 0.025, tex: 'puff' }); }
+  for (let k = 0; k < 12; k++) { const back = k * 0.6; particle({ x: rx + 1.3 + back * 0.55, y: 0.35 + k * 0.08, z: rz + 1.0 + back, life: 1.4, size: 1.1 + k * 0.3, color: 0xfff4ec, hdr: 1.35, op: 0.42 - k * 0.028, tex: 'puff' }); }
   for (let k = 0; k < 6; k++) particle({ x: car.x - sn * 2.55, y: 0.33, z: car.z - cs * 2.55 + k * 0.35, life: 0.3, size: 0.8 - k * 0.08, color: 0x7fc8ff, add: true, hdr: 1.6 });
   // the ram: sparks where the cruiser's push bar meets the right rear quarter
   { const hx = rx + 0.9, hz = rz + 0.4; sparks(hx, 0.7, hz, 30); sparks(hx, 0.55, hz, 16); particle({ x: hx, y: 0.75, z: hz, life: 1, size: 1.8, color: 0xffc070, add: true }); }
   G.money = 48000; api.updateHud(0.016); popup('DRIFT x3', 150, 'drift'); popup('NEAR MISS', 100, 'near');
   say({ who: 'sol', text: 'Dex sold us out! Spikes ahead: hit the nitro and thread the gap!' }); typed();
   G.exposure = 1.05; if (G.post) Object.assign(G.post.params, { bloom: 0.3, threshold: 1.25, vignette: 0.3 });
-  G.shotCam = { pos: [px, camY, pz], look: [lx, 0.9, lz], fov: 54, roll: 0.025 };
+  G.shotCam = { pos: [px, camY, pz], look: [lx, 1.9, lz], fov: 54, roll: 0.025 };
   const rim = new THREE.PointLight(0xffe0c0, 50, 14, 1.6); { const [x, z] = T(-3, -2); rim.position.set(x, 3.2, z); } G.scene.add(rim);
   finish(api); }
 // Chapter 7, The Ledger: Nico runs the stolen ledger out of Marina Cala in the Skipjack speedboat, banking hard with a

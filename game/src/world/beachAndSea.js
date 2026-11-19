@@ -21,6 +21,13 @@ export function buildBeachAndSea(scene, rng) {
     pushBox(B, x, 0, z, 0.12, 2.4, 0.12, 0xeeeeee); pushBox(B, x, 2.3, z, 2.8, 0.3, 2.8, c); pushBox(B, x + 2.2, 0.05, z, 0.9, 0.12, 2.0, 0xffe9c0); }
   for (let k = 0; k < 3; k++) { const x = lineCoord(1) + k * 90, z = lineCoord(0) + 20;
     for (const dx of [-8, 8]) pushBox(B, x + dx, 0, z, 1.2, 30, 1.2, 0xe8a030); pushBox(B, x, 28, z, 20, 1.5, 1.5, 0xe8a030); pushBox(B, x, 26, z + 14, 1.5, 1.5, 28, 0xe8a030); }
+  // lifeguard towers (teal hut, coral roof, on stilts with a ramp) and umbrella clusters close to the Strand road
+  for (const z of [232, 96, -30]) { const x = HALF + 25;
+    for (const dx of [-1.1, 1.1]) for (const dz of [-1.1, 1.1]) pushBox(B, x + dx, 0, z + dz, 0.25, 2.6, 0.25, 0xf6ead2);
+    pushBox(B, x, 2.6, z, 3.2, 0.2, 3.2, 0xf6ead2); pushBox(B, x, 2.8, z, 2.4, 1.9, 2.4, 0x2fb8a8); pushBox(B, x - 1.21, 3.3, z, 0.02, 0.9, 1.7, 0x17404a); pushBox(B, x, 4.7, z, 3.0, 0.3, 3.0, 0xe8604c);
+    pushBox(B, x - 1.25, 3.1, z, 0.03, 0.5, 0.5, 0xffffff); pushBox(B, x + 2.8, 0, z, 3.2, 0.15, 1.0, 0xc8a070); pushBox(B, x, 5.0, z, 0.08, 2.4, 0.08, 0xffffff); pushBox(B, x + 0.5, 6.6, z, 1.0, 0.6, 0.05, 0xe8604c); }
+  [[14, 246, 0xff5a7a], [19, 240, 0x2fc4b2], [12, 236, 0xffb02e], [30, 250, 0xffffff], [21, 222, 0xff5a7a], [15, 214, 0x2fc4b2], [32, 238, 0xffb02e], [11, 204, 0xff5a7a]].forEach(([dx, z, c]) => { const x = HALF + dx;
+    pushBox(B, x, 0, z, 0.12, 2.4, 0.12, 0xeeeeee); pushBox(B, x, 2.3, z, 2.8, 0.3, 2.8, c); pushBox(B, x + 0.4, 2.6, z, 1.6, 0.2, 1.6, c); pushBox(B, x + 2.0, 0.05, z - 0.6, 0.9, 0.12, 2.0, z % 2 ? 0x2fb8a8 : 0xffe9c0); pushBox(B, x - 1.9, 0.05, z + 0.4, 0.9, 0.12, 2.0, 0xe8604c); });
   const m = new THREE.Mesh(toGeometry(B), new THREE.MeshLambertMaterial({ vertexColors: true })); m.castShadow = true; scene.add(m);
   // Smooth layered coastal hills: rounded ridgelines (sum of sines), pale far layers fading into the haze.
   const LAYERS = [[860, 330, 0x9cc8c4, 0xf2cdb0], [740, 250, 0x72aeb0, 0xdcb8a0], [650, 175, 0x3f8890, 0xa8b4a4], [590, 105, 0x2f7a62, 0x7fa58c]] // teal ridgelines into warm haze;

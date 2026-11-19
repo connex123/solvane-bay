@@ -113,13 +113,13 @@ function lagoonMarket(scene, B, rng) {
   water.position.set(x, 0.12, z); scene.add(water);
   for (const [dx, dz, w, d] of [[0, -24.5, 50, 1], [0, 24.5, 50, 1], [-24.5, 0, 1, 50], [24.5, 0, 1, 50]]) pushBox(B, x + dx, 0, z + dz, w, 0.7, d, 0xd8c8a6); // stone rim
   addBox({ x0: x - 25, x1: x + 25, z0: z - 25, z1: z + 25, h: 1.2 });
-  const STRIPES = [[0xe8604c, 0xfff4e0], [0x2fb8a8, 0xfff4e0], [0xf2b33a, 0xfff4e0], [0x3a8fd0, 0xfff4e0]], WALLS = [0xf7c59f, 0x8fd3c8, 0xf4a6a0, 0xf6e3b4, 0xb8e0b0, 0xfff4e6];
+  const STRIPES = [[0xe8604c, 0xfff4e0, 0x2fb8a8], [0x2fb8a8, 0xfff4e0, 0xe8604c], [0xe8604c, 0x2fb8a8, 0xfff4e0], [0x2fb8a8, 0xe8604c, 0xfff4e0]], WALLS = [0xf7c59f, 0x8fd3c8, 0xf4a6a0, 0xf6e3b4, 0xb8e0b0, 0xfff4e6];
   const stalls = [[-14, -13], [0, -15], [14, -13], [-14, 6], [14, 6], [0, 12]];
   stalls.forEach(([dx, dz], i) => {
-    const cx = x + dx, cz = z + dz, [a, b] = STRIPES[i % 4];
+    const cx = x + dx, cz = z + dz, [a, b, v] = STRIPES[i % 4];
     for (const sx of [-3.6, 3.6]) for (const sz of [-2.6, 2.6]) pushBox(B, cx + sx, 0, cz + sz, 0.35, 1.6, 0.35, 0x7a5a3a); // stilts
     pushBox(B, cx, 1.5, cz, 8.4, 0.3, 6.4, 0xa07a50); pushBox(B, cx, 1.8, cz + 1, 6.4, 2.6, 3.6, WALLS[i % WALLS.length]); pushBox(B, cx, 1.8, cz - 1.9, 6.4, 1.0, 1.6, 0xe9d8b8); // deck, hut, counter
-    for (let k = 0; k < 8; k++) pushBox(B, cx - 3.5 + k + 0.5, 4.4 - Math.abs(k - 3.5) * 0.08, cz - 0.4, 1, 0.22, 7.2, k % 2 ? b : a); // striped awning
+    for (let k = 0; k < 8; k++) { pushBox(B, cx - 3.5 + k + 0.5, 4.4 - Math.abs(k - 3.5) * 0.08, cz - 0.4, 1, 0.22, 7.2, k % 2 ? b : a); pushBox(B, cx - 3.5 + k + 0.5, 3.75, cz - 4.05, 1, 0.68 - (k % 2) * 0.18, 0.08, k % 2 ? v : a); } // striped coral / cream / teal awning with a scalloped front valance
     for (let k = 0; k < 3; k++) pushBox(B, cx - 2 + k * 2, 2.8, cz - 2.2, 0.9, 0.5, 0.9, [0xff8a3d, 0x7ed68a, 0xffd23c][(i + k) % 3]); // produce crates
   });
   // boardwalks from the street into the market, and a rowboat or two
