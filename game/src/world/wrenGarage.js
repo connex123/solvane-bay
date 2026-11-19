@@ -51,9 +51,9 @@ export function buildWrenGarage(scene) {
   const m = new THREE.Mesh(toGeometry(B), new THREE.MeshLambertMaterial({ vertexColors: true })); m.castShadow = m.receiveShadow = true; scene.add(m);
   scene.add(new THREE.Mesh(toGeometry(L), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 2.1, 1.7) })));
   // the ceiling seen from inside (box tops only face up), and the shop's name painted again high on the tool wall
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x8a8070 })); ceil.position.set(cx, h - 0.02, (z0 + z1) / 2); scene.add(ceil);
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xd8cbb4, emissive: 0x302418 })); ceil.position.set(cx, h - 0.02, (z0 + z1) / 2); scene.add(ceil);
   const inner = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.75), new THREE.MeshBasicMaterial({ map: signTexture() })); inner.rotation.y = -Math.PI / 2; inner.position.set(x1 - 0.42, 4.5, z0 + 6); scene.add(inner);
-  const lamp = new THREE.PointLight(0xffd2a0, 55, 17, 1.3); lamp.position.set(cx, h - 1, (z0 + z1) / 2 + 1); scene.add(lamp); G.garageLamp = lamp;
+  const lamp = new THREE.PointLight(0xffd2a0, 75, 18, 1.3); lamp.position.set(cx, h - 1, (z0 + z1) / 2 + 1); scene.add(lamp); G.garageLamp = lamp;
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.6, (w + 0.6) / 8), new THREE.MeshBasicMaterial({ map: signTexture() })); sign.position.set(cx, h + 0.35 + (w + 0.6) / 16, z1 + 0.42); scene.add(sign);
   // walls are solid for cars and people; the front stays open
   addBox({ x0, x1, z0: z0 - 0.2, z1: z0 + 0.6, h }); addBox({ x0: x0 - 0.2, x1: x0 + 0.6, z0, z1, h }); addBox({ x0: x1 - 0.6, x1: x1 + 0.2, z0, z1, h });
