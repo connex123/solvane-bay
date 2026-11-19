@@ -5,6 +5,9 @@ import { input } from '../core/input.js';
 import { crime } from '../police/wantedSystem.js';
 import { MISSIONS } from '../missions/storyMissions.js';
 import { startMission } from '../missions/missionRunner.js';
+import { lineCoord, LANE } from '../core/config.js';
+import { damageCar } from '../vehicles/carPhysics.js';
+import { conditionPct } from '../vehicles/vehicleCondition.js';
 
 export async function runSelfTest(api) {
   try {
@@ -13,6 +16,8 @@ export async function runSelfTest(api) {
     if (!G.p.car) throw new Error('could not enter car'); input.keys.add('KeyW'); const x0 = G.p.x, z0 = G.p.z;
     for (let i = 0; i < 360; i++) { if (i === 100) input.keys.add('KeyD'); if (i === 140) input.keys.delete('KeyD'); api.stepGame(0.016); }
     if (!(Math.hypot(G.p.x - x0, G.p.z - z0) > 20)) throw new Error('car did not drive');
+    { const c = G.p.car, n0 = c.nitro ?? 1; c.x = -20; c.z = lineCoord(3) + LANE; c.heading = Math.PI / 2; c.steerA = 0; c.vx = Math.sin(c.heading) * 20; c.vz = Math.cos(c.heading) * 20; input.keys.add('ShiftLeft'); for (let i = 0; i < 40; i++) api.stepGame(0.016); input.keys.delete('ShiftLeft');
+      if (!(c.nitro < n0 - 0.1)) throw new Error('nitro did not burn'); const hp = c.hp; damageCar(c, 100); if (!(conditionPct(c) < Math.round(hp / c.maxHp * 100))) throw new Error('condition did not drop'); }
     crime('killcop'); crime('killcop'); for (let i = 0; i < 600; i++) api.stepGame(0.016);
     if (G.cars.filter((c) => c.kind === 'cop').length < 1) throw new Error('no police spawned');
     input.keys.delete('KeyW'); startMission(MISSIONS[0]); for (let i = 0; i < 60; i++) api.stepGame(0.016); api.updateHud(0.016); api.renderFrame();
