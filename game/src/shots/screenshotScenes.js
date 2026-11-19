@@ -125,19 +125,22 @@ function crewScreen(api) {
   // behind the panels: the Strand at golden hour, the sand, the sea and both Causeway pylons
   G.shotCrisp = true; G.shotCam = { pos: [HALF - 4, 9, 78], look: [HALF + 60, 24, -40], fov: 62 }; thinPalms(HALF - 4, 78, 15, 60, 6);
   for (let i = 0; i < 3; i++) api.renderFrame(true); api.showScreen('crew'); finish(api, 1); }
-// Key art: low angle on the beach road at golden hour, the VELOCE GT and Nico in front, palms, skyline and marina behind.
+// Key art: low on the Strand at golden hour looking north-east, the VELOCE GT and Nico in front, the sea gold under the
+// low sun and both coral Causeway pylons with their cable fans standing over it.
 function title(api) {
   clearTraffic(); seedSave({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Palmetto Beach', at: '2026-11-18 17:35' });
-  G.mode = 'title'; G.clock = 16.7; G.magicForce = 0.7; G.exposure = 1.4; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0;
-  const car = createCar('veloce', HALF - 3.4, 62.6, 0.35, 'parked', 0xd01020); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
-  const p = G.p; p.x = HALF - 0.3; p.z = 66.2; p.yaw = 0.2; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
+  G.mode = 'title'; G.clock = 16.75; G.magicForce = 0.8; G.exposure = 1.3; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0; G.shotCrisp = true;
+  const C = { x: HALF - 3, z: 112 }, at = (deg, d) => [C.x + Math.sin(deg * Math.PI / 180) * d, C.z - Math.cos(deg * Math.PI / 180) * d];
+  const [vx, vz] = at(25, 10), car = createCar('veloce', vx, vz, -0.75, 'parked', 0xd01020); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  const [nx, nz] = at(41, 5.6), p = G.p; p.x = nx; p.z = nz; p.yaw = -0.35; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
   const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
-  tc('tupelo', -10, 1, 0xf6c21c); tc('rumble', -60, -1, 0x8fd3c8); tc('pico', -120, 1, 0xff8a3d); tc('hawke', 6, -1, 0xf0f0f0);
-  [[-4, 1, 1], [-22, 1, -1], [-40, -1, 1], [16, 1, 1], [-70, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  // sunlit foreground: a warm low key from the sea side washes the near asphalt and kerb in late sun
-  const key = new THREE.SpotLight(0xffc27e, 1400, 90, 0.5, 0.7, 1.6); key.position.set(HALF + 18, 16, 98); key.target.position.set(HALF - 9, 0, 70); G.scene.add(key, key.target);
+  tc('tidebus', 70, 1); tc('rumble', 40, -1, 0x8fd3c8); tc('pico', -10, 1, 0xff8a3d); tc('hawke', 20, -1, 0xf0f0f0);
+  [[88, 1, 1], [72, 1, -1], [60, -1, 1], [50, 1, 1], [30, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  thinPalms(C.x, C.z, 16, 72, 10);
+  // sunlit foreground: a warm low key from the sea side washes the near asphalt, the car and Nico in late sun
+  const key = new THREE.SpotLight(0xffc27e, 1200, 90, 0.5, 0.7, 1.6); key.position.set(HALF + 18, 16, 128); key.target.position.set(HALF - 1, 0, 102); G.scene.add(key, key.target);
   if (G.roadMat) G.roadMat.color.setRGB(1.45, 1.22, 1.0); if (G.post) G.post.params.vignette = 0.3;
-  G.titleCam = { x: HALF - 2.2, y: 1.35, z: 71.5, tx: HALF - 6, ty: 3.4, tz: 30 };
+  { const [tx, tz] = at(27, 40); G.titleCam = { x: C.x, y: 1.5, z: C.z, tx, ty: 6.6, tz }; }
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
