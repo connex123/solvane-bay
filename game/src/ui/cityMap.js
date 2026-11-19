@@ -5,6 +5,8 @@ import { blocks } from '../world/cityLayout.js';
 import { hex, drawBlips, gpsRoute } from './minimap.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { slotSummary } from '../save/saveGame.js';
+import { CAUSEWAY, LIGHTHOUSE, CROWN_TOWER, LAGOON } from '../world/landmarks.js';
+import { LIFEGUARD_TOWERS } from '../world/beachLife.js';
 import { packagePositions, SHOP, GARAGE, TAXI, RACE } from '../missions/sideActivities.js';
 
 const V_NAMES = ['Harbor Rd', 'Coral Ave', 'Marlin St', 'Crown Blvd', 'Velvet Ave', 'Alder Way', 'Tupelo St', 'Cadia Ave', 'Hawke St', 'Palmetto Dr'];
@@ -15,10 +17,10 @@ const money = (n) => '$' + Number(n).toLocaleString('en-US');
 
 function baseMap(g, X, Z, k) {
   const W = g.canvas.width, Hh = g.canvas.height, seaX = X(SEA_X), cw = X(HALF + 8);
-  g.fillStyle = '#1b2a2a'; g.fillRect(0, 0, W, Hh);
+  g.fillStyle = '#e9dcb8'; g.fillRect(0, 0, W, Hh); // chart paper
   for (let i = 0; i < 260; i++) { g.fillStyle = hash(i, 1) > 0.5 ? '#2f5e40' : '#24503a'; g.beginPath(); g.arc(hash(i, 2) * cw, hash(i, 3) * Hh, 6 + hash(i, 4) * 18, 0, 7); g.fill(); }
   // sea: gradient, wave rows and sparkles
-  const sg = g.createLinearGradient(seaX, 0, W, 0); sg.addColorStop(0, '#35b6d2'); sg.addColorStop(0.35, '#1f87b8'); sg.addColorStop(1, '#0d3c70'); g.fillStyle = sg; g.fillRect(seaX, 0, W - seaX, Hh);
+  const sg = g.createLinearGradient(seaX, 0, W, 0); sg.addColorStop(0, '#6fdcd2'); sg.addColorStop(0.35, '#2fa8b4'); sg.addColorStop(1, '#0f5a72'); g.fillStyle = sg; g.fillRect(seaX, 0, W - seaX, Hh);
   g.lineWidth = 1.6; for (let r = 0; r < 52; r++) { const y0 = 8 + r * 14, ph = hash(r, 7) * 6; g.strokeStyle = `rgba(210,242,255,${0.12 + hash(r, 8) * 0.18})`; g.beginPath(); for (let x = seaX + 4; x <= W; x += 6) { const y = y0 + Math.sin(x * 0.07 + ph) * 3 + Math.sin(x * 0.19 + ph * 2) * 1.2; x === seaX + 4 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); }
   g.fillStyle = 'rgba(255,255,255,0.55)'; for (let i = 0; i < 60; i++) g.fillRect(seaX + 10 + hash(i, 9) * (W - seaX - 14), hash(i, 10) * Hh, 2, 1.2);
   // beach: sand with speckle, foam line, umbrellas and palms
@@ -52,6 +54,35 @@ function baseMap(g, X, Z, k) {
     for (let b = 0; b < 4; b++) { const bx = X(SEA_X - 10 + b * 14) + 18, bz = Z(zc + (b % 2 ? 4.5 : -4.5)) + (b % 2 ? 4 : -4); g.fillStyle = ['#ffffff', '#f4a6a0', '#8fd3c8', '#f6e3b4'][b]; rr(g, bx - 6, bz - 2.5, 12, 5, 2.5); g.fill(); g.fillStyle = '#1b2a40'; g.fillRect(bx - 1, bz - 1, 3, 2); } }
 }
 let occ = []; // screen rects already used by badges, the info card and the player arrow
+// Nautical-chart layer: sounding contours off the Strand with depth figures, the lagoon basin, a compass rose and the
+// landmarks drawn as chart symbols (Causeway with pylons and cable fans, lighthouse light-flare, Crown Tower crown).
+function chartLayer(g, X, Z, k) {
+  const W = g.canvas.width, Hh = g.canvas.height;
+  g.save(); g.lineWidth = 1.4; g.font = 'italic 700 11px Segoe UI, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  [[14, 2], [34, 5], [62, 10], [98, 20], [126, 40]].forEach(([off, depth], i) => {
+    g.strokeStyle = `rgba(232, 250, 246, ${0.55 - i * 0.07})`; g.setLineDash(i % 2 ? [6, 4] : []); g.beginPath();
+    for (let y = 0; y <= Hh; y += 6) { const x = X(SEA_X + off) + Math.sin(y * 0.021 + i) * 6 * (1 + i * 0.4) + Math.sin(y * 0.007 + i * 2) * 9; y ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.stroke(); g.setLineDash([]);
+    for (let y = 60 + i * 37; y < Hh; y += 170) { const x = X(SEA_X + off) + Math.sin(y * 0.021 + i) * 6 * (1 + i * 0.4) + Math.sin(y * 0.007 + i * 2) * 9; g.fillStyle = '#0d5a6e'; g.fillRect(x - 8, y - 7, 16, 14); g.fillStyle = '#e8faf6'; g.fillText(String(depth), x, y); }
+  });
+  // lagoon basin with its own soundings
+  const lx = X(LAGOON.x), lz = Z(LAGOON.z); g.fillStyle = '#2fd0c4'; g.fillRect(lx - 24 * k, lz - 24 * k, 48 * k, 48 * k);
+  g.strokeStyle = 'rgba(232,250,246,0.8)'; for (const r of [16, 9]) { g.beginPath(); g.ellipse(lx, lz, r * k, r * k * 0.8, 0, 0, 7); g.stroke(); }
+  // the Causeway: deck, pylons and cable fans
+  const cz = Z(CAUSEWAY.z); g.strokeStyle = '#f4e8cc'; g.lineWidth = 7; g.beginPath(); g.moveTo(X(CAUSEWAY.x0), cz); g.lineTo(W, cz); g.stroke(); g.strokeStyle = '#ff6f59'; g.lineWidth = 3; g.stroke();
+  for (const px of CAUSEWAY.pylons) { const x = X(px); g.fillStyle = '#ff6f59'; g.fillRect(x - 4, cz - 11, 8, 22); g.strokeStyle = 'rgba(244,232,204,0.8)'; g.lineWidth = 1; for (let i = 1; i <= 4; i++) for (const d of [-1, 1]) { g.beginPath(); g.moveTo(x, cz); g.lineTo(x + d * i * 7, cz - 9); g.moveTo(x, cz); g.lineTo(x + d * i * 7, cz + 9); g.stroke(); } }
+  // lighthouse light-flare
+  const hx = X(LIGHTHOUSE.x), hz = Z(LIGHTHOUSE.z); g.fillStyle = 'rgba(255, 201, 60, 0.35)'; g.beginPath(); g.moveTo(hx, hz); g.arc(hx, hz, 30, -2.2, -1.0); g.closePath(); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(hx, hz, 6, 0, 7); g.fill(); g.fillStyle = '#ff6f59'; g.beginPath(); g.arc(hx, hz, 3.5, 0, 7); g.fill();
+  // Crown Tower: gold crown symbol on its block
+  const tx = X(CROWN_TOWER.x), tz = Z(CROWN_TOWER.z); g.fillStyle = '#ffc93c'; g.strokeStyle = '#3a2a00'; g.lineWidth = 2; g.beginPath(); g.moveTo(tx - 11, tz + 7); g.lineTo(tx - 12, tz - 6); g.lineTo(tx - 5, tz); g.lineTo(tx, tz - 9); g.lineTo(tx + 5, tz); g.lineTo(tx + 12, tz - 6); g.lineTo(tx + 11, tz + 7); g.closePath(); g.fill(); g.stroke();
+  for (const t of LIFEGUARD_TOWERS) { g.fillStyle = '#ff6f59'; g.fillRect(X(t.x) - 3, Z(t.z) - 3, 6, 6); }
+  // compass rose over open water
+  const cx = W - 70, cy = Hh - 80; g.translate(cx, cy); g.strokeStyle = 'rgba(244,232,204,0.8)'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, 0, 40, 0, 7); g.stroke(); g.beginPath(); g.arc(0, 0, 30, 0, 7); g.stroke();
+  for (let i = 0; i < 8; i++) { g.rotate(Math.PI / 4); g.fillStyle = i % 2 ? '#f4e8cc' : '#ff6f59'; g.beginPath(); g.moveTo(0, i % 2 ? -26 : -44); g.lineTo(5, 0); g.lineTo(-5, 0); g.closePath(); g.fill(); }
+  g.fillStyle = '#f4e8cc'; g.font = '800 14px Segoe UI, Arial'; g.fillText('N', 0, -54);
+  g.restore();
+}
 function badge(g, x, y, col, glyph, label) {
   occ.push(label ? [x - 38, y - 13, 76, 40] : [x - 13, y - 13, 26, 26]);
   g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 8; g.fillStyle = col; g.beginPath(); g.arc(x, y, 10, 0, 7); g.fill(); g.shadowBlur = 0; g.lineWidth = 2.5; g.strokeStyle = '#fff'; g.stroke();
@@ -99,7 +130,7 @@ import { HOLDERS, holderOf, shares } from '../story/territoryControl.js';
 import { galaLabel } from '../story/chapterArc.js';
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));
-  const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; occ = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
+  const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; occ = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k); chartLayer(g, X, Z, k);
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 14px Segoe UI, Arial'; g.shadowColor = '#000'; g.shadowBlur = 7;
   const seen = {}; for (const b of blocks) (seen[b.district] ||= []).push(b);
   g.font = 'italic 800 16px Segoe UI, Arial'; g.fillStyle = '#d6f3ff'; g.fillText('SOLVANE SEA', X(HALF + 112), Z(0)); g.font = '700 11px Segoe UI, Arial'; g.fillStyle = '#6a5426'; g.shadowBlur = 0; g.save(); g.translate(X(HALF + 29), Z(195)); g.rotate(-Math.PI / 2); g.fillText('THE STRAND', 0, 0); g.restore();
@@ -115,7 +146,7 @@ export function drawCityMap() {
   g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; g.strokeRect(1, 1, cv.width - 2, cv.height - 2);
   const lv = levelFromXp(G.xp), next = RESPECT_XP[lv] ?? null, side = document.getElementById('mapSide');
   const rows = MISSIONS.map((m) => { const done = G.completed.includes(m.id), nx = m === next1; return `<div class="mrow ${done ? 'done' : nx ? 'next' : 'locked'}"><span class="st">${done ? '✓' : nx ? '!' : '🔒'}</span><span>CH ${m.chapter} · ${m.title}</span></div>`; }).join('');
-  const leg = [['#e0463c', 'Crown turf'], ['#2fd6c4', 'Low Tide turf'], ['#ffd23c', 'Story mission'], ['#4fa8ff', 'Calder Arms shop'], ['#4fe0a0', 'Glow Coat Respray'], ['#f2c230', 'Taxi fares'], ['#ff4fd8', 'Street race'], ['#ffe14a', 'Hidden package'], ['#ff2a40', 'Police unit'], ['#ff3a5c', 'Target']].map(([c, t]) => `<div><i style="background:${c}"></i>${t}</div>`).join('');
+  const leg = [['#e0463c', 'Crown turf'], ['#2fd6c4', 'Low Tide turf'], ['#ff6f59', 'The Causeway'], ['#ffffff', 'Point Wren Light'], ['#ffc93c', 'Crown Tower'], ['#2fd0c4', 'Lagoon Market'], ['#ffd23c', 'Story mission'], ['#4fa8ff', 'Calder Arms shop'], ['#4fe0a0', 'Glow Coat Respray'], ['#f2c230', 'Taxi fares'], ['#ff4fd8', 'Street race'], ['#ffe14a', 'Hidden package'], ['#ff2a40', 'Police unit'], ['#ff3a5c', 'Target']].map(([c, t]) => `<div><i style="background:${c}"></i>${t}</div>`).join('');
   const sl = slotSummary();
   const sh = shares(); side.innerHTML = `<div class="card"><h3>WATERFRONT · ${galaLabel(G.completed.length)}</h3><div class="turf"><i style="width:${sh.crown}%"></i><b style="width:${sh.tide}%"></b></div><div class="turflab"><span>Crown ${sh.crown}%</span><span>Low Tide ${sh.tide}%</span></div></div><div class="card"><h3>STORY · NICO VARELA</h3>${rows}</div><div class="card"><h3>REP LEVEL ${lv}</h3><div class="bar"><i style="width:${next ? Math.min(100, (G.xp - RESPECT_XP[lv - 1]) / (next - RESPECT_XP[lv - 1]) * 100) : 100}%"></i></div><div style="margin-top:6px;color:#bdb8d4">${G.xp} XP · ${lv >= 2 ? 'SMG ' : ''}${lv >= 3 ? 'Shotgun ' : ''}unlocked · Packages ${G.packages.length}/16</div></div><div class="card"><h3>LEGEND</h3><div class="leg">${leg}</div></div><div class="card"><h3>SAVE SLOT</h3><div class="slot${sl.used ? ' used' : ''}">${sl.text}</div><div class="slotbtns"><button data-slot="save">Save</button><button data-slot="load"${sl.used ? '' : ' disabled'}>Load</button></div></div>`;
   side.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => window.dispatchEvent(new CustomEvent('slot', { detail: b.dataset.slot }))));

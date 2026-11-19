@@ -17,7 +17,7 @@
 #mapCanvas { border-radius: 10px; display: block; }
 #mapSide { width: 300px; display: flex; flex-direction: column; gap: 10px; } #mapSide .card { padding: 10px 14px; font-size: 13px; } #mapSide h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: 2px; color: #ffb347; }
 .mrow { display: flex; gap: 8px; align-items: center; padding: 3px 0; } .mrow .st { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: #444; } .mrow.done .st { background: #3fbf6a; } .mrow.next .st { background: #ffd23c; color: #111; } .mrow.locked { opacity: 0.45; }
-.leg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; } .leg i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.leg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 15px; font-weight: 700; } .leg i { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 6px; }
 .slot { padding: 6px 8px; border: 1px dashed rgba(255, 255, 255, 0.3); border-radius: 8px; font-size: 12px; }
 .deadbox { text-align: center; } #deadTitle { font-size: 120px; margin: 0; letter-spacing: 10px; color: #ff3a55; text-shadow: 0 6px 0 #400; font-style: italic; } #deadSub { font-size: 20px; color: #f0e6ff; }
 
@@ -85,3 +85,4 @@
 #title { background: linear-gradient(90deg, rgba(3, 40, 48, 0.82) 0%, rgba(3, 40, 48, 0.45) 40%, transparent 70%); }
 #title h1.logo .l1 { background-image: linear-gradient(180deg, #fff6d8 0%, #ffd06a 40%, #ff8a4a 70%, #ff6f59 100%); filter: drop-shadow(5px 6px 0 #0a4a54) drop-shadow(10px 12px 0 #032028); }
 #title h1.logo .l2 { background-image: linear-gradient(180deg, #f0fffa 0%, #7dffe0 40%, #2fd6c4 70%, #138a96 100%); filter: drop-shadow(5px 6px 0 #ff6f59) drop-shadow(10px 12px 0 #032028); }
+#cityMap, #pause, #crew, #garage, #shop, #settings, #controls { z-index: 5; } /* menu screens sit above the HUD */
