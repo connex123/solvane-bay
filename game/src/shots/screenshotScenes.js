@@ -37,7 +37,8 @@ function chase(api) {
   const p = G.p, z0 = lineCoord(3), zc = z0 + 0.5, x0 = -8; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 760; G.radio = 1; api.showHud(true);
   const car = createCar('veloce', x0, zc, Math.PI / 2 - 0.55, 'parked', 0xd01020); enterCar(car); car.vx = 38; car.vz = 1.5; car.speed = 38; car.steerA = 0.5; car.input.throttle = 1;
   car.hp = car.maxHp * 0.68; car.nitro = 0.62; car.boosting = true; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24, molotov: 3 };
-  G.completed = ['m1', 'm2', 'm3', 'm4', 'm5']; G.territory = null; G.crew = { cd: { sol: 22 }, swaps: 1 };
+  // same story moment as the Crew & Chapters shot: six chapters done (Dex has turned), chapter 7 in progress
+  G.completed = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; G.territory = null; G.crew = { cd: { sol: 22 }, swaps: 1 };
   const cop = (x, z, h, v, ai) => { const c = spawnCop(x, z, h, ai); c.vx = Math.sin(h) * v; c.vz = Math.cos(h) * v; c.speed = v; c.ai = ai; c.heading = h; return c; };
   // one cruiser rams the left rear quarter, one closes on the right, a third trails behind
   cop(x0 - 1.4, zc - 2.6, 1.12, 39, 'RAMMING'); cop(x0 + 8, zc + 4.2, Math.PI / 2 + 0.2, 37, 'PURSUIT'); cop(x0 - 18, zc - 3, Math.PI / 2 - 0.12, 36, 'PURSUIT');
@@ -47,7 +48,7 @@ function chase(api) {
   tc('marlin', x0 + 56, -1, 0x2f7fd8, 14); tc('cadia', 66, -1, 0x2fb89a); tc('rumble', 92, -1, 0x8fd3c8); tc('pico', 120, 1, 0xff8a3d); tc('tupelo', 140, -1, 0xf6c21c); tc('hawke', 112, -1, 0xe9c46a); tc('pico', 80, -1, 0xc3a6e0);
   [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1], [2, 1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1], [48, 1, -1], [34, -1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 3, x, s, d); if (i % 2 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, i % 2 ? 0.6 : 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
   G.heli = createHeli(x0 + 37, zc + 5); G.heli.y = 9.2; G.heli.mesh.position.set(G.heli.x, 9.2, G.heli.z); G.heli.mesh.rotation.set(0.08, 0.35, -0.12); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
-  addMarker({ x: 150, z: zc, kind: 'obj', label: 'Safehouse', color: 0xffd23c, auto: false }); setStars(4); G.wanted.heat = 4.3; fakeMission(5, 2, "Reyne's units are on the pier: lose 4 stars", 0);
+  addMarker({ x: 150, z: zc, kind: 'obj', label: 'Safehouse', color: 0xffd23c, auto: false }); setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, 'Shake Reyne\'s units before the marina gate', 0);
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   updateSirens(0.1); updateLineOfSight(1);
   // the drift so far: an arc of twin skid marks behind the rear wheels, and light sunlit tyre smoke rolling off them, kept low and to the side

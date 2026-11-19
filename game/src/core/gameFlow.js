@@ -14,11 +14,14 @@ import { galaLabel } from '../story/chapterArc.js';
 import { grantMolotovs } from '../combat/molotov.js';
 import { applyGarage } from '../shop/garageShop.js';
 import { rig } from '../camera/cameraRig.js';
-import { showHud } from '../ui/hud.js';
 import { showScreen, hideScreens, showDead } from '../ui/menus.js';
 import { initAudio, sfx } from '../audio/soundEngine.js';
 import { cycleRadio } from '../audio/radioStations.js';
 import { saveGame, readSave, applySave } from '../save/saveGame.js';
+import { spawnTrafficNear } from '../vehicles/trafficSystem.js';
+import { spawnPedsNear } from '../characters/pedestrianSystem.js';
+import { renderFrame } from '../render/frameRenderer.js';
+import { showHud, updateHud } from '../ui/hud.js';
 
 const hidden = (id) => document.getElementById(id).classList.contains('hidden');
 function hurtPlayer(d) { const p = G.p; if (p.car) { damageCar(p.car, d * 3); return; } const a = Math.min(p.armor, d * 0.7); p.armor -= a; p.hp -= d - a; G.shake = Math.max(G.shake, 0.25); }
@@ -41,9 +44,15 @@ function resetWorld() {
 }
 // Swallow the click that pressed a menu button so it never reaches the gun.
 const swallowClick = () => { input.left = false; input.leftPressed = false; };
+// Populate the streets around the player and draw the first play frame (GPU uploads, shadow map, HUD) right away, so
+// the cost lands on the button press rather than as a stall a second into play.
+function primeFirstFrame() {
+  const p = G.p; for (let k = 0; k < 6; k++) { spawnTrafficNear(p.x, p.z, 70, 190); spawnPedsNear(p.x, p.z, 30, 130); }
+  renderFrame(true); updateHud(0.016); const gl = G.renderer.getContext(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+}
 export function startGame(load) {
   initAudio(); resetWorld(); if (load) { const s = readSave(); if (s) applySave(s); }
-  G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); swallowClick(); requestLock(); refreshStartMarker();
+  G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); swallowClick(); requestLock(); refreshStartMarker(); primeFirstFrame(); G.holdFrames = 3;
   say(load ? [{ who: 'sol', text: `${galaLabel(G.completed.length)}, Nico. Follow the gold marker; the Low Tide is not getting any younger.` }]
     : [{ who: 'nico', text: 'Five years away and the night ferry still smells like diesel and fried fish. Home.' }, { who: 'brandt', text: 'Welcome back, Mr Varela. Your mother\'s diner belongs to the Crown now. Enjoy the Causeway Gala in seven days.' }, { who: 'dex', text: 'Nico! Gold marker outside Club Velvet. We talk before Brandt\'s people find you.' }]);
 }

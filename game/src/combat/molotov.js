@@ -47,8 +47,10 @@ export function updateMolotovs(dt) {
   }
   for (const c of G.cars) if (c.burnT > 0) { if (c.dead) { c.burnT = 0; continue; } c.burnT -= dt; damageCar(c, MOLOTOV.burnDps * dt); if (Math.random() < dt * 25) fire(c.x + (Math.random() - 0.5) * 1.6, 1.1, c.z + (Math.random() - 0.5) * 1.6); }
   // one shared warm light over the newest fire
-  if (!glow) { glow = new THREE.PointLight(0xff7a30, 0, 16, 1.8); G.scene.add(glow); }
+  if (!glow) return;
   const last = pools[pools.length - 1]; glow.intensity = last ? 30 + Math.random() * 12 : 0; if (last) glow.position.set(last.x, 1.6, last.z);
 }
 // Chapter 3's reward: three bottles from the Coral Kings' stash and the slot to throw them from.
+// The fire glow light exists from boot: adding a light mid-game changes every shader's light count and forces a full recompile.
+export function initMolotovGlow(scene) { glow = new THREE.PointLight(0xff7a30, 0, 16, 1.8); glow.position.set(0, -50, 0); scene.add(glow); }
 export function grantMolotovs(n = 3) { const p = G.p; p.owned[4] = true; p.ammo.molotov = Math.min(10, (p.ammo.molotov || 0) + n); }

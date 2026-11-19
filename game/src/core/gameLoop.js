@@ -15,6 +15,8 @@ function frame(t) {
   const real = last ? Math.min(MAX_FRAME, (t - last) / 1000) : STEP; last = t; acc += real;
   updateQuality(real); handleGlobalKeys();
   // Below 3 fps the steps stretch (up to 0.05 s each) (still real-time) instead of piling up.
+  // the first frames of a session paint the HUD for the first time (slow on software renderers): the world holds still
+  if (G.holdFrames > 0) { G.holdFrames--; acc = 0; }
   const n = Math.min(MAX_STEPS, Math.floor(acc / STEP)), h = acc / STEP > MAX_STEPS ? acc / MAX_STEPS : STEP;
   const t1 = performance.now(); for (let i = 0; i < n; i++) { stepGame(h); if (i === 0) endFrame(); acc -= h; }
   const t2 = performance.now();

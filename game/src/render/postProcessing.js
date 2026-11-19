@@ -61,6 +61,8 @@ export function createPostProcessing(renderer, opts = {}) {
   const mk = (w, h, samples = 0) => new THREE.WebGLRenderTarget(Math.max(1, w), Math.max(1, h), { type, samples: isGL2 ? Math.max(0, samples) : 0, depthBuffer: samples >= 0, colorSpace: THREE.LinearSRGBColorSpace, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
   const samples = opts.samples ?? 4;
   let W = 1, H = 1, sceneRT = null, levels = [];
+  // lite: no MSAA and no bloom passes, same shaders (the lowest quality level keeps the grade without a recompile)
+  const params = { threshold: 0.95, knee: 0.45, bloom: 0.6, exposure: 1.0, fringe: 0, vignette: 0.55, lite: false };
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)), fsScene = new THREE.Scene();
   quad.frustumCulled = false; fsScene.add(quad);
   const mat = (frag, uniforms) => new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: frag, uniforms, depthTest: false, depthWrite: false, toneMapped: false });
@@ -72,15 +74,14 @@ export function createPostProcessing(renderer, opts = {}) {
 
   function setSize(w, h) {
     W = w; H = h; sceneRT?.dispose(); levels.forEach((l) => { l.a.dispose(); l.b.dispose(); });
-    sceneRT = mk(w, h, samples); levels = [2, 4, 8].map((f) => ({ a: mk(w / f | 0, h / f | 0, -1), b: mk(w / f | 0, h / f | 0, -1), w: w / f | 0, h: h / f | 0 }));
+    sceneRT = mk(w, h, params.lite ? 0 : samples); levels = [2, 4, 8].map((f) => ({ a: mk(w / f | 0, h / f | 0, -1), b: mk(w / f | 0, h / f | 0, -1), w: w / f | 0, h: h / f | 0 }));
   }
-  const params = { threshold: 0.95, knee: 0.45, bloom: 0.6, exposure: 1.0, fringe: 0, vignette: 0.55 };
   function render(scene, cam, time = 0) {
     const prevTM = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
     renderer.setRenderTarget(sceneRT); renderer.render(scene, cam);
-    bright.uniforms.tSrc.value = sceneRT.texture; bright.uniforms.uThreshold.value = params.threshold; bright.uniforms.uKnee.value = params.knee; pass(bright, levels[0].a);
+    bright.uniforms.tSrc.value = sceneRT.texture; bright.uniforms.uThreshold.value = params.threshold; bright.uniforms.uKnee.value = params.knee; if (!params.lite) pass(bright, levels[0].a);
     let src = levels[0].a;
-    for (let i = 0; i < levels.length; i++) {
+    for (let i = 0; i < (params.lite ? 0 : levels.length); i++) {
       const L = levels[i];
       if (i > 0) { copy.uniforms.tSrc.value = src.texture; pass(copy, L.a); }
       const iters = i === 0 ? 1 : 2;
@@ -91,9 +92,9 @@ export function createPostProcessing(renderer, opts = {}) {
       src = L.a;
     }
     const u = comp.uniforms; u.tScene.value = sceneRT.texture; u.tB1.value = levels[0].a.texture; u.tB2.value = levels[1].a.texture; u.tB3.value = levels[2].a.texture;
-    u.uBloom.value = params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0;
+    u.uBloom.value = params.lite ? 0 : params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0;
     pass(comp, null); renderer.toneMapping = prevTM;
   }
   const size = renderer.getDrawingBufferSize(new THREE.Vector2()); setSize(size.x, size.y);
-  return { render, setSize, params, hdr: half };
+  return { render, setSize, params, hdr: half, target: () => sceneRT };
 }

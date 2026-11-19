@@ -8,7 +8,7 @@ export function nitroLevel(car) { if (car.nitro === undefined) car.nitro = 1; re
 export function updateNitro(car, dt, want) {
   nitroLevel(car);
   const sn = Math.sin(car.heading), cs = Math.cos(car.heading), fwd = sn * car.vx + cs * car.vz;
-  if (want && !car.dead && fwd > 3 && (car.boosting ? car.nitro > 0 : car.nitro > NITRO.minFire)) {
+  if (want && !car.dead && fwd > -0.5 && /* launch boost works from a standstill, not in reverse */ (car.boosting ? car.nitro > 0 : car.nitro > NITRO.minFire)) {
     car.boosting = true; car.nitro = Math.max(0, car.nitro - NITRO.drain * (car.nitroMul || 1) * dt);
     const push = fwd < car.type.max * NITRO.overspeed ? NITRO.thrust * dt : 0;
     car.vx += sn * push; car.vz += cs * push; G.fovKick = Math.min(1, (G.fovKick || 0) + dt * 3);

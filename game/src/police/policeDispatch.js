@@ -41,8 +41,9 @@ export function updatePolice(dt) {
   const want = st === 0 ? 0 : Math.min(6, st + 1);
   spawnT -= dt;
   if (spawnT <= 0 && cops.length < want && G.mode === 'play') {
-    spawnT = 2.2; const pt = randomRoadPoint(rnd, tx, tz, 110, 170), a = pt.axis === 'x' ? pt.x : pt.z;
-    if ((a + HALF) % 64 > 16 && (a + HALF) % 64 < 48) { const dir = rnd() < .5 ? 1 : -1; spawnCop(pt.axis === 'x' ? a : lineCoord(pt.line) - dir * 3.5, pt.axis === 'x' ? lineCoord(pt.line) + dir * 3.5 : a, pt.axis === 'x' ? dir * Math.PI / 2 : dir > 0 ? 0 : Math.PI); }
+    // a spawn point at a junction is rejected: retry next step instead of waiting out the whole interval
+    spawnT = 0.05; const pt = randomRoadPoint(rnd, tx, tz, 110, 170), a = pt.axis === 'x' ? pt.x : pt.z;
+    if ((a + HALF) % 64 > 16 && (a + HALF) % 64 < 48) { spawnT = 2.2; const dir = rnd() < .5 ? 1 : -1; spawnCop(pt.axis === 'x' ? a : lineCoord(pt.line) - dir * 3.5, pt.axis === 'x' ? lineCoord(pt.line) + dir * 3.5 : a, pt.axis === 'x' ? dir * Math.PI / 2 : dir > 0 ? 0 : Math.PI); }
   }
   blockT -= dt;
   if (st >= 3 && blockT <= 0 && G.mode === 'play') {
