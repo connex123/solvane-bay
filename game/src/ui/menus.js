@@ -24,9 +24,9 @@ export function showScreen(id) {
 export const hideScreens = () => ALL.forEach((s) => $(s).classList.add('hidden'));
 export function showDead(title, sub) { showScreen('dead'); $('deadTitle').textContent = title; $('deadTitle').style.color = title === 'CUFFED' ? '#5a8aff' : '#ff3a55'; $('deadSub').textContent = sub; }
 function fillShop() {
-  const p = G.p, lv = levelFromXp(G.xp); $('shopMoney').textContent = `Cash $${Math.floor(G.money)}  ·  Respect level ${lv}`;
+  const p = G.p, lv = levelFromXp(G.xp); $('shopMoney').textContent = `Cash $${Math.floor(G.money)}  ·  Rep level ${lv}`;
   let h = ''; WEAPONS.forEach((w, i) => { if (!i) return; const own = p.owned[i];
-    h += `<div class="item"><span>${w.name} ${own ? `(${p.ammo[w.id]} rounds)` : ''}</span>${own ? `<button data-buy="ammo${i}">+${w.mag * 2} ammo $${w.ammoPrice}</button>` : lv >= w.level ? `<button data-buy="gun${i}">Buy $${w.price}</button>` : `<span style="opacity:.5">Respect ${w.level} required</span>`}</div>`; });
+    h += `<div class="item"><span>${w.name} ${own ? `(${p.ammo[w.id]} rounds)` : ''}</span>${own ? `<button data-buy="ammo${i}">+${w.mag * 2} ammo $${w.ammoPrice}</button>` : lv >= w.level ? `<button data-buy="gun${i}">Buy $${w.price}</button>` : `<span style="opacity:.5">Rep ${w.level} required</span>`}</div>`; });
   h += `<div class="item"><span>Body armor</span><button data-buy="armor">Buy $250</button></div>`; $('shopList').innerHTML = h;
   $('shopList').querySelectorAll('[data-buy]').forEach((b) => b.addEventListener('click', () => { buy(b.dataset.buy); fillShop(); }));
 }

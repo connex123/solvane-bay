@@ -85,3 +85,13 @@
 #waypoint i { display: block; width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #ff4fd8; border: 3px solid #fff; transform: rotate(45deg); box-shadow: 0 0 14px #ff4fd8, 0 2px 6px rgba(0, 0, 0, 0.6); }
 #waypoint span { display: block; width: 80px; margin: 8px 0 0 -40px; font-size: 13px; font-weight: 900; color: #fff; text-shadow: 0 1px 3px #000, 0 0 6px #000; }
 #waypoint.start i { background: #ffd23c; box-shadow: 0 0 14px #ffb000, 0 2px 6px rgba(0, 0, 0, 0.6); }
+/* Chapter-complete card: centred, teal-and-coral, big condensed type. */
+#chapterCard { position: absolute; left: 50%; top: 92px; transform: translateX(-50%) skewX(-4deg); width: 560px; box-sizing: border-box; padding: 14px 22px 16px; text-align: center; background: linear-gradient(160deg, rgba(10, 40, 52, 0.94), rgba(30, 10, 40, 0.92)); border-top: 6px solid #2fd6c4; border-bottom: 6px solid #ff6a4f; border-radius: 6px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55); animation: ccIn 0.45s ease-out; }
+@keyframes ccIn { from { opacity: 0; transform: translateX(-50%) skewX(-4deg) scale(1.25); } }
+.cc-kick { font-size: 15px; font-weight: 800; letter-spacing: 4px; color: #8ff0e4; }
+.cc-done { font: 46px/1 var(--big); letter-spacing: 2px; color: #fff; margin: 4px 0 2px; -webkit-text-stroke: 1px #08262c; text-shadow: 3px 3px 0 #ff6a4f; }
+.cc-title { font: 26px/1.1 var(--big); color: #ffd23c; letter-spacing: 1px; }
+.cc-beat { font-size: 18px; font-weight: 700; color: #f0e8ff; margin: 8px 0; line-height: 1.2; }
+.cc-row { display: flex; justify-content: center; gap: 18px; font: 26px var(--big); } .cc-cash { color: #5dff7a; } .cc-xp { color: #d06aff; } .cc-days { color: #ffb35a; }
+.cc-unl { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; } .cc-unl i { font-style: normal; font-size: 14px; font-weight: 800; letter-spacing: 1px; padding: 2px 10px; border-radius: 3px; background: #2fd6c4; color: #08262c; }
+.cc-turf { margin-top: 8px; font-size: 18px; font-weight: 800; letter-spacing: 2px; color: #fff; } .cc-turf b { color: var(--c); }

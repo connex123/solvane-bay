@@ -10,6 +10,7 @@ import { refreshStartMarker, failMission } from '../missions/missionRunner.js';
 import { RESPAWN } from '../missions/sideActivities.js';
 import { HOME } from '../missions/storyMissions.js';
 import { say, clearDialogue } from '../story/dialogue.js';
+import { galaLabel } from '../story/chapterArc.js';
 import { rig } from '../camera/cameraRig.js';
 import { showHud } from '../ui/hud.js';
 import { showScreen, hideScreens, showDead } from '../ui/menus.js';
@@ -33,7 +34,7 @@ export function respawn() {
 G.hooks = { hitActor, crime, hurtPlayer, playerDown, openShop: () => { G.mode = 'pause'; releaseLock(); showScreen('shop'); }, onEnterCar: () => {} };
 
 function resetWorld() {
-  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
+  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; G.territory = null; p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
   setStars(0); G.clock = 17.6; if (p.car) exitCar(true); p.x = HOME.x; p.z = HOME.z; p.yaw = Math.PI / 2; G.cam.yaw = Math.PI / 2; G.cam.pitch = 0.2; p.mesh.visible = true; p.hidden = false; clearDialogue();
 }
 // Swallow the click that pressed a menu button so it never reaches the gun.
@@ -41,7 +42,8 @@ const swallowClick = () => { input.left = false; input.leftPressed = false; };
 export function startGame(load) {
   initAudio(); resetWorld(); if (load) { const s = readSave(); if (s) applySave(s); }
   G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); swallowClick(); requestLock(); refreshStartMarker();
-  say([{ who: 'dex', text: load ? 'Back in the Bay, Nico? Gold marker, Club Velvet. Let us get to work.' : 'Welcome to Solvane Bay, Nico. Walk into the gold marker outside Club Velvet and we will talk work.' }]);
+  say(load ? [{ who: 'sol', text: `${galaLabel(G.completed.length)}, Nico. Follow the gold marker; the Low Tide is not getting any younger.` }]
+    : [{ who: 'nico', text: 'Five years away and the night ferry still smells like diesel and fried fish. Home.' }, { who: 'brandt', text: 'Welcome back, Mr Varela. Your mother\'s diner belongs to the Crown now. Enjoy the Causeway Gala in seven days.' }, { who: 'dex', text: 'Nico! Gold marker outside Club Velvet. We talk before Brandt\'s people find you.' }]);
 }
 export function toTitle() { G.mode = 'title'; rig.mode = 'aerial'; showHud(false); showScreen('title'); releaseLock(); G.mission = null; clearDialogue(); }
 export function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; showScreen('pause'); releaseLock(); sfx.engine(false, 0, 0); } else if (!on && (G.mode === 'pause')) { G.mode = 'play'; hideScreens(); swallowClick(); requestLock(); } }

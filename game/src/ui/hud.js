@@ -12,6 +12,7 @@ import { drawMinimap, gpsTarget } from './minimap.js';
 import { conditionPct, conditionWord } from '../vehicles/vehicleCondition.js';
 import { nitroLevel } from '../vehicles/nitroBoost.js';
 import { driftState } from '../vehicles/driftScoring.js';
+import { updateChapterCard } from './chapterCompleteCard.js';
 
 const wpV = { x: 0, y: 0, z: 0 };
 // Screen-space waypoint diamond with distance over the GPS target (clamped to the screen edges).
@@ -39,7 +40,7 @@ const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(
 export function updateHud(dt) {
   const p = G.p, M = G.mission, w = G.wanted;
   show('missionCard', !!M);
-  if (M) { set('mChap', M.def.side ? 'SIDE JOB' : `CH ${M.def.chapter}`); set('mTitle', M.def.title); set('mObj', M.text); set('mStage', `STAGE ${Math.max(1, M.idx + 1)} / ${M.total}`); set('mTimer', M.timer > 0 ? fmt(M.timer) : ''); const nx = M.def.stages[M.idx + 1]; const nh = `<b>NEXT</b>${nx ? nx.text : `Payout $${M.def.reward.money.toLocaleString('en-US')} · +${M.def.reward.xp} respect`}`; if (cache.nh !== nh) { cache.nh = nh; $('mNext').innerHTML = nh; } $('mBar').style.width = `${Math.max(6, (M.idx / M.total) * 100)}%`; }
+  if (M) { set('mChap', M.def.side ? 'SIDE JOB' : `CH ${M.def.chapter}`); set('mTitle', M.def.title); set('mObj', M.text); set('mStage', `STAGE ${Math.max(1, M.idx + 1)} / ${M.total}`); set('mTimer', M.timer > 0 ? fmt(M.timer) : ''); const nx = M.def.stages[M.idx + 1]; const nh = `<b>NEXT</b>${nx ? nx.text : `Payout $${M.def.reward.money.toLocaleString('en-US')} · +${M.def.reward.xp} rep`}`; if (cache.nh !== nh) { cache.nh = nh; $('mNext').innerHTML = nh; } $('mBar').style.width = `${Math.max(6, (M.idx / M.total) * 100)}%`; }
   polT -= dt; show('policeCard', w.stars > 0);
   if (w.stars > 0 && polT <= 0) {
     polT = 0.25; const cs = copCars().map((c) => ({ c, d: Math.hypot(c.x - p.x, c.z - p.z) })).sort((a, b) => a.d - b.d).slice(0, 4);
@@ -69,6 +70,7 @@ export function updateHud(dt) {
   let pu = (G.popups || []).map((q) => `<div class="popup ${q.kind}" style="opacity:${Math.min(1, q.t * 2).toFixed(2)}"><b>${q.text}</b>${q.cash ? `<span>+$${q.cash}</span>` : ''}</div>`).join('');
   if (p.car && driftState.t > 0.3) pu = `<div class="popup live"><b>DRIFT x${driftState.mult}</b><span>${Math.round(driftState.pts * driftState.mult)}</span></div>` + pu;
   if (cache.pu !== pu) { cache.pu = pu; $('popups').innerHTML = pu; }
+  updateChapterCard(dt);
   G.hudRate += dt; if (G.hudRate > 0.04) { G.hudRate = 0; drawMinimap($('minimap')); }
   updateWaypoint();
 }

@@ -13,6 +13,9 @@ import { saveGame } from '../save/saveGame.js';
 import { sfx } from '../audio/soundEngine.js';
 import { nearestLine } from '../world/cityLayout.js';
 import { HALF, lineCoord } from '../core/config.js';
+import { ARC, galaLabel } from '../story/chapterArc.js';
+import { applyChapterFlips } from '../story/territoryControl.js';
+import { showChapterCard } from '../ui/chapterCompleteCard.js';
 
 let startMarker = null, objMarkers = [], introLock = false;
 export const activeMission = () => G.mission;
@@ -38,16 +41,18 @@ function nextStage() {
   else if (s.type === 'kill') { M.enemies = []; for (let k = 0; k < s.count; k++) { const a = createActor('gang', s.at.x + rnd.range(-14, 14), s.at.z + rnd.range(-14, 14), s.gang === 'brandt' || s.gang === undefined && false ? STYLES.suit : (s.gang === 'brandt' ? STYLES.suit : STYLES.coral), {}); a.hp = 70; M.enemies.push(a); } objMarkers.push(addMarker({ ...s.at, color: 0xff3a5c, r: 0, label: 'TARGETS' })); }
   else if (s.type === 'chase') { const pt = s.at, line = nearestLine(pt.z), car = placeTraffic('x', line, pt.x, 1, s.key, 'target', s.tint); car.hp = car.maxHp = 700; M.target = car; M.car = car; objMarkers.push(addMarker({ follow: car, x: car.x, z: car.z, color: 0xff3a5c, r: 0, label: 'TARGET' })); }
   else if (s.type === 'escape') { setStars(s.stars); }
+  if (s.stars && s.type !== 'escape' && G.wanted.stars < s.stars) setStars(s.stars);
 }
 function fail(why) { if (!G.mission) return; notify(`MISSION FAILED: ${why}`, 'bad'); clearObj(); G.mission = null; refreshStartMarker(); }
 export const failMission = fail;
 function complete() {
-  const M = G.mission, d = M.def; clearObj(); G.mission = null; G.money += d.reward.money; const lv = levelFromXp(G.xp); G.xp += d.reward.xp;
-  notify(`MISSION PASSED  +$${d.reward.money}  +${d.reward.xp} RESPECT`, 'good'); sfx.pickup();
-  if (levelFromXp(G.xp) > lv) notify(`RESPECT LEVEL ${levelFromXp(G.xp)}: new gear unlocked at Calder Arms`, 'good');
-  if (d.side) { refreshStartMarker(); return; }
-  G.completed.push(d.id); if (d.outro) say(d.outro); saveGame(); notify('GAME SAVED', ''); refreshStartMarker();
-  if (G.completed.length === MISSIONS.length) notify('STORY COMPLETE: Solvane Bay is yours', 'good');
+  const M = G.mission, d = M.def; clearObj(); G.mission = null; G.money += d.reward.money; const lv = levelFromXp(G.xp); G.xp += d.reward.xp; sfx.pickup();
+  if (levelFromXp(G.xp) > lv) notify(`REP LEVEL ${levelFromXp(G.xp)}: new gear at Calder Arms`, 'good');
+  if (d.side) { notify(`JOB DONE  +$${d.reward.money}  +${d.reward.xp} REP`, 'good'); refreshStartMarker(); return; }
+  G.completed.push(d.id); const flips = applyChapterFlips(d.id); G.hooks.onChapter?.(d.id);
+  showChapterCard({ def: d, arc: ARC[d.id], flips, days: galaLabel(G.completed.length) });
+  if (d.outro) say(d.outro); saveGame(); refreshStartMarker();
+  if (G.completed.length === MISSIONS.length) notify('THE BAY IS FREE: keep driving', 'good');
 }
 export function updateMission(dt) {
   const M = G.mission; if (!M) return; const s = M.stage, p = G.p;

@@ -16,6 +16,6 @@ export function applySave(s) {
 }
 export const slotSummary = () => {
   const s = readSave(); if (!s) return { used: false, text: 'Slot 1 \u00b7 Empty' };
-  const m = Math.floor((s.play || 0) / 60), ch = Math.min((s.completed || []).length + 1, 6);
+  const m = Math.floor((s.play || 0) / 60), ch = Math.min((s.completed || []).length + 1, 8);
   return { used: true, text: `Slot 1 \u00b7 CH ${ch} \u00b7 $${Number(s.money).toLocaleString('en-US')} \u00b7 ${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m \u00b7 ${s.place || 'Solvane Bay'}` };
 };
