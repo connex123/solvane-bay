@@ -5,3 +5,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1030; fon
 .bar { height: 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
 .bar i { display: block; height: 100%; width: 50%; border-radius: 5px; background: #ffd23c; }
 button { font: inherit; cursor: pointer; }
+/* Territory strip (HUD and map): Crown red on the left, Low Tide teal on the right. */
+.turf { display: flex; height: 10px; border-radius: 2px; overflow: hidden; transform: skewX(-18deg); background: #222; } .turf i { background: linear-gradient(90deg, #a8201c, #e0463c); } .turf b { background: linear-gradient(90deg, #2fd6c4, #7ff5e8); }
+.turflab { display: flex; justify-content: space-between; margin-top: 3px; font-weight: 800; letter-spacing: 1px; } .turflab span:first-child { color: #ff7a6a; } .turflab span:last-child { color: #6ff0e0; }

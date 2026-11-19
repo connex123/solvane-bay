@@ -13,6 +13,8 @@ import { conditionPct, conditionWord } from '../vehicles/vehicleCondition.js';
 import { nitroLevel } from '../vehicles/nitroBoost.js';
 import { driftState } from '../vehicles/driftScoring.js';
 import { updateChapterCard } from './chapterCompleteCard.js';
+import { shares } from '../story/territoryControl.js';
+import { galaLabel } from '../story/chapterArc.js';
 
 const wpV = { x: 0, y: 0, z: 0 };
 // Screen-space waypoint diamond with distance over the GPS target (clamped to the screen edges).
@@ -71,6 +73,7 @@ export function updateHud(dt) {
   if (p.car && driftState.t > 0.3) pu = `<div class="popup live"><b>DRIFT x${driftState.mult}</b><span>${Math.round(driftState.pts * driftState.mult)}</span></div>` + pu;
   if (cache.pu !== pu) { cache.pu = pu; $('popups').innerHTML = pu; }
   updateChapterCard(dt);
+  const sh = shares(); set('galaBadge', galaLabel(G.completed.length)); set('turfCrownT', `Crown ${sh.crown}%`); set('turfTideT', `Low Tide ${sh.tide}%`); $('turfCrown').style.width = `${sh.crown}%`; $('turfTide').style.width = `${sh.tide}%`;
   G.hudRate += dt; if (G.hudRate > 0.04) { G.hudRate = 0; drawMinimap($('minimap')); }
   updateWaypoint();
 }

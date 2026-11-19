@@ -33,6 +33,7 @@ function baseMap(g, X, Z, k) {
     const x = X(b.cx - 25), z = Z(b.cz - 25), w = 50 * k; rr(g, x, z, w, w, 5);
     g.fillStyle = b.type === 'park' ? '#3f9a5e' : b.type === 'plaza' ? '#8a7fc0' : '#4a5578'; g.fill();
     if (b.type !== 'park' && b.type !== 'plaza') { rr(g, x, z, w, w, 5); g.fillStyle = DISTRICTS[b.district].color + '58'; g.fill(); g.fillStyle = 'rgba(255,255,255,0.13)'; g.fillRect(x + w * 0.16, z + w * 0.16, w * 0.3, w * 0.24); g.fillRect(x + w * 0.54, z + w * 0.5, w * 0.28, w * 0.3); }
+    { const hc = HOLDERS[holderOf(b.district)].color; rr(g, x + 1.5, z + 1.5, w - 3, w - 3, 5); g.fillStyle = hc + '2e'; g.fill(); g.lineWidth = 3; g.strokeStyle = hc + 'd0'; g.stroke(); }
     if (b.type === 'park') for (let t = 0; t < 9; t++) { const tx = x + 6 + hash(b.i * 7 + t, b.j) * (w - 12), tz = z + 6 + hash(b.j * 5 + t, b.i + 3) * (w - 12); g.fillStyle = '#1b5a38'; g.beginPath(); g.arc(tx, tz, 4.4, 0, 7); g.fill(); g.fillStyle = '#5cc27f'; g.beginPath(); g.arc(tx - 1, tz - 1, 2.2, 0, 7); g.fill(); }
   }
   // roads: light lines (avenues thicker), dashed centre lines, names
@@ -94,12 +95,14 @@ function drawRoute(g, pts) {
   g.setLineDash([2, 14]); g.lineDashOffset = -(G.time || 0) * 30; path(); g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2.5; g.stroke(); g.restore();
   for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], n = Math.ceil(Math.hypot(bx - ax, by - ay) / 18); for (let j = 0; j <= n; j++) { const t = j / Math.max(1, n); occ.push([ax + (bx - ax) * t - 6, ay + (by - ay) * t - 6, 12, 12]); } }
 }
+import { HOLDERS, holderOf, shares } from '../story/territoryControl.js';
+import { galaLabel } from '../story/chapterArc.js';
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));
   const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; occ = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k);
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 14px Segoe UI, Arial'; g.shadowColor = '#000'; g.shadowBlur = 7;
   const seen = {}; for (const b of blocks) (seen[b.district] ||= []).push(b);
-  g.font = 'italic 800 16px Segoe UI, Arial'; g.fillStyle = '#d6f3ff'; g.fillText('SOLVANE SEA', X(HALF + 112), Z(0)); g.font = '700 11px Segoe UI, Arial'; g.fillStyle = '#6a5426'; g.shadowBlur = 0; g.save(); g.translate(X(HALF + 29), Z(195)); g.rotate(-Math.PI / 2); g.fillText('PALMETTO BEACH', 0, 0); g.restore();
+  g.font = 'italic 800 16px Segoe UI, Arial'; g.fillStyle = '#d6f3ff'; g.fillText('SOLVANE SEA', X(HALF + 112), Z(0)); g.font = '700 11px Segoe UI, Arial'; g.fillStyle = '#6a5426'; g.shadowBlur = 0; g.save(); g.translate(X(HALF + 29), Z(195)); g.rotate(-Math.PI / 2); g.fillText('THE STRAND', 0, 0); g.restore();
   for (const k2 of packagePositions()) if (!k2.got) { g.fillStyle = '#ffe14a'; g.fillRect(X(k2.x) - 2, Z(k2.z) - 2, 4, 4); }
   drawBlips(g, (x, z) => [X(x), Z(z)], 1.3, 0);
   const next1 = MISSIONS.find((m) => !G.completed.includes(m.id));
@@ -112,8 +115,8 @@ export function drawCityMap() {
   g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; g.strokeRect(1, 1, cv.width - 2, cv.height - 2);
   const lv = levelFromXp(G.xp), next = RESPECT_XP[lv] ?? null, side = document.getElementById('mapSide');
   const rows = MISSIONS.map((m) => { const done = G.completed.includes(m.id), nx = m === next1; return `<div class="mrow ${done ? 'done' : nx ? 'next' : 'locked'}"><span class="st">${done ? '✓' : nx ? '!' : '🔒'}</span><span>CH ${m.chapter} · ${m.title}</span></div>`; }).join('');
-  const leg = [['#ffd23c', 'Story mission'], ['#4fa8ff', 'Calder Arms shop'], ['#4fe0a0', 'Glow Coat Respray'], ['#f2c230', 'Taxi fares'], ['#ff4fd8', 'Street race'], ['#ffe14a', 'Hidden package'], ['#ff2a40', 'Police unit'], ['#ff3a5c', 'Target']].map(([c, t]) => `<div><i style="background:${c}"></i>${t}</div>`).join('');
+  const leg = [['#e0463c', 'Crown turf'], ['#2fd6c4', 'Low Tide turf'], ['#ffd23c', 'Story mission'], ['#4fa8ff', 'Calder Arms shop'], ['#4fe0a0', 'Glow Coat Respray'], ['#f2c230', 'Taxi fares'], ['#ff4fd8', 'Street race'], ['#ffe14a', 'Hidden package'], ['#ff2a40', 'Police unit'], ['#ff3a5c', 'Target']].map(([c, t]) => `<div><i style="background:${c}"></i>${t}</div>`).join('');
   const sl = slotSummary();
-  side.innerHTML = `<div class="card"><h3>STORY · NICO VARELA</h3>${rows}</div><div class="card"><h3>REP LEVEL ${lv}</h3><div class="bar"><i style="width:${next ? Math.min(100, (G.xp - RESPECT_XP[lv - 1]) / (next - RESPECT_XP[lv - 1]) * 100) : 100}%"></i></div><div style="margin-top:6px;color:#bdb8d4">${G.xp} XP · ${lv >= 2 ? 'SMG ' : ''}${lv >= 3 ? 'Shotgun ' : ''}unlocked · Packages ${G.packages.length}/16</div></div><div class="card"><h3>LEGEND</h3><div class="leg">${leg}</div></div><div class="card"><h3>SAVE SLOT</h3><div class="slot${sl.used ? ' used' : ''}">${sl.text}</div><div class="slotbtns"><button data-slot="save">Save</button><button data-slot="load"${sl.used ? '' : ' disabled'}>Load</button></div></div>`;
+  const sh = shares(); side.innerHTML = `<div class="card"><h3>WATERFRONT · ${galaLabel(G.completed.length)}</h3><div class="turf"><i style="width:${sh.crown}%"></i><b style="width:${sh.tide}%"></b></div><div class="turflab"><span>Crown ${sh.crown}%</span><span>Low Tide ${sh.tide}%</span></div></div><div class="card"><h3>STORY · NICO VARELA</h3>${rows}</div><div class="card"><h3>REP LEVEL ${lv}</h3><div class="bar"><i style="width:${next ? Math.min(100, (G.xp - RESPECT_XP[lv - 1]) / (next - RESPECT_XP[lv - 1]) * 100) : 100}%"></i></div><div style="margin-top:6px;color:#bdb8d4">${G.xp} XP · ${lv >= 2 ? 'SMG ' : ''}${lv >= 3 ? 'Shotgun ' : ''}unlocked · Packages ${G.packages.length}/16</div></div><div class="card"><h3>LEGEND</h3><div class="leg">${leg}</div></div><div class="card"><h3>SAVE SLOT</h3><div class="slot${sl.used ? ' used' : ''}">${sl.text}</div><div class="slotbtns"><button data-slot="save">Save</button><button data-slot="load"${sl.used ? '' : ' disabled'}>Load</button></div></div>`;
   side.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => window.dispatchEvent(new CustomEvent('slot', { detail: b.dataset.slot }))));
 }
