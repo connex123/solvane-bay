@@ -130,7 +130,8 @@ function boatRun(api) {
 // the tail of the car he skidded in (parked beside his line of fire so the rounds really reach the cage); his rounds just touched off the gas cage at the market's south landing, and the
 // fireball is rolling up over the Coral Kings bunched by the stalls while the others shoot back. Crown Tower stands over
 // the stilt market and the lagoon in the low sun. Camera low behind Nico's right shoulder looking east-north-east.
-const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.5, 211.5], fov: 54, nico: [-263.4, 223.6], cover: [-262.0, 225.6, 2.07], ride: [-246.5, 228.6, Math.PI / 2 - 0.3] };
+const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.5, 211.5], fov: 54, nico: [-263.4, 223.6], cover: [-262.0, 225.6, 2.07], ride: [-246.5, 228.6, Math.PI / 2 - 0.3],
+  cops: [{ at: [-231, 222.4, -Math.PI / 2 + 0.12], sp: 9, ai: 'PURSUIT' }, { at: [-225.5, 211.5, -2.35], sp: 6, ai: 'PURSUIT' }, { at: [-222, 120, Math.PI], sp: 24, ai: 'ARRIVING' }] };
 function marketFight(api) {
   const p = G.p, S = SHOT3; clearTraffic(); G.mode = 'play'; G.clock = S.clock; G.magicForce = 1; G.time = 40; G.money = 6420; G.xp = 380; G.radio = 1; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
   G.completed = ['m1', 'm2']; G.territory = null; G.crew = { cd: { wren: 0 }, swaps: 0 };
@@ -153,10 +154,18 @@ function marketFight(api) {
   kings.filter((a) => !a.dead).forEach((a) => { const ox = a.x + Math.sin(a.yaw) * 0.6, oz = a.z + Math.cos(a.yaw) * 0.6, dx = p.x - a.x, dz = p.z - a.z, l = Math.hypot(dx, dz);
     shootRay(a, { id: 'pistol', dmg: 0, range: 60, pellets: 1, spread: 0.02 }, ox, 1.4, oz, dx / l, -0.012, dz / l, { x: ox, y: 1.3, z: oz }); });
   step(2); burst(kings[1].x, 1.3, kings[1].z);
-  G.mission.text = `${M.stages[1].text} (${kings.filter((a) => !a.dead).length} left)`; setStars(2); G.wanted.heat = 2.2; updateLineOfSight(1);
-  say({ who: 'wren', text: 'Told you they cook on bottled gas. Finish it before Reyne remembers where Old Town is.' }); typed();
+  G.mission.text = `${M.stages[1].text} (${kings.filter((a) => !a.dead).length} left)`;
+  // the blast brought SBPD: a cruiser braking in along the market road, one skidding out of the cross street behind the
+  // Kings, a third still on its way down from Crown Heights (the real dispatch's units, light bars running)
+  for (const { at: [x, z, h], sp, ai } of S.cops) { const c = spawnCop(x, z, h, ai); c.vx = Math.sin(h) * sp; c.vz = Math.cos(h) * sp; c.speed = sp; c.steerA = ai === 'PURSUIT' ? -0.5 : 0; c.mesh.position.set(x, 0, z); c.mesh.rotation.y = h; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
+  { const c = G.cars.find((k) => k.kind === 'cop' && k.ai === 'PURSUIT'); if (c) for (let k = 0; k < 24; k++) for (const sg of [-1, 1]) skidMark(c.x - Math.sin(c.heading) * (1.4 + k * 0.4) + Math.cos(c.heading) * sg * 0.85 + k * k * 0.004, c.z - Math.cos(c.heading) * (1.4 + k * 0.4) - Math.sin(c.heading) * sg * 0.85, c.heading + k * 0.01); }
+  setStars(3); G.wanted.heat = 3.3; updateSirens(0.1); updateLineOfSight(1);
+  say({ who: 'wren', text: 'Told you they cook on bottled gas. Now SBPD heard it too: drop the last Kings and get out of Old Town!' }); typed();
   G.shotCam = { pos: S.cam, look: S.look, fov: S.fov, roll: -0.02 }; G.exposure = 1.12; if (G.post) Object.assign(G.post.params, { bloom: 0.36, threshold: 1.2, vignette: 0.3 });
   { const [x, , z] = S.cam; thinPalms(x, z, 30, 95, 4); }
+  // the low sun is behind the towers: a broad warm bounce from the sunlit lagoon and road lifts the facades and stalls out of silhouette
+  { const b = new THREE.DirectionalLight(0xffd2a8, 0.85); b.position.set(S.cam[0] - 40, 30, S.cam[2] + 30); b.target.position.set(S.look[0], 0, S.look[2]); G.scene.add(b, b.target); }
+  { const glow = new THREE.PointLight(0xffa860, 120, 22, 1.3); glow.position.set(-248, 5, 216); G.scene.add(glow); } // the festoon strings and the fire washing the kerb
   // warm low sun bounce off the road onto Nico's back and the tail of his car, so he reads as a figure, not a cut-out
   { const fill = new THREE.PointLight(0xffb27a, 140, 11, 1.3); fill.position.set(p.x - 2.4, 2.8, p.z + 3.4); G.scene.add(fill); }
   finish(api); }

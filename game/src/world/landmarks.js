@@ -139,6 +139,17 @@ function lagoonMarket(scene, B, rng) {
     for (let k = 0; k < 8; k++) { pushBox(B, cx - 3.5 + k + 0.5, 4.4 - Math.abs(k - 3.5) * 0.08, cz - 0.4, 1, 0.22, 7.2, k % 2 ? b : a); pushBox(B, cx - 3.5 + k + 0.5, 3.75, cz - 4.05, 1, 0.68 - (k % 2) * 0.18, 0.08, k % 2 ? v : a); } // striped coral / cream / teal awning with a scalloped front valance
     for (let k = 0; k < 3; k++) pushBox(B, cx - 2 + k * 2, 2.8, cz - 2.2, 0.9, 0.5, 0.9, [0xff8a3d, 0x7ed68a, 0xffd23c][(i + k) % 3]); // produce crates
   });
+  // festoon lights: bulb strings on poles along the street front and a lit bead row under every awning's valance,
+  // coral, amber and teal bulbs that glow brighter as the sun goes down (strength set in updateLandmarks)
+  const bulbs = newBuf(), wires = [], BULBS = [0xffb347, 0xff7a5c, 0xffd27a, 0x5fe0d0], kz = z + 26.6, poles = [-24, -14, -7, 7, 14, 24];
+  const string = (ax, ay, az, bx, by, bz, sag, n) => { let px = ax, py = ay, pz = az; for (let k = 1; k <= n; k++) { const t = k / n, x2 = ax + (bx - ax) * t, z2 = az + (bz - az) * t, y2 = ay + (by - ay) * t - Math.sin(t * Math.PI) * sag;
+    wires.push(px, py, pz, x2, y2, z2); if (k < n) pushBox(bulbs, x2, y2 - 0.24, z2, 0.2, 0.24, 0.2, BULBS[(k + Math.round(ax)) % 4]); px = x2; py = y2; pz = z2; } };
+  for (const dx of poles) { pushBox(B, x + dx, 0, kz, 0.22, 5, 0.22, 0x3a3a40); addBox({ x0: x + dx - 0.2, x1: x + dx + 0.2, z0: kz - 0.2, z1: kz + 0.2, h: 5 }); }
+  for (let k = 0; k < poles.length - 1; k++) string(x + poles[k], 4.9, kz, x + poles[k + 1], 4.9, kz, 0.9, Math.round((poles[k + 1] - poles[k]) / 1.1));
+  stalls.forEach(([dx, dz]) => { const cx = x + dx, cz = z + dz; string(cx - 3.6, 4.0, cz - 4.15, cx + 3.6, 4.0, cz - 4.15, 0.25, 8); if (dz > 0) string(cx - 3.6, 4.0, cz + 3.3, cx + 3.6, 4.0, cz + 3.3, 0.25, 8);
+    if (dz > 0) string(cx, 4.0, cz + 3.3, x + (dx === 0 ? 7 : dx), 4.9, kz, 0.6, 10); }); // and a run from each street-side stall out to the poles
+  live.bulbMat = new THREE.MeshBasicMaterial({ vertexColors: true }); scene.add(new THREE.Mesh(toGeometry(bulbs), live.bulbMat));
+  { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(wires, 3)); scene.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x2a2228 }))); }
   // a cluster of cooking-gas bottles on each stall deck, at the corner nearest the street (combat/gasBottles.js)
   // and a gas cage on the kerb outside each landing of the long boardwalk
   buildGasBottles(scene, [...stalls.map(([dx, dz]) => [x + dx + 3.0, 1.8, z + dz + (dz < 0 ? -2.7 : 2.7)]), [x + 3.5, 0.1, z + 25.7], [x - 3.5, 0.1, z - 25.7]]);
@@ -162,6 +173,7 @@ export function updateLandmarks(clock, time) {
   // Causeway floodlights come up through the late afternoon (full by 17:30) and stay on all night
   const fl = clock < 6.5 ? 1 : Math.min(1, Math.max(0, (clock - 16.2) / 1.3));
   if (live.pylonMat) { live.pylonMat.emissiveIntensity = 0.06 + fl * 0.62; live.rimMat.emissiveIntensity = 0.15 + fl * 1.5; live.cableMat.color.setRGB(1, 0.96, 0.88).multiplyScalar(1 + fl * 0.7); }
+  if (live.bulbMat) live.bulbMat.color.setScalar(0.9 + fl * 0.75);
   if (live.glow) { const s = 12 + d * 14; live.glow.scale.set(s, s, 1); live.glow.material.opacity = 0.55 + d * 0.45; }
   if (live.beam) { live.beam.rotation.y = time * 0.7; live.beam.children[0].material.opacity = 0.03 + d * 0.12; }
 }
