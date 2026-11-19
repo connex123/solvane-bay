@@ -86,3 +86,21 @@ export function signTexture(text, fg, bg = '#150a24', w = 512, h = 160) {
     g.font = `bold ${Math.min(80, (w - 60) / (text.length * 0.62))}px Arial Black, Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = fg; g.fillText(text, w / 2, h / 2 + 4); g.fillText(text, w / 2, h / 2 + 4);
   }, false);
 }
+// Billowing puff for fire and smoke: dozens of soft blobs packed inside a round falloff, lit from the top-left so
+// each puff has a bright crown and a shaded underside. Tinted per particle.
+export const puffTex = () => canvasTex(128, 128, (g) => {
+  let s = 91; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  for (let i = 0; i < 70; i++) {
+    const a = r() * 6.283, d = Math.sqrt(r()) * 34, x = 64 + Math.cos(a) * d, y = 64 + Math.sin(a) * d, rad = 12 + r() * 20 * (1 - d / 60), lit = 0.55 + 0.45 * Math.max(0, (64 - y) / 40 + (64 - x) / 80) * r() + 0.2;
+    const v = Math.min(255, Math.round(170 + 85 * lit)), gr = g.createRadialGradient(x - rad * 0.25, y - rad * 0.3, 0, x, y, rad);
+    gr.addColorStop(0, `rgba(${v},${v},${v},0.55)`); gr.addColorStop(0.6, `rgba(${v - 40},${v - 40},${v - 40},0.3)`); gr.addColorStop(1, 'rgba(120,120,120,0)'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, 6.283); g.fill();
+  }
+  const img = g.getImageData(0, 0, 128, 128), px = img.data;
+  for (let i = 0; i < px.length; i += 4) { const k = (i >> 2), x = k % 128 - 64, y = (k >> 7) - 64, f = Math.max(0, 1 - Math.hypot(x, y) / 62); px[i + 3] = Math.min(255, px[i + 3] * 1.6 * Math.min(1, f * 2.2) * (0.85 + r() * 0.3)); }
+  g.putImageData(img, 0, 0);
+}, false);
+// Scorch decal: charred centre fading out in a ragged ring.
+export const scorchTex = () => canvasTex(128, 128, (g) => {
+  let s = 17; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  for (let i = 0; i < 40; i++) { const a = r() * 6.283, d = r() * 30, x = 64 + Math.cos(a) * d, y = 64 + Math.sin(a) * d, rad = 14 + r() * 26, gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, 'rgba(10,8,8,0.35)'); gr.addColorStop(1, 'rgba(10,8,8,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
+}, false);

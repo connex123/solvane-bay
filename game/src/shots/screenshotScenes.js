@@ -13,7 +13,7 @@ import { setStars } from '../police/wantedSystem.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { refreshStartMarker } from '../missions/missionRunner.js';
 import { dlg, say } from '../story/dialogue.js';
-import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters, skidMark, updateEffects, explosion } from '../combat/effects.js';
+import { muzzleFlash, tracer, sparks, smoke, particle, updateSirens, floatText, layoutFloaters, skidMark, updateEffects, explosion, fire } from '../combat/effects.js';
 import { rig } from '../camera/cameraRig.js';
 import { removeCar } from '../vehicles/carPhysics.js';
 import { removeActor } from '../characters/pedestrianSystem.js';
@@ -66,9 +66,9 @@ function onfoot(api) {
   p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 60, smg: 118, shotgun: 16 }; p.hp = 72; p.armor = 45; G.camDistAim = 4.4; p.x = X - 1.2; p.z = 46; p.yaw = Math.PI + 0.12; p.aim = true; selectWeapon(2); G.cam.yaw = Math.PI - 0.22; G.cam.pitch = 0.1;
   animateWalk(p.mesh, 0.6, 0.0, true); p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg');
   // the SBPD cruiser slewed across the road, officers firing over and beside it
-  const cr = spawnCop(X - 1.5, 27, Math.PI / 2 + 0.25, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
-  const cr2 = spawnCop(X + 4.2, 19, Math.PI - 0.5, 'PURSUIT'); cr2.speed = 0; cr2.deployed = true;
-  const cops = [[X - 3.6, 25.2], [X + 1.2, 25.0], [X + 3.4, 23.2]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: 0 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = Math.atan2(p.x - x, p.z - z) + (i - 1) * 0.08; return a; });
+  const cr = spawnCop(X - 2.5, 31, Math.PI / 2 + 0.25, 'PURSUIT'); cr.speed = 0; cr.vx = cr.vz = 0; cr.deployed = true;
+  const cr2 = spawnCop(X + 2.6, 23, Math.PI - 0.5, 'PURSUIT'); cr2.speed = 0; cr2.deployed = true;
+  const cops = [[X - 5.6, 29.0], [X + 0.2, 28.8], [X + 2.6, 26.6]].map(([x, z], i) => { const a = createActor('cop', x, z, STYLES.cop, { yaw: 0 }); animateWalk(a.mesh, i * 2, 0.5, true); setGun(a.mesh, 'pistol'); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = Math.atan2(p.x - x, p.z - z) + (i - 1) * 0.08; return a; });
   // the car that caught the stray rounds: a real wreck (burnt shell, fireball, blast) on the kerb behind the line
   const boom = createCar('rumble', X + 5.6, 35, -0.6, 'parked', 0xff8a3d); boom.mesh.position.set(boom.x, 0, boom.z); boom.mesh.rotation.y = boom.heading;
   const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; c.nav.spd = 0; return c; };
@@ -77,7 +77,7 @@ function onfoot(api) {
   for (const [x, z, yw] of [[X + 14, 38, 0.6], [X + 18, 30, -0.4], [X + 22, 44, 0.9], [X + 12, 22, 0.2], [X + 26, 36, -0.8]]) { const a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); a.scared = 6; animateWalk(a.mesh, x * 0.7, 0.95, false); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = yw; }
   setStars(3); G.wanted.heat = 3.4; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0); G.mission.def = { ...G.mission.def };
   for (const c of G.cars) { c.mesh.position.set(c.x, c.mesh.position.y, c.z); c.mesh.rotation.y = c.heading; }
-  wreck(boom); layoutFloaters(5); for (let k = 0; k < 4; k++) updateEffects(0.04); explosion(boom.x, 1.0, boom.z); for (let k = 0; k < 3; k++) updateEffects(0.04);
+  wreck(boom); layoutFloaters(5); for (let k = 0; k < 6; k++) { fire(boom.x, 1.1, boom.z); fire(boom.x, 1.1, boom.z); updateEffects(0.05); }
   setStars(3); G.wanted.heat = 3.4; fakeMission(2, 1, 'Take out the Coral Kings (2 left)', 0); G.toasts.length = 0;
   for (const a of cops) { a.dead = false; a.hp = Math.max(a.hp || 0, 40); }
   G.cars.forEach((c) => { if (c !== boom) { c.dead = false; c.hp = Math.max(c.hp, 400); } });
@@ -85,7 +85,7 @@ function onfoot(api) {
   const gx = p.x + Math.sin(p.yaw) * 1.1, gz = p.z + Math.cos(p.yaw) * 1.1; muzzleFlash(gx, 1.38, gz);
   cops.forEach((c, i) => { const fx = c.x + Math.sin(c.mesh.rotation.y) * 0.7, fz = c.z + Math.cos(c.mesh.rotation.y) * 0.7; muzzleFlash(fx, 1.38, fz); tracer(fx, 1.38, fz, p.x + 0.3 - i * 0.3, 1.2 + i * 0.2, p.z - 0.4); });
   tracer(gx, 1.38, gz, cops[0].x, 1.3, cops[0].z); sparks(cops[0].x, 1.3, cops[0].z, 6); tracer(gx, 1.38, gz, cops[1].x, 1.2, cops[1].z); sparks(cr.x + 0.5, 0.9, cr.z + 0.9, 10);
-  G.shake = 0; G.toasts.push({ text: 'WANTED LEVEL 3', kind: 'wanted', t: 9 });
+  G.shake = 0;
   G.exposure = 1.18; if (G.post) Object.assign(G.post.params, { bloom: 0.5, threshold: 1.05 });
   rig.mode = 'auto'; finish(api);
   floatText(cops[0].x, 1.5, cops[0].z, '-34', 'hit'); floatText(cops[1].x, 1.5, cops[1].z, '-18', 'hit'); layoutFloaters(0); }

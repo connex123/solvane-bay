@@ -172,7 +172,7 @@ export function buildCarMesh(key, tint) {
   const mk = `${key}${c}`;
   const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.45 }));
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
-  a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a;
+  a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a; grp.userData.lightsMesh = li; grp.userData.glassMesh = gl;
   grp.userData.fw = g.front.map((f) => { const w = new THREE.Mesh(f.geo, m.trim); w.position.set(f.x, f.y, f.z); w.castShadow = true; grp.add(w); return w; });
   if (pr_sport(key)) sportRear(grp, key);
   if (t.police) {
@@ -189,4 +189,4 @@ export function buildCarMesh(key, tint) {
   return grp;
 }
 export const CIVIL_TYPES = ['marlin', 'marlin', 'tupelo', 'tupelo', 'cadia', 'hawke', 'rumble', 'pico', 'pico', 'veloce'];
-export const burntMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+export const burntMat = new THREE.MeshLambertMaterial({ color: 0x2a2220 }), burntLampMat = new THREE.MeshLambertMaterial({ color: 0x141010 });

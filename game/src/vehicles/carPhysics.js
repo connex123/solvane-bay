@@ -1,9 +1,9 @@
 // Arcade car physics: acceleration, braking, steering, drift, building and car-to-car collisions, damage and wrecks.
 import { G, notify } from '../core/gameState.js';
 import { clamp, wrapAngle } from '../core/config.js';
-import { CAR_TYPES, buildCarMesh, burntMat } from './vehicleModels.js';
+import { CAR_TYPES, buildCarMesh, burntMat, burntLampMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
-import { sparks, smoke, explosion, skidMark, addSiren, removeSiren, tyreSmoke } from '../combat/effects.js';
+import { sparks, smoke, explosion, skidMark, addSiren, removeSiren, tyreSmoke, fire } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
 import { conditionEffects } from './vehicleCondition.js';
 
@@ -20,7 +20,7 @@ export function damageCar(car, amt) {
   if (car.hp <= 0) wreck(car);
 }
 export function wreck(car) {
-  car.dead = true; car.kind = 'wreck'; car.hp = 0; car.mesh.userData.bodyMesh.material = burntMat; car.input.throttle = 0; car.input.brake = 1; car.wreckT = 40;
+  car.dead = true; car.kind = 'wreck'; car.hp = 0; { const u = car.mesh.userData; u.bodyMesh.material = burntMat; if (u.lightsMesh) u.lightsMesh.material = burntLampMat; if (u.glassMesh) u.glassMesh.material = burntLampMat; } car.input.throttle = 0; car.input.brake = 1; car.wreckT = 40;
   explosion(car.x, 1, car.z); sfx.explosion(); blast(car.x, car.z, 9, car);
   if (car.driver === 'player') { G.p.exitCarForced(); G.p.hp -= 45; }
 }
@@ -55,7 +55,7 @@ export function stepCar(car, dt) {
   }
   car.hitT = Math.max(0, car.hitT - dt);
   conditionEffects(car, dt);
-  if (car.dead) { car.wreckT -= dt; if (Math.random() < dt * 6) smoke(car.x, 1.2, car.z, 0x151515); if (car.wreckT < 0 && car !== G.p.car) removeCar(car); }
+  if (car.dead) { car.wreckT -= dt; if (Math.random() < dt * 6) smoke(car.x, 1.6, car.z, 0x151515); if (car.wreckT > 26 && Math.random() < dt * 14) fire(car.x, 1.1, car.z); if (car.wreckT < 0 && car !== G.p.car) removeCar(car); }
   const m = car.mesh; for (const w of m.userData.fw || []) w.rotation.y = car.steerA * 0.9; m.position.set(car.x, 0, car.z); m.rotation.y = car.heading; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
 }
 export function carCollisions() {
