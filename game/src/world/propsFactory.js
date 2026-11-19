@@ -56,7 +56,7 @@ export function buildProps(scene, rng) {
     if (b.district === 'beach' || b.type === 'plaza') for (let k = 0; k < 4; k++) palms.push({ x: b.cx + rng.range(-20, 20), z: b.cz + rng.range(-20, 20), ry: rng() * 6, s: 1 });
   }
   for (let k = 0; k < 40; k++) palms.push({ x: HALF + rng.range(12, 34), z: rng.range(-HALF, HALF), ry: rng() * 6, s: 1.1 });
-  const pg0 = inst(palmGeo(), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), palms); pg0.castShadow = true; scene.add(pg0);
+  const pg0 = inst(palmGeo(), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), palms); pg0.castShadow = true; scene.add(pg0); G.palmProps = { mesh: pg0, list: palms }; // staged shots may thin palms that block a landmark
   // bus stops, benches and hydrants along the sidewalks
   const stops = [], benches = [], hyd = [];
   for (const b of blocks) for (const [dx, dz, ry] of [[0, -23.2, 0], [0, 23.2, Math.PI], [-23.2, 0, Math.PI / 2], [23.2, 0, -Math.PI / 2]]) {

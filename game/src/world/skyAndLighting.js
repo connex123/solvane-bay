@@ -51,7 +51,7 @@ export function createSky(scene) {
       const mg = G.magicForce ?? Math.max(0, Math.min(1, (e + 0.06) / 0.1, (0.36 - e) / 0.14)); G.magic = mg; u.magic.value = mg;
       yaw(u.sunDir.value.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.62 - (e < 0 ? 0.3 : 0), -0.03)).normalize();
       scene.fog.color.copy(u.hor.value).lerp(tmpA.set('#ffe2c4'), e > 0 ? 0.35 : 0).lerp(gr.fog, mg * 0.6); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
-      if (G.mode === 'title') { scene.fog.near = 300; scene.fog.far = 1500; } else { scene.fog.near = 180; scene.fog.far = 950; }
+      if (G.mode === 'title' || G.shotCrisp) { scene.fog.near = 300; scene.fog.far = 1700; } else { scene.fog.near = 180; scene.fog.far = 950; }
       for (const hm of G.hillMats || []) hm.color.setScalar((G.mode === 'title' ? 1 : 0.78) * Math.max(0.35, Math.min(1, 0.45 + (e + 0.1) * 1.4)));
       const day = Math.max(0.28, Math.min(1, (e + 0.08) * 5));
       sun.color.copy(u.sunCol.value).lerp(tmpA.set('#ffa850'), mg * 0.5); sun.intensity = e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1);

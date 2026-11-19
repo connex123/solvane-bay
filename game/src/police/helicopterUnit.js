@@ -10,6 +10,12 @@ export function createHeli(x, z) {
   const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.8), body); fin.position.set(0, 0.8, -5.8); g.add(fin);
   const rotor = new THREE.Group(); const blade = new THREE.Mesh(new THREE.BoxGeometry(11, 0.06, 0.35), new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.55 }));
   const b2 = blade.clone(); b2.rotation.y = Math.PI / 2; rotor.add(blade, b2); rotor.position.y = 1.55; g.add(rotor);
+  // landing skids on struts, a tail rotor and a faint spinning rotor disc so the silhouette reads as a helicopter at any size
+  const dark = new THREE.MeshLambertMaterial({ color: 0x2a3438 });
+  for (const sx of [-1, 1]) { const sk = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 4.4), dark); sk.position.set(sx * 1.15, -1.75, 0.1); g.add(sk);
+    for (const sz of [-0.8, 0.9]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.75, 0.12), dark); st.position.set(sx * 0.95, -1.4, sz); st.rotation.z = sx * 0.35; g.add(st); } }
+  const tr = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.2, 0.22), dark); tr.position.set(0.22, 0.9, -5.9); g.add(tr);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(5.5, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x30393c, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide })); disc.position.y = 1.5; g.add(disc);
   const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.05, 0.25, 1.2), new THREE.MeshBasicMaterial({ color: 0xff3040 })); stripe.position.set(0, -0.3, 0); g.add(stripe);
   const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.085, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   G.scene.add(g, cone);

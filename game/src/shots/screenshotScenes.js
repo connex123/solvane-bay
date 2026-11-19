@@ -32,40 +32,52 @@ function fakeMission(idx, stageIdx, text, timer) {
 function finish(api, frames = 2) { G.hudRate = 1; const gl0 = G.renderer.getContext();  for (let i = 0; i < frames; i++) { G.hudRate = 1; api.updateHud(0.016); api.renderFrame(true); gl0.finish(); gl0.readPixels(0, 0, 1, 1, gl0.RGBA, gl0.UNSIGNED_BYTE, new Uint8Array(4)); } { const px = new Uint8Array(4); gl0.readPixels(640, 700, 1, 1, gl0.RGBA, gl0.UNSIGNED_BYTE, px); const p2 = new Uint8Array(4); gl0.readPixels(640, 100, 1, 1, gl0.RGBA, gl0.UNSIGNED_BYTE, p2); document.body.dataset.px = px.join(',') + '/' + p2.join(','); } { const c = G.renderer.domElement, r = c.getBoundingClientRect(); document.body.dataset.sz = [c.width, c.height, r.x, r.y, r.width, r.height, innerWidth, innerHeight, devicePixelRatio, getComputedStyle(c).display, getComputedStyle(c).visibility].join(','); } document.body.dataset.cam = [G.camera.position.x, G.camera.position.y, G.camera.position.z, G.p.x, G.p.z, G.camera.fov].map((v) => v.toFixed(1)).join(',') + ' lost=' + G.renderer.getContext().isContextLost() + ' err=' + G.renderer.getContext().getError() + ' calls=' + G.renderer.info.render.calls + ' tris=' + G.renderer.info.render.triangles; if (location.search.includes('overlay')) api.showScreen('pause'); if (location.search.includes('nohud')) document.getElementById('hud').style.display = 'none'; }
 function typed() { dlg.t = 99; }
 
-// Cover: the VELOCE GT drifts sideways on nitro down the palm boulevard toward the sea and the sun, an SBPD cruiser
-// ramming its rear quarter, two more chasing, a roadblock with a spike strip ahead and AIR-1's spotlight on the car.
+// Cover: golden hour on the Strand. The VELOCE GT drifts nose-left on nitro past the beach, an SBPD cruiser ramming its
+// right rear quarter, one alongside and one trailing, AIR-1 overhead with its searchlight, both Causeway pylons over the sea.
+// Hide the palms inside a bearing window seen from (cx, cz) so they frame a landmark instead of covering it.
+function thinPalms(cx, cz, b0, b1, minD) {
+  const pp = G.palmProps; if (!pp) return; const m = new THREE.Matrix4().makeScale(0, 0, 0);
+  pp.list.forEach((it, i) => { const dx = it.x - cx, dz = it.z - cz, b = Math.atan2(dx, -dz) * 180 / Math.PI; if (b > b0 && b < b1 && Math.hypot(dx, dz) > minD) pp.mesh.setMatrixAt(i, m); });
+  pp.mesh.instanceMatrix.needsUpdate = true;
+}
 function chase(api) {
-  // Staged on the Strand road heading north: the city on the left, the sea, the sand and the Causeway on the right.
-  // Layout is authored along a local avenue (u forward, v to the right) and mapped onto the road: T(u, v) -> world x, z.
-  const p = G.p, R = HALF, Z0 = 262, T = (u, v) => [R + v, Z0 - u], H = (h) => h + Math.PI / 2; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 760; G.radio = 1; api.showHud(true);
-  const [cx, cz] = T(0, 0.5), car = createCar('veloce', cx, cz, H(Math.PI / 2 - 0.55), 'parked', 0xd01020); enterCar(car); car.vx = 1.5; car.vz = -38; car.speed = 38; car.steerA = 0.5; car.input.throttle = 1;
+  // Laid out along a local avenue (u forward = north, v to the right = toward the sea) and mapped onto the Strand road.
+  const p = G.p, R = HALF, Z0 = 262, T = (u, v) => [R + v, Z0 - u], H = (h) => h + Math.PI / 2; clearTraffic(); G.mode = 'play'; G.clock = 16.95; G.magicForce = 0.85; G.money = 48250; G.xp = 760; G.radio = 1; G.shotCrisp = true; api.showHud(true);
+  const DRIFT = 0.62, [cx, cz] = T(0, 1.4), car = createCar('veloce', cx, cz, H(Math.PI / 2 + DRIFT), 'parked', 0xd01020); enterCar(car); car.vx = 2.5; car.vz = -38; car.speed = 38; car.steerA = -0.45; car.input.throttle = 1;
   car.hp = car.maxHp * 0.68; car.nitro = 0.62; car.boosting = true; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24, molotov: 3 };
   // same story moment as the Crew & Chapters shot: six chapters done (Dex has turned), chapter 7 in progress
   G.completed = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; G.territory = null; G.crew = { cd: { sol: 22 }, swaps: 1 };
   const cop = (u, v, h, sp, ai) => { const [x, z] = T(u, v), c = spawnCop(x, z, H(h), ai); c.vx = Math.sin(H(h)) * sp; c.vz = Math.cos(H(h)) * sp; c.speed = sp; c.ai = ai; c.heading = H(h); return c; };
-  // one cruiser rams the left rear quarter, one closes on the right, a third trails behind
-  cop(-1.4, -2.1, 1.12, 39, 'RAMMING'); cop(8, 4.7, Math.PI / 2 + 0.2, 37, 'PURSUIT'); cop(-18, -2.5, Math.PI / 2 - 0.12, 36, 'PURSUIT');
-  const rb = [cop(36, 3.4, 0.32, 0, 'ROADBLOCK'), cop(38, -3.2, -0.28, 0, 'ROADBLOCK')]; rb.forEach((c) => { c.rbT = 40; });
-  { const [x, z] = T(30, 0); createSpikeStrip(x, z, Math.PI / 2, 11); }
+  // one cruiser rams the right rear quarter, two more run ahead on the right to box the car in
+  cop(-2.6, 3.4, Math.PI / 2 + 0.3, 39, 'RAMMING'); cop(12, 3.6, Math.PI / 2 - 0.12, 37, 'PURSUIT'); cop(24, 1.6, Math.PI / 2 + 0.08, 36, 'PURSUIT');
+  const rb = [cop(40, 3.4, 0.32, 0, 'ROADBLOCK'), cop(42, -3.2, -0.28, 0, 'ROADBLOCK')]; rb.forEach((c) => { c.rbT = 40; });
+  { const [x, z] = T(34, 0); createSpikeStrip(x, z, Math.PI / 2, 11); }
   const tc = (key, u, dir, col, spd = 11) => { const c = placeTraffic('z', N, Z0 - u, -dir, key, 'traffic', col); c.nav.spd = spd; return c; };
-  tc('marlin', 56, -1, 0x2f7fd8, 14); tc('tidebus', 74, -1); stageMoto(0, 'z', N, Z0 - 24, -1, 2.2, 0.8); stageMoto(1, 'z', N, Z0 - 48, -1, 5.0, 2.2); stageMoto(2, 'z', N, Z0 - 64, 1, 4.2, 1.0); tc('rumble', 100, -1, 0x8fd3c8); tc('pico', 128, 1, 0xff8a3d); tc('tupelo', 148, -1, 0xf6c21c); tc('hawke', 120, -1, 0xe9c46a); tc('pico', 88, -1, 0xc3a6e0);
-  [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1], [2, 1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1], [48, 1, -1], [34, -1, 1]].forEach(([u, s, d], i) => { const a = spawnPed('z', N, Z0 - u, s, -d); if (i % 2 === 0) { a.scared = 6; a.nav.dir = -d; } animateWalk(a.mesh, i * 1.3, i % 2 ? 0.6 : 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
-  { const [x, z] = T(32, 4); G.heli = createHeli(x, z); } G.heli.y = 12.5; G.heli.mesh.position.set(G.heli.x, 12.5, G.heli.z); G.heli.mesh.rotation.set(0.08, H(0.35), -0.12); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
+  tc('tidebus', 24, 1); tc('marlin', 60, -1, 0x2f7fd8, 14); stageMoto(0, 'z', N, Z0 - 16, 1, 2.2, 0.8); stageMoto(1, 'z', N, Z0 - 48, -1, 5.0, 2.2); stageMoto(2, 'z', N, Z0 - 70, 1, 4.2, 1.0); tc('rumble', 100, -1, 0x8fd3c8); tc('pico', 128, 1, 0xff8a3d); tc('tupelo', 84, 1, 0xf6c21c); tc('hawke', 120, -1, 0xe9c46a);
+  [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-2, -1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1], [34, -1, 1]].forEach(([u, s, d], i) => { const a = spawnPed('z', N, Z0 - u, s, -d); if (i % 2 === 0) { a.scared = 6; a.nav.dir = -d; } animateWalk(a.mesh, i * 1.3, i % 2 ? 0.6 : 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  // beach-goers on the sand turning to watch
+  for (const [u, v, yw] of [[14, 16, -1.2], [22, 22, -1.6], [30, 14, -0.9], [18, 28, -1.9], [40, 24, -1.4], [8, 20, -1.0], [48, 32, -1.7]]) { const [x, z] = T(u, v), a = createActor('ped', x, z, randomStyle(rnd), { yaw: yw }); animateWalk(a.mesh, x * 0.7, u % 3 ? 0 : 0.6, false); a.mesh.position.set(x, 0, z); a.mesh.rotation.y = yw; }
+  // camera low beside and behind the left rear, looking north-east so the car crosses the frame against the sea and the Causeway
+  const [px, pz] = T(-7.4, -3.2), [lx, lz] = T(20, 14.6), camY = 3.1;
+  thinPalms(px, pz, 10, 62, 10);
+  // AIR-1 side-on in open sky between the city and the first pylon, its searchlight on the car
+  { const b = 25 * Math.PI / 180, d = 36, hx = px + Math.sin(b) * d, hz = pz - Math.cos(b) * d; G.heli = createHeli(hx, hz); G.heli.y = 11.5; G.heli.mesh.position.set(hx, 11.5, hz);
+    G.heli.mesh.rotation.order = 'YXZ'; G.heli.mesh.rotation.set(0.14, Math.PI - (b + 1.35), 0.16); G.heli.rotor.rotation.y = 0.5; placeCone(G.heli, car.x, car.z); } G.shotLock = true;
   { const [x, z] = T(158, 0.5); addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); } setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, 'Shake Reyne\'s units before the marina gate', 0);
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   updateSirens(0.1); updateLineOfSight(1);
-  // the drift so far: an arc of twin skid marks behind the rear wheels, and light sunlit tyre smoke rolling off them, kept low and to the side
-  for (let k = 0; k < 60; k++) { const q = k / 60, u = -2 - q * 30, v = 0.4 - q * q * 4.5, h = Math.PI / 2 - 0.44 * (1 - q) + 0.2 * q; for (const sg of [-1, 1]) { const [x, z] = T(u + Math.cos(h) * sg * 0.85, v - Math.sin(h) * sg * 0.85); skidMark(x, z, H(h)); } }
+  // the drift so far: twin skid marks curving in from the right behind the rear wheels; tyre smoke rolls off away from the camera
+  for (let k = 0; k < 60; k++) { const q = k / 60, u = -2 - q * 30, v = 1.4 + q * q * 3.5, h = Math.PI / 2 + DRIFT * (1 - q) - 0.15 * q; for (const sg of [-1, 1]) { const [x, z] = T(u + Math.cos(h) * sg * 0.85, v - Math.sin(h) * sg * 0.85); skidMark(x, z, H(h)); } }
   const sn = Math.sin(car.heading), cs = Math.cos(car.heading), rx = car.x - sn * 1.45, rz = car.z - cs * 1.45;
-  for (let k = 0; k < 8; k++) { const back = k * 0.5, sg = k % 2 ? 1 : -1; particle({ x: rx - 1.0 - back * 0.55 + sg * 0.5, y: 0.3 + k * 0.05, z: rz + back + 0.3, life: 1.4, size: 0.9 + k * 0.18, color: 0xfff0e4, hdr: 1.45, op: 0.34 - k * 0.025, tex: 'puff' }); }
+  for (let k = 0; k < 8; k++) { const back = k * 0.55; particle({ x: rx + 1.2 + back * 0.5, y: 0.3 + k * 0.06, z: rz + 0.8 + back, life: 1.4, size: 0.8 + k * 0.2, color: 0xfff0e4, hdr: 1.3, op: 0.3 - k * 0.025, tex: 'puff' }); }
   for (let k = 0; k < 6; k++) particle({ x: car.x - sn * 2.55, y: 0.33, z: car.z - cs * 2.55 + k * 0.35, life: 0.3, size: 0.8 - k * 0.08, color: 0x7fc8ff, add: true, hdr: 1.6 });
-  // the ram: sparks where the cruiser's push bar meets the rear quarter
-  const [hx, hz] = T(-0.3, -0.95); sparks(hx, 0.7, hz, 34); sparks(hx, 0.55, hz, 18); particle({ x: hx, y: 0.75, z: hz, life: 1, size: 2.2, color: 0xffc070, add: true });
+  // the ram: sparks where the cruiser's push bar meets the right rear quarter
+  { const hx = rx + 0.9, hz = rz + 0.4; sparks(hx, 0.7, hz, 30); sparks(hx, 0.55, hz, 16); particle({ x: hx, y: 0.75, z: hz, life: 1, size: 1.8, color: 0xffc070, add: true }); }
   G.money = 48000; api.updateHud(0.016); popup('DRIFT x3', 150, 'drift'); popup('NEAR MISS', 100, 'near');
   say({ who: 'sol', text: 'Dex sold us out! Spikes ahead: hit the nitro and thread the gap!' }); typed();
-  // camera low behind the left rear, turned a little toward the sea so the Causeway pylons stand over the water
-  const [px, pz] = T(-8.5, -1.3), [lx, lz] = T(40, 14); G.exposure = 1.1; G.shotCam = { pos: [px, 2.8, pz], look: [lx, -0.4, lz], fov: 46, roll: 0.03 };
-  const rim = new THREE.PointLight(0xffe0c0, 60, 14, 1.6); { const [x, z] = T(-3.5, -1.5); rim.position.set(x, 3.2, z); } G.scene.add(rim);
+  G.exposure = 1.05; if (G.post) Object.assign(G.post.params, { bloom: 0.3, threshold: 1.25, vignette: 0.3 });
+  G.shotCam = { pos: [px, camY, pz], look: [lx, 0.9, lz], fov: 54, roll: 0.025 };
+  const rim = new THREE.PointLight(0xffe0c0, 50, 14, 1.6); { const [x, z] = T(-3, -2); rim.position.set(x, 3.2, z); } G.scene.add(rim);
   finish(api); }
 // Daylight firefight on the Palmetto Beach road: Nico fires on SBPD officers behind their cruiser while a car they hit
 // goes up in a fireball; beachgoers flee across the sand, the sea and the palms on the right.
