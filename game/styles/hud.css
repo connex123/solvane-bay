@@ -126,3 +126,25 @@
 .wseg b { position: absolute; left: 6px; top: 2px; font: 15px var(--big); color: #ffd23c; } .wseg.on b { color: #1a1030; }
 .wseg span { display: block; font: 15px/1 var(--big); color: #fff; } .wseg.on span { color: #1a1030; }
 .wcenter { position: absolute; left: -60px; top: -22px; width: 120px; text-align: center; } .wcenter b { display: block; font: 24px var(--big); color: #fff; } .wcenter span { font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #ffd9a8; }
+
+/* ---- TIDE CHART card system: one look for every HUD card and menu panel ----
+   deep-teal glass, 2 px cream keyline, coral accent stripe, 10 px radius, cream labels, condensed display numbers,
+   money in mint, stars in gold. menus.css applies the same tokens to the menus, map, garage, shop and pause. */
+:root { --tc-glass: linear-gradient(165deg, rgba(10, 64, 72, 0.9), rgba(5, 36, 46, 0.88)); --tc-cream: #f4e8cc; --tc-coral: #ff6f59; --tc-mint: #7dffc4; --tc-gold: #ffc93c; --tc-teal: #2fd6c4; --tc-ink: #062a32; }
+#hud .card, .crewc { background: var(--tc-glass); border: 2px solid rgba(244, 232, 204, 0.85); border-radius: 10px; box-shadow: inset 6px 0 0 var(--tc-coral), 0 4px 0 rgba(4, 24, 30, 0.45); padding-left: 16px; }
+#hud .card[class*='acc-'], #hud .card { --acc: var(--tc-coral); }
+#hud, #hud .card { color: var(--tc-cream); }
+#hud .chap { background: var(--tc-coral); color: var(--tc-ink); }
+#mObj { color: #fff3dc; } #mNext, .mstage { color: #bfe2dc; } #mNext b { color: var(--tc-teal); }
+#mBar, #respBar { background: linear-gradient(90deg, var(--tc-teal), var(--tc-mint)); }
+#hud .bar { background: rgba(244, 232, 204, 0.16); }
+#policeCard .hdr { color: var(--tc-coral); }
+.tag { background: var(--tc-coral); color: var(--tc-ink); } .tag.RAMMING { background: #ffa23c; } .tag.ROADBLOCK { background: #f4e8cc; } .tag.TRACKING { background: var(--tc-gold); }
+#money { color: var(--tc-mint); -webkit-text-stroke: 1.5px #053a2c; text-shadow: 3px 3px 0 #04261e; }
+#moneyDelta { color: var(--tc-mint); }
+#stars i.on { background: linear-gradient(180deg, #fff2a8, var(--tc-gold) 55%, #ff9a1c); }
+.wlab { text-shadow: 2px 2px 0 #04262e; }
+.wt { background: var(--tc-glass); border: 2px solid rgba(244, 232, 204, 0.55); border-radius: 8px; }
+.wt.sel { background: var(--tc-gold); border-color: var(--tc-cream); }
+.crewc .ring { background: rgba(244, 232, 204, 0.5); } .crewc.ready .ring { background: var(--tc-mint); box-shadow: none; }
+#minimap, #mapWrap { border-color: var(--tc-cream) !important; }

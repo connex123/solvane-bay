@@ -72,3 +72,16 @@
 .pips i { display: inline-block; width: 14px; height: 8px; margin-left: 3px; background: rgba(255, 255, 255, 0.2); transform: skewX(-18deg); } .pips i.on { background: #ffb35a; } .maxed { color: #4fe08a; font-weight: 800; letter-spacing: 1px; }
 .swatches { display: flex; gap: 6px; } #garageList .swatches button { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid #fff; }
 .sub .lowtide { font-size: 22px; letter-spacing: 4px; color: #2fd6c4; margin-right: 10px; text-shadow: 2px 2px 0 #08262c; }
+
+/* ---- TIDE CHART card system (tokens in hud.css): menus, Crew & Chapters, garage, shop, pause and map ---- */
+.panel, .mapframe, .ccard, .act, .ccturf { background: var(--tc-glass) !important; border: 2px solid rgba(244, 232, 204, 0.85) !important; border-radius: 10px !important; box-shadow: inset 6px 0 0 var(--tc-coral), 0 6px 0 rgba(4, 24, 30, 0.45); color: var(--tc-cream); }
+#pause, #controls, #settings, #shop, #dead, #garage { background: rgba(3, 30, 38, 0.66); }
+#cityMap { background: radial-gradient(ellipse at 30% 20%, #0f5a64, #032028); }
+#crew { background: linear-gradient(180deg, rgba(4, 40, 48, 0.7), rgba(4, 30, 38, 0.45) 45%, rgba(3, 22, 30, 0.8)); }
+.menu button, .panel button { background: var(--tc-glass); border: 2px solid rgba(244, 232, 204, 0.7); border-radius: 10px; color: var(--tc-cream); }
+.menu button:hover, .panel button:hover, #title .menu button:first-child, .slotbtns button:hover:not(:disabled) { background: linear-gradient(90deg, var(--tc-coral), #ffa84a); color: var(--tc-ink); border-color: var(--tc-cream); }
+.chrow.done i { background: var(--tc-mint); } .chrow.cur { background: linear-gradient(90deg, rgba(255, 111, 89, 0.3), transparent); }
+.ccturf em { background: linear-gradient(90deg, var(--tc-gold), var(--tc-coral)); }
+#title { background: linear-gradient(90deg, rgba(3, 40, 48, 0.82) 0%, rgba(3, 40, 48, 0.45) 40%, transparent 70%); }
+#title h1.logo .l1 { background-image: linear-gradient(180deg, #fff6d8 0%, #ffd06a 40%, #ff8a4a 70%, #ff6f59 100%); filter: drop-shadow(5px 6px 0 #0a4a54) drop-shadow(10px 12px 0 #032028); }
+#title h1.logo .l2 { background-image: linear-gradient(180deg, #f0fffa 0%, #7dffe0 40%, #2fd6c4 70%, #138a96 100%); filter: drop-shadow(5px 6px 0 #ff6f59) drop-shadow(10px 12px 0 #032028); }
