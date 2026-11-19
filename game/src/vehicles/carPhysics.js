@@ -5,6 +5,7 @@ import { CAR_TYPES, buildCarMesh, burntMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
 import { sparks, smoke, explosion, skidMark, addSiren, removeSiren } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
+import { conditionEffects } from './vehicleCondition.js';
 
 export function createCar(key, x, z, heading, kind = 'parked', tint) {
   const type = CAR_TYPES[key], mesh = buildCarMesh(key, tint);
@@ -53,7 +54,7 @@ export function stepCar(car, dt) {
       if (vn < 0) { car.vx -= vn * 1.3 * r.nx; car.vz -= vn * 1.3 * r.nz; if (vn < -4) { if (car.driver === 'player') { G.shake = Math.max(G.shake, Math.min(0.7, -vn / 25)); sfx.crash(-vn); } sparks(car.x + s2 * off, 0.6, car.z + c2 * off); if (car.kind !== 'wreck') damageCar(car, -vn * 6); } } }
   }
   car.hitT = Math.max(0, car.hitT - dt);
-  if (car.hp < car.maxHp * 0.4 && !car.dead && Math.random() < dt * (car.hp < 200 ? 14 : 5)) smoke(car.x + s2 * t.len * 0.35, 1.1, car.z + c2 * t.len * 0.35, car.hp < 200 ? 0x151515 : 0x888888);
+  conditionEffects(car, dt);
   if (car.dead) { car.wreckT -= dt; if (Math.random() < dt * 6) smoke(car.x, 1.2, car.z, 0x151515); if (car.wreckT < 0 && car !== G.p.car) removeCar(car); }
   const m = car.mesh; m.position.set(car.x, 0, car.z); m.rotation.y = car.heading; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
 }

@@ -59,3 +59,11 @@
 #waypoint i { display: block; width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #ff4fd8; border: 3px solid #fff; transform: rotate(45deg); box-shadow: 0 0 14px #ff4fd8, 0 2px 6px rgba(0, 0, 0, 0.6); }
 #waypoint span { display: block; width: 80px; margin: 8px 0 0 -40px; font-size: 13px; font-weight: 900; color: #fff; text-shadow: 0 1px 3px #000, 0 0 6px #000; }
 #waypoint.start i { background: #ffd23c; box-shadow: 0 0 14px #ffb000, 0 2px 6px rgba(0, 0, 0, 0.6); }
+#wantedRow { display: flex; align-items: center; gap: 10px; }
+#losTag { font-size: 13px; font-weight: 900; letter-spacing: 2px; padding: 3px 9px; border-radius: 6px; }
+#losTag.seen { background: #ff2a40; color: #fff; box-shadow: 0 0 12px rgba(255, 42, 64, 0.7); } #losTag.search { background: #ffb020; color: #1a1020; }
+.vlab { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 1px; color: #bdb8d4; margin: 4px 0 2px; } .vlab b { color: #fff; }
+.bar.dmg.low i { background: #ff7a2a; } .bar.nitro i { background: linear-gradient(90deg, #2a8cff, #6fe0ff); } .bar.nitro.on i { box-shadow: 0 0 10px #6fe0ff; }
+#popups { position: absolute; right: 320px; bottom: 150px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.popup b { font: italic 900 28px Impact, 'Arial Black', sans-serif; color: #ffd23c; text-shadow: 2px 2px 0 #000; margin-right: 8px; } .popup span { font: 900 24px Impact, 'Arial Black', sans-serif; color: #8dff9a; text-shadow: 2px 2px 0 #000; }
+.popup.near b { color: #6fe0ff; } .popup.bad b { color: #ff4f6a; } .popup.live b { color: #fff; }

@@ -8,10 +8,9 @@ export function crime(type) {
   w.stars = Math.floor(w.heat); w.unseen = 0; if (w.stars > before) notify(`WANTED LEVEL ${w.stars}`, 'wanted');
 }
 export function setStars(n) { G.wanted.heat = n; G.wanted.stars = n; G.wanted.unseen = 0; }
-export function updateWanted(dt, copDist) {
+export function updateWanted(dt, copDist, seen = copDist < 75 + G.wanted.stars * 12) {
   const w = G.wanted; if (w.stars <= 0) { w.heat = Math.max(0, w.heat - dt * 0.1); w.stars = Math.floor(w.heat); return; }
-  const radius = 75 + w.stars * 12;
-  if (copDist > radius && !(G.heli && Math.hypot(G.heli.x - G.p.x, G.heli.z - G.p.z) < 60)) { w.unseen += dt; w.heat -= dt * (0.08 + w.unseen * 0.012); }
+  if (!seen) { w.unseen += dt; w.heat -= dt * (0.08 + w.unseen * 0.012); }
   else { w.unseen = Math.max(0, w.unseen - dt * 2); w.heat -= dt * 0.004; }
   w.heat = Math.max(0, w.heat); const s = Math.floor(w.heat); if (s < w.stars) { w.stars = s; if (s === 0) notify('WANTED LEVEL LOST', 'good'); }
 }

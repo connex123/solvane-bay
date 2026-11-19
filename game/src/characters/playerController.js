@@ -1,4 +1,6 @@
 // Nico Varela: on-foot movement, shooting, entering/stealing/exiting cars, and driving input.
+import { updateNitro } from '../vehicles/nitroBoost.js';
+import { updateDriftScore } from '../vehicles/driftScoring.js';
 import { G, notify } from '../core/gameState.js';
 import { clamp, wrapAngle } from '../core/config.js';
 import { rnd } from '../core/random.js';
@@ -53,6 +55,7 @@ function drive(dt, p) {
   i.throttle = down('KeyW') || down('ArrowUp') ? 1 : 0; i.brake = down('KeyS') || down('ArrowDown') ? 1 : 0; i.hand = down('Space') ? 1 : 0;
   i.steer = (down('KeyD') || down('ArrowRight') ? 1 : 0) - (down('KeyA') || down('ArrowLeft') ? 1 : 0);
   sfx.horn(down('KeyH')); if (down('KeyH')) scarePeds(c.x, c.z, 14);
+  updateNitro(c, dt, down('ShiftLeft') || down('ShiftRight') || down('KeyN')); updateDriftScore(c, dt);
   p.x = c.x; p.z = c.z; p.yaw = c.heading; p.moving = 0;
   if (c.driver !== 'player') c.driver = 'player';
 }

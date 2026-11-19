@@ -8,6 +8,8 @@ import { updateActors, maintainPeds } from '../characters/pedestrianSystem.js';
 import { updateWanted } from '../police/wantedSystem.js';
 import { updatePolice } from '../police/policeDispatch.js';
 import { updateHeli } from '../police/helicopterUnit.js';
+import { updateLineOfSight } from '../police/lineOfSight.js';
+import { tickPopups } from '../vehicles/driftScoring.js';
 import { updateMarkers } from '../missions/markers.js';
 import { updateMission } from '../missions/missionRunner.js';
 import { updateSide } from '../missions/sideActivities.js';
@@ -26,7 +28,7 @@ export function stepGame(dt) {
     pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); }
   }
   if (G.mode === 'play') {
-    const cd = updatePolice(dt); updateWanted(dt, cd); updateHeli(dt); updateMarkers(dt); updateMission(dt); updateSide(dt);
+    const cd = updatePolice(dt); updateWanted(dt, cd, updateLineOfSight(dt)); tickPopups(dt); updateHeli(dt); updateMarkers(dt); updateMission(dt); updateSide(dt);
     if (p.hp <= 0) G.hooks.playerDown('FLATLINED');
     const c = p.car; sfx.engine(!!c && !c.dead, c ? c.speed : 0, c ? c.input.throttle : 0);
     let near = 999; for (const k of G.cars) if (k.kind === 'cop' && !k.dead) near = Math.min(near, Math.hypot(k.x - p.x, k.z - p.z)); sfx.siren(G.wanted.stars > 0 ? Math.max(0, 1 - near / 120) : 0);

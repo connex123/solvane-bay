@@ -92,6 +92,9 @@ if (!s.onFoot) {
   const d0 = await state(); await down('KeyW'); await sleep(2500); await down('KeyA'); await sleep(700); await up('KeyA'); await down('KeyD'); await sleep(700); await up('KeyD'); await sleep(800);
   const d1 = await state(); await up('KeyW');
   check('driving moves the car', Math.hypot(d1.x - d0.x, d1.z - d0.z) > 15, `${Math.hypot(d1.x - d0.x, d1.z - d0.z).toFixed(0)} m, ${d1.speedKmh} km/h`);
+  await down('KeyW'); await sleep(600); const n0 = await state(); await down('ShiftLeft'); await sleep(1200); const n1 = await state(); await up('ShiftLeft'); await up('KeyW');
+  check('Shift in a car burns nitro', n1.nitro < n0.nitro - 0.15 || n1.boosting, `nitro ${n0.nitro} -> ${n1.nitro}`);
+  check('car condition reads 0-100 %', n1.condition >= 0 && n1.condition <= 100, `${n1.condition}%`);
   await down('KeyS'); await sleep(1500); await up('KeyS');
 }
 

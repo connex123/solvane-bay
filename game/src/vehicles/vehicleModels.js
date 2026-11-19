@@ -159,7 +159,7 @@ function sportRear(grp, key) {
   flameMat = flameMat || new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.85, 0.22), transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
   for (const sx of [-1, 1]) {
     const f = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.42, 10, 1, true).rotateX(-Math.PI / 2).translate(0, 0, -0.2), flameMat); f.position.set(sx * 0.52, 0.32, rz - 0.24);
-    f.onBeforeRender = () => { const c = G.p.car, on = c && c.mesh === grp ? Math.max(0, c.input.throttle) * Math.min(1, Math.abs(c.speed) / 20) : 0, t = (G.time || 0) * 37 + sx * 1.7;
+    f.onBeforeRender = () => { const c = G.p.car, mine = c && c.mesh === grp, on = mine ? (c.boosting ? 2.6 : Math.max(0, c.input.throttle) * Math.min(1, Math.abs(c.speed) / 20)) : 0, t = (G.time || 0) * 37 + sx * 1.7;
       const k = on * (0.55 + 0.3 * Math.sin(t) + 0.2 * Math.sin(t * 2.3 + 1)); f.scale.set(0.8 + 0.4 * k, 0.8 + 0.4 * k, Math.max(0.001, k)); };
     grp.add(f);
   }

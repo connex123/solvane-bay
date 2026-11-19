@@ -8,6 +8,9 @@ import { dlg } from '../story/dialogue.js';
 import { CAST } from '../story/characters.js';
 import { drawPortrait } from './portraits.js';
 import { drawMinimap, gpsTarget } from './minimap.js';
+import { conditionPct, conditionWord } from '../vehicles/vehicleCondition.js';
+import { nitroLevel } from '../vehicles/nitroBoost.js';
+import { driftState } from '../vehicles/driftScoring.js';
 
 const wpV = { x: 0, y: 0, z: 0 };
 // Screen-space waypoint diamond with distance over the GPS target (clamped to the screen edges).
@@ -37,18 +40,22 @@ export function updateHud(dt) {
   }
   const hh = Math.floor(G.clock) % 24, mm = Math.floor((G.clock % 1) * 60); set('clock', `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`);
   set('money', `$${Math.floor(G.money).toLocaleString('en-US')}`);
-  const st = $('stars').children; for (let i = 0; i < 5; i++) st[i].classList.toggle('on', i < w.stars); $('stars').classList.toggle('flash', w.stars > 0 && w.unseen > 0);
+  const st = $('stars').children; for (let i = 0; i < 5; i++) st[i].classList.toggle('on', i < w.stars); $('stars').classList.toggle('flash', w.stars > 0 && !w.seen);
+  show('losTag', w.stars > 0); if (w.stars > 0) { set('losTag', w.seen ? 'IN SIGHT' : 'SEARCHING'); $('losTag').className = w.seen ? 'seen' : 'search'; }
   const r = radioInfo(); set('rName', r ? r.name : 'RADIO OFF'); set('rTrack', r ? `${r.track} · ${r.dj}` : 'Press R to tune in');
   $('hpBar').style.width = `${Math.max(0, p.hp)}%`; $('arBar').style.width = `${p.armor}%`; set('district', districtAt(p.x, p.z).toUpperCase());
   const wh = WEAPONS.map((wp, i) => `<div class="wslot${p.weapon === i ? ' sel' : ''}" style="${p.owned[i] ? '' : 'opacity:.25'}"><b>${i + 1}</b>${wp.name}<span>${i === 0 ? '∞' : p.owned[i] ? p.ammo[wp.id] : '–'}</span></div>`).join('');
   if (cache.wh !== wh) { cache.wh = wh; $('weapons').innerHTML = wh; }
-  show('speedo', !!p.car); if (p.car) { set('speedVal', String(Math.round(Math.abs(p.car.speed) * 3.6))); set('carName', p.car.type.name.toUpperCase()); $('carBar').style.width = `${Math.max(0, p.car.hp / p.car.maxHp * 100)}%`; set('gear', p.car.speed < -0.5 ? 'R' : `D${Math.min(6, 1 + Math.floor(Math.abs(p.car.speed) / 9))}`); }
+  show('speedo', !!p.car); if (p.car) { set('speedVal', String(Math.round(Math.abs(p.car.speed) * 3.6))); set('carName', p.car.type.name.toUpperCase()); const cp = conditionPct(p.car); $('carBar').style.width = `${cp}%`; set('condPct', `${cp}% ${conditionWord(cp)}`); $('carBar').parentNode.classList.toggle('low', cp <= 45); const nl = nitroLevel(p.car); $('nitroBar').style.width = `${Math.round(nl * 100)}%`; $('nitroBar').parentNode.classList.toggle('on', !!p.car.boosting); set('nitroKey', p.car.boosting ? 'BOOST!' : `${Math.round(nl * 100)}%`); set('gear', p.car.speed < -0.5 ? 'R' : `D${Math.min(6, 1 + Math.floor(Math.abs(p.car.speed) / 9))}`); }
   show('crosshair', !p.car && p.aim && G.mode === 'play');
   const d = dlg.cur; show('dialog', !!d);
   if (d) { if (lastWho !== d.who) { lastWho = d.who; drawPortrait($('portrait'), d.who); } set('dName', (CAST[d.who]?.name || d.who).toUpperCase() + '  ·  ' + (CAST[d.who]?.role || '')); const n = Math.min(d.text.length, Math.floor(dlg.t * 55) + 1); set('dText', d.text.slice(0, n)); } else lastWho = null;
   const pr = G.prompt || (!p.car && p.nearCar ? `F  Enter ${p.nearCar.type.name}` : ''); show('prompt', !!pr && G.mode === 'play'); set('prompt', pr);
   const tl = G.toasts.map((t) => `<div class="toast ${t.kind}">${t.text}</div>`).join(''); if (cache.tl !== tl) { cache.tl = tl; $('toasts').innerHTML = tl; }
   for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter((t) => t.t > 0);
+  let pu = (G.popups || []).map((q) => `<div class="popup ${q.kind}" style="opacity:${Math.min(1, q.t * 2).toFixed(2)}"><b>${q.text}</b>${q.cash ? `<span>+$${q.cash}</span>` : ''}</div>`).join('');
+  if (p.car && driftState.t > 0.3) pu = `<div class="popup live"><b>DRIFT x${driftState.mult}</b><span>${Math.round(driftState.pts * driftState.mult)}</span></div>` + pu;
+  if (cache.pu !== pu) { cache.pu = pu; $('popups').innerHTML = pu; }
   G.hudRate += dt; if (G.hudRate > 0.04) { G.hudRate = 0; drawMinimap($('minimap')); }
   updateWaypoint();
 }
