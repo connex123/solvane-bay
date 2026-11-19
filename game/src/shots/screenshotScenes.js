@@ -132,21 +132,24 @@ function crewScreen(api) {
   G.shotCrisp = true; G.shotCam = { pos: [HALF - 4, 9, 78], look: [HALF + 60, 24, -40], fov: 62 }; thinPalms(HALF - 4, 78, 15, 60, 6);
   for (let i = 0; i < 3; i++) api.renderFrame(true); api.showScreen('crew'); finish(api, 1); }
 // Key art: low on the Strand at golden hour looking north-east, the VELOCE GT and Nico in front, the sea gold under the
-// low sun and both coral Causeway pylons with their cable fans standing over it.
+// low sun and both coral Causeway pylons with their cable fans standing over it. Camera placed so the sun disc sits in
+// the open sky between the near pylon and the far one, just above the deck.
 function title(api) {
   clearTraffic(); seedSave({ v: 1, money: 3240, xp: 520, completed: ['m1', 'm2'], packages: [0, 1, 2, 3, 4, 5, 6, 7], owned: {}, ammo: {}, clock: 17.6, play: 4320, place: 'Palmetto Beach', at: '2026-11-18 17:35' });
-  G.mode = 'title'; G.clock = 17.5; G.magicForce = 1; G.exposure = 1.15; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0; G.shotCrisp = true;
-  const C = { x: HALF - 3, z: -30 }, at = (deg, d) => [C.x + Math.sin(deg * Math.PI / 180) * d, C.z - Math.cos(deg * Math.PI / 180) * d];
-  const [vx, vz] = at(58, 10), car = createCar('veloce', vx, vz, 0.15, 'parked', 0xd01020); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
+  G.mode = 'title'; G.clock = 17.0; G.magicForce = 1; G.exposure = 1.22; G.time = 30; rig.mode = 'aerial'; G.wanted.stars = 0; G.shotCrisp = true;
+  const C = { x: HALF - 3, z: -10 }, at = (deg, d) => [C.x + Math.sin(deg * Math.PI / 180) * d, C.z - Math.cos(deg * Math.PI / 180) * d];
+  const [vx, vz] = at(58, 10), car = createCar('veloce', vx, vz, 0.15, 'parked', COVER.paint); car.mesh.position.set(car.x, 0, car.z); car.mesh.rotation.y = car.heading;
   const [nx, nz] = at(67, 6.4), p = G.p; p.x = nx; p.z = nz; p.yaw = -1.25; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
   const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
-  tc('tidebus', -60, 1); tc('rumble', -10, -1, 0x8fd3c8); tc('pico', 40, 1, 0xff8a3d); tc('hawke', 10, -1, 0xf0f0f0);
-  [[-52, 1, 1], [-64, 1, -1], [-40, -1, 1], [-12, 1, 1], [0, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
+  tc('tidebus', -40, 1); tc('rumble', 10, -1, 0x8fd3c8); tc('pico', 60, 1, 0xff8a3d); tc('hawke', 30, -1, 0xf0f0f0); // z offsets follow C.z + 30
+  [[-52, 1, 1], [-64, 1, -1], [-40, -1, 1], [-12, 1, 1], [0, -1, -1]].forEach(([z, sd, d], i) => { const a = spawnPed('z', N, z + C.z + 30, sd, d); animateWalk(a.mesh, i * 1.3, 0.6, false); a.mesh.position.y = 0.25; a.y = 0.25; });
   thinPalms(C.x, C.z, 40, 100, 8);
   // sunlit foreground: a warm low key from the sea side washes the near asphalt, the car and Nico in late sun
   const key = new THREE.SpotLight(0xffc27e, 1200, 90, 0.5, 0.7, 1.6); key.position.set(HALF + 20, 14, -18); key.target.position.set(HALF + 2, 0, -36); G.scene.add(key, key.target);
-  const fill = new THREE.PointLight(0xffc89a, 26, 14, 1.5); fill.position.set(C.x + 1.5, 2.6, C.z + 1.5); G.scene.add(fill); // warm bounce on Nico's face and the car's flank
-  if (G.roadMat) G.roadMat.color.setRGB(1.45, 1.22, 1.0); if (G.post) G.post.params.vignette = 0.3;
+  const fill = new THREE.PointLight(0xffc89a, 75, 16, 1.4); fill.position.set(C.x + 1.2, 3.0, C.z + 0.8); G.scene.add(fill); // warm bounce on Nico's face and the car's flank
+  { const [rx, rz] = at(72, 9.5), rim = new THREE.PointLight(0xffa25a, 70, 7, 1.6); rim.position.set(rx, 2.2, rz); G.scene.add(rim); } // sun-side rim on Nico's shoulders
+  { const [gx, gz] = at(50, 7), glow = new THREE.PointLight(0xffb070, 90, 12, 1.5); glow.position.set(gx, 1.2, gz); G.scene.add(glow); } // low warm fill on the road and sand
+  if (G.roadMat) G.roadMat.color.setRGB(1.45, 1.22, 1.0); if (G.post) Object.assign(G.post.params, { vignette: 0.16, bloom: 0.5 });
   { const [tx, tz] = at(62, 40); G.titleCam = { x: C.x, y: 1.5, z: C.z, tx, ty: 7.4, tz }; }
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
