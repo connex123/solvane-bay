@@ -100,7 +100,7 @@ function boatRun(api) {
   const S = SHOT2, b = mooredSpeedboat(); b.x = S.start[0]; b.z = S.start[1]; b.heading = S.start[2]; b.vx = Math.sin(b.heading) * S.v0; b.vz = Math.cos(b.heading) * S.v0; enterBoat(b); b.input.throttle = 1;
   const launches = S.launches.map(([x, z, h]) => { const l = createBoat('patrol', x, z, h, 'ai'); l.driver = 'ai'; l.vx = Math.sin(h) * 26; l.vz = Math.cos(h) * 26; return l; });
   for (let i = 0; i < S.steps; i++) { b.input.steer = i > S.turnAt ? S.steer : 0; b.input.hand = i > S.turnAt ? 1 : 0; G.time += 1 / 60; updateBoats(1 / 60); updateEffects(1 / 60); }
-  p.x = b.x; p.z = b.z; setStars(3); G.wanted.heat = 3.2; fakeMission(6, 6, 'Outrun the harbour launches: run the ledger to Sol at the Point Wren light', 0);
+  p.x = b.x; p.z = b.z; setStars(4); G.wanted.heat = 4.2; fakeMission(6, 6, 'Outrun the harbour launches: run the ledger to Sol at the Point Wren light', 0);
   addMarker({ x: DROP.x, z: DROP.z, kind: 'obj', label: 'Point Wren light', color: 0xffd23c, auto: false });
   say({ who: 'sol', text: 'Harbour launches off your stern! Hug the Causeway pylons, they turn like bathtubs.' }); typed();
   // the lead launch closes in on Nico's stern quarter; a few more real steps lay its own wake while Nico straightens up
@@ -110,16 +110,18 @@ function boatRun(api) {
   // the gunfight (combat/boatGunfight.js): Nico's rounds have just holed the second launch's fuel tank and it goes up beside
   // the wake; the lead launch's bow gunner walks a burst across the water at the Skipjack while Nico fires back over the stern
   { const l = launches[1], [fx, fz, rx, rz] = fwd(), [bk, sd] = S.blast; l.x = b.x - fx * bk + rx * sd; l.z = b.z - fz * bk + rz * sd; l.heading = b.heading - 0.5; l.mesh.position.set(l.x, 0, l.z); l.mesh.rotation.y = l.heading; l.trail = []; sinkBoat(l); }
+  for (let i = 0; i < 8; i++) { G.time += 1 / 60; updateEffects(1 / 60); fire(launches[1].x, 1.3 + i * 0.2, launches[1].z); } // the fuel fire roaring up
   const lead = launches[0], bow = () => [lead.x + Math.sin(lead.heading) * 3.6, 1.9, lead.z + Math.cos(lead.heading) * 3.6];
   for (let i = 0; i < 12; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i % 3 === 0) { boatShot(...bow(), b, 3.2, 0); { const a = Math.random() * 6.283, r = 4.5 + Math.random() * 4; splash(b.x + Math.cos(a) * r, b.z + Math.sin(a) * r); } } }
-  for (let k = 0; k < 2; k++) { boatShot(...bow(), b, 2.4, 0); boatShot(b.x, 1.7, b.z, lead, 2, 0); }
+  { const dx = lead.x - b.x, dz = lead.z - b.z, d = Math.hypot(dx, dz); // Nico's return fire leaves the gun muzzle, held out over the stern toward the launch
+    for (let k = 0; k < 2; k++) { boatShot(...bow(), b, 2.4, 0); if (k) boatShot(b.x + dx / d * 1.3, 1.65, b.z + dz / d * 1.3, lead, 2, 0); } }
   // camera ahead of the bow and off to one side, looking back past the boat toward the yacht at Marina Cala
   { const [fx, fz, rx, rz] = fwd(); G.shotCam = { pos: [b.x + fx * c.f + rx * c.r, c.h, b.z + fz * c.f + rz * c.r], look: [b.x + (YACHT.x - b.x) * c.k + rx * c.lr, c.ly, b.z + (YACHT.z - b.z) * c.k + rz * c.lr], fov: c.fov, roll: c.roll }; }
-  G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.3, threshold: 1.25, vignette: 0.3 });
+  updateLineOfSight(1); G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.34, threshold: 1.2, vignette: 0.3 });
   finish(api); }
 // staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
-const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4]],
-  lead: [12, 7], blast: [12, -6.5], settle: 30, cam: { f: 7.4, r: 3.4, h: 2.7, k: 0.1, lr: 4.2,  ly: 2.0, fov: 56, roll: -0.02 } };
+const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4], [398, -246, 0.55]],
+  lead: [12, 7], blast: [12, -6.5], settle: 30, cam: { f: 6.7, r: 3.1, h: 2.6, k: 0.1, lr: 4.2,  ly: 2.0, fov: 54, roll: -0.02 } };
 // Crew & Chapters screen opened from a ride on The Strand: six chapters done, Dex has turned, Sol's HOT SWAP cooling down.
 function crewScreen(api) {
   const p = G.p, done = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; clearTraffic(); G.mode = 'pause'; G.clock = 17.1; G.magicForce = 0.6; G.completed = done; G.territory = null; G.xp = 2200; G.money = 21400; G.crew = { cd: { sol: 18 }, swaps: 1 }; G.wanted.stars = 0;

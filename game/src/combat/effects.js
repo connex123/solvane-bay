@@ -40,7 +40,8 @@ export function splash(x, z, big = 1) {
 export const smoke =(x, y, z, c = 0x333333) => particle({ x, y, z, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - .5) * 1.5, life: 1.6, size: 1.2, grow: 2.5, color: c, op: 0.7, tex: 'puff', spin: 0.4 });
 export const tyreSmoke = (x, z) => particle({ x, y: 0.4, z, vx: (Math.random() - .5) * 1.2, vy: 0.6 + Math.random() * 0.8, vz: (Math.random() - .5) * 1.2, life: 1.4, size: 1.1, grow: 2.6, color: 0xfff4f0, op: 0.5, tex: 'puff', spin: 0.3 });
 // flames licking off a burning wreck
-export const fire = (x, y, z) => { const R = Math.random; particle({ x: x + (R() - .5) * 1.4, y, z: z + (R() - .5) * 1.4, vy: 2 + R() * 1.5, life: 0.6 + R() * 0.3, size: 1 + R() * 0.6, grow: 0.8, color: 0xffd060, c2: 0x9a1808, hdr: 1.8, op: 0.95, tex: 'puff', spin: 1 }); };
+export const fire = (x, y, z) => { const R = Math.random; particle({ x: x + (R() - .5) * 1.4, y, z: z + (R() - .5) * 1.4, vy: 2 + R() * 1.5, life: 0.6 + R() * 0.3, size: 1 + R() * 0.6, grow: 0.8, color: 0xffd060, c2: 0x9a1808, hdr: 1.8, op: 0.95, tex: 'puff', spin: 1 });
+  particle({ x: x + (R() - .5) * 0.9, y: y + 0.2, z: z + (R() - .5) * 0.9, vy: 2.4 + R(), life: 0.4 + R() * 0.2, size: 0.9 + R() * 0.5, grow: 1.2, color: 0xfff0b8, c2: 0xff8a30, hdr: 2.4, add: true, op: 0.8, tex: 'puff' }); }; // white-hot core so flames read bright, not muddy
 export function explosion(x, y, z) {
   const R = Math.random, P = 'puff';
   flash.position.set(x, y + 2, z); flash.intensity = 900; flashT = 0.6;

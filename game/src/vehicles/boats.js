@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { G, notify } from '../core/gameState.js';
 import { clamp, wrapAngle } from '../core/config.js';
-import { particle, sparks, explosion } from '../combat/effects.js';
+import { particle, sparks, explosion, fire } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
 import { waterBlock, dockSpotNear } from '../world/marina.js';
 import { buildCharacter, STYLES } from '../characters/characterModel.js';
@@ -52,7 +52,7 @@ function wakeMesh() {
 export function createBoat(key, x, z, heading, kind = 'moored') {
   const type = BOAT_TYPES[key], mesh = boatMesh(key);
   const b = { isBoat: true, key, type, mesh, x, z, y: 0, heading, vx: 0, vz: 0, speed: 0, lat: 0, steerA: 0, hp: type.hp, maxHp: type.hp, input: { throttle: 0, brake: 0, steer: 0, hand: 0 }, driver: null, kind, dead: false, hitT: 0, ph: Math.random() * 6, trail: [], trailT: 0, wake: wakeMesh() };
-  if (type.police) { b.callsign = `HARBOUR-${launchN++}`; b.ai = 'PURSUIT'; }
+  if (type.police) { b.callsign = `HL-${launchN++}`; /* harbour launch: short enough for the SBPD RESPONSE row */ b.ai = 'PURSUIT'; }
   mesh.position.set(x, 0, z); mesh.rotation.y = heading; G.scene.add(mesh); G.boats.push(b); return b;
 }
 export function removeBoat(b) { b.mesh.removeFromParent(); b.wake.removeFromParent(); b.wake.geometry.dispose(); G.boats = G.boats.filter((q) => q !== b); }
@@ -81,7 +81,7 @@ function patrolInput(b, dt) {
 export function stepBoat(b, dt) {
   const t = b.type, i = b.input, sn = Math.sin(b.heading), cs = Math.cos(b.heading);
   let vF = b.vx * sn + b.vz * cs, vL = b.vx * cs - b.vz * sn;
-  if (b.dead) { b.sinkT -= dt; b.mesh.position.y -= dt * 0.6; b.mesh.rotation.z += dt * 0.1; if (Math.random() < dt * 8) particle({ x: b.x, y: 1, z: b.z, vy: 2.5, life: 1.6, size: 1.6, grow: 3, color: 0x2a2a2a, op: 0.6, tex: 'puff' }); if (b.sinkT < 0 && b !== G.p.car) removeBoat(b); return; }
+  if (b.dead) { b.sinkT -= dt; b.mesh.position.y -= dt * 0.6; b.mesh.rotation.z += dt * 0.1; if (Math.random() < dt * 8) particle({ x: b.x, y: 1, z: b.z, vy: 2.5, life: 1.6, size: 1.6, grow: 3, color: 0x2a2a2a, op: 0.6, tex: 'puff' }); if (b.sinkT > 1.5 && Math.random() < dt * 14) fire(b.x, 1.2, b.z); /* the holed fuel tank burns on the water */ if (b.sinkT < 0 && b !== G.p.car) removeBoat(b); return; }
   if (b.driver === 'ai') patrolInput(b, dt);
   const mx = t.max * (b.pmax || 1);
   if (i.throttle > 0) vF += t.acc * i.throttle * dt * clamp(1 - Math.max(0, vF) / mx, 0.04, 1);
