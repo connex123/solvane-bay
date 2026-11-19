@@ -13,6 +13,7 @@ export const CAR_TYPES = {
   hawke: { name: 'Hawke SUV', len: 4.9, wid: 2.0, cab: [0.62, 0.62, -0.1], roof: 1.78, max: 42, acc: 16, grip: 7.5, steer: 0.55, hp: 1300, tint: 0x222831 },
   rumble: { name: 'Rumble 69 Convertible', len: 4.8, wid: 1.95, cab: [0.42, 0.42, -0.25], roof: 1.15, max: 52, acc: 22, grip: 6, steer: 0.6, hp: 1000, tint: 0xff8a3d },
   pico: { name: 'Pico Compact', len: 3.8, wid: 1.75, cab: [0.5, 0.5, -0.1], roof: 1.5, max: 38, acc: 16, grip: 8, steer: 0.66, hp: 800, tint: 0x8fd3c8 },
+  tidebus: { name: 'Tide Bus', len: 6.6, wid: 2.2, cab: [0.3, 0.3, 0.6], roof: 2.45, max: 30, acc: 10, grip: 7, steer: 0.5, hp: 1600, tint: 0xf6c21c },
   interceptor: { name: 'SBPD Interceptor', len: 4.8, wid: 1.95, cab: [0.46, 0.46, -0.15], roof: 1.44, max: 52, acc: 20, grip: 8, steer: 0.62, hp: 900, tint: 0xf7f8fa, police: true },
 };
 // Side profiles (z: rear -> front is -L/2 -> +L/2, y: height). top = front-to-rear outline of the painted body;
@@ -25,6 +26,8 @@ const PROFILES = {
   rumble: { top: [[2.4, 0.48], [2.35, 0.86], [0.75, 0.94], [-1.0, 0.94], [-2.35, 0.97], [-2.4, 0.55]], cab: null, hy: 0.68, ty: 0.82, r: 0.37 },
   pico: { top: [[1.9, 0.5], [1.85, 0.84], [1.15, 0.95], [0.85, 0.98], [-1.75, 1.0], [-1.9, 0.6]], cab: [[0.85, 0.97], [0.15, 1.5], [-1.45, 1.48], [-1.78, 1.0]], hy: 0.66, ty: 0.85, r: 0.32 },
 };
+// the yellow city minibus: tall flat nose, long window band
+PROFILES.tidebus = { top: [[3.3, 0.55], [3.26, 1.05], [3.05, 1.3], [2.85, 2.4], [-3.25, 2.45], [-3.3, 0.62]], cab: [[2.95, 1.32], [2.8, 2.25], [-3.15, 2.25], [-3.2, 1.32]], hy: 0.7, ty: 1.1, r: 0.42 };
 PROFILES.marlin = PROFILES.tupelo = PROFILES.interceptor = PROFILES.sedan;
 
 let envTex = null;
@@ -140,6 +143,7 @@ function livery() {
 }
 const taxiTex = () => canvasTex(256, 64, (g) => { g.fillStyle = '#fff6c8'; g.fillRect(0, 0, 256, 64); g.fillStyle = '#1a1a1a'; g.font = 'bold 34px Arial Black, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('BAY CAB', 128, 34); }, false);
 
+const busTex = () => canvasTex(512, 64, (g) => { g.fillStyle = '#16707a'; g.fillRect(0, 0, 512, 64); g.fillStyle = '#e8604c'; g.fillRect(0, 0, 512, 8); g.fillStyle = '#fff6e0'; g.font = 'bold 40px Arial Black, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('TIDE BUS  ·  STRAND LOOP', 256, 37); }, false);
 const matCache = {};
 const shared = {};
 function sharedMats() {
@@ -168,7 +172,7 @@ function sportRear(grp, key) {
 }
 export function buildCarMesh(key, tint) {
   const g = geoCache[key] || (geoCache[key] = build(key)); const t = CAR_TYPES[key], m = sharedMats();
-  const c = t.police ? t.tint : key === 'tupelo' ? t.tint : tint ?? t.tint;
+  const c = t.police ? t.tint : key === 'tupelo' || key === 'tidebus' ? t.tint : tint ?? t.tint;
   const mk = `${key}${c}`;
   const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.45 }));
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
@@ -185,8 +189,9 @@ export function buildCarMesh(key, tint) {
     const bar = (col, x) => { const mm = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.16, 0.3), new THREE.MeshBasicMaterial({ color: col, toneMapped: false })); mm.position.set(x, t.roof + 0.12, -0.45); grp.add(mm); return mm; };
     grp.userData.bar = { r: bar(0xff3040, -0.38), b: bar(0x4080ff, 0.38) };
   }
+  if (key === 'tidebus') { const bm = new THREE.MeshBasicMaterial({ map: busTex() }); for (const sd of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 0.5), bm); b.position.set(sd * (t.wid / 2 + 0.02), 1.0, -0.3); b.rotation.y = sd * Math.PI / 2; grp.add(b); } }
   if (key === 'tupelo') { const s = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.3), new THREE.MeshBasicMaterial({ map: taxiTex() })); s.position.set(0, t.roof + 0.18, -0.3); grp.add(s); }
   return grp;
 }
-export const CIVIL_TYPES = ['marlin', 'marlin', 'tupelo', 'tupelo', 'cadia', 'hawke', 'rumble', 'pico', 'pico', 'veloce'];
+export const CIVIL_TYPES = ['tidebus', 'tidebus', 'marlin', 'marlin', 'tupelo', 'tupelo', 'cadia', 'hawke', 'rumble', 'pico', 'pico', 'veloce'];
 export const burntMat = new THREE.MeshLambertMaterial({ color: 0x2a2220 }), burntLampMat = new THREE.MeshLambertMaterial({ color: 0x141010 });

@@ -23,6 +23,7 @@ import { rnd } from '../core/random.js';
 import { createSpikeStrip } from '../police/spikeStrip.js';
 import { updateLineOfSight } from '../police/lineOfSight.js';
 import { popup } from '../vehicles/driftScoring.js';
+import { stageMoto } from '../vehicles/motoTaxis.js';
 
 function clearTraffic() { for (const c of G.cars.slice()) if (c.kind === 'traffic' || c.kind === 'parked') removeCar(c); for (const a of G.actors.slice()) removeActor(a); }
 function fakeMission(idx, stageIdx, text, timer) {
@@ -47,7 +48,7 @@ function chase(api) {
   const rb = [cop(36, 3.4, 0.32, 0, 'ROADBLOCK'), cop(38, -3.2, -0.28, 0, 'ROADBLOCK')]; rb.forEach((c) => { c.rbT = 40; });
   { const [x, z] = T(30, 0); createSpikeStrip(x, z, Math.PI / 2, 11); }
   const tc = (key, u, dir, col, spd = 11) => { const c = placeTraffic('z', N, Z0 - u, -dir, key, 'traffic', col); c.nav.spd = spd; return c; };
-  tc('marlin', 56, -1, 0x2f7fd8, 14); tc('cadia', 74, -1, 0x2fb89a); tc('rumble', 100, -1, 0x8fd3c8); tc('pico', 128, 1, 0xff8a3d); tc('tupelo', 148, -1, 0xf6c21c); tc('hawke', 120, -1, 0xe9c46a); tc('pico', 88, -1, 0xc3a6e0);
+  tc('marlin', 56, -1, 0x2f7fd8, 14); tc('tidebus', 74, -1); stageMoto(0, 'z', N, Z0 - 24, -1, 2.2, 0.8); stageMoto(1, 'z', N, Z0 - 48, -1, 5.0, 2.2); stageMoto(2, 'z', N, Z0 - 64, 1, 4.2, 1.0); tc('rumble', 100, -1, 0x8fd3c8); tc('pico', 128, 1, 0xff8a3d); tc('tupelo', 148, -1, 0xf6c21c); tc('hawke', 120, -1, 0xe9c46a); tc('pico', 88, -1, 0xc3a6e0);
   [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1], [2, 1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1], [48, 1, -1], [34, -1, 1]].forEach(([u, s, d], i) => { const a = spawnPed('z', N, Z0 - u, s, -d); if (i % 2 === 0) { a.scared = 6; a.nav.dir = -d; } animateWalk(a.mesh, i * 1.3, i % 2 ? 0.6 : 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
   { const [x, z] = T(32, 4); G.heli = createHeli(x, z); } G.heli.y = 12.5; G.heli.mesh.position.set(G.heli.x, 12.5, G.heli.z); G.heli.mesh.rotation.set(0.08, H(0.35), -0.12); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
   { const [x, z] = T(158, 0.5); addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); } setStars(4); G.wanted.heat = 4.3; fakeMission(6, 1, 'Shake Reyne\'s units before the marina gate', 0);

@@ -20,6 +20,7 @@ import { updateRadio } from '../audio/radioStations.js';
 import { animateSea } from '../world/beachAndSea.js';
 import { respawn } from './gameFlow.js';
 import { updateCrew } from '../crew/crewAbilities.js';
+import { updateMotoTaxis } from '../vehicles/motoTaxis.js';
 import { updateMolotovs } from '../combat/molotov.js';
 
 let pedT = 0;
@@ -27,7 +28,7 @@ export function stepGame(dt) {
   const p = G.p; G.time += dt;
   if (G.mode === 'play') { G.clock = (G.clock + dt / 60) % 24; updatePlayer(dt); updateDialogue(dt); }
   if (G.mode === 'play' || G.mode === 'title' || G.mode === 'dead') {
-    updateTraffic(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateActors(dt);
+    updateTraffic(dt); updateMotoTaxis(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateActors(dt);
     pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); }
   }
   if (G.mode === 'play') {

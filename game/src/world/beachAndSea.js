@@ -23,7 +23,6 @@ export function buildBeachAndSea(scene, rng) {
   }
   for (let k = 0; k < 26; k++) { const x = HALF + rng.range(10, 36), z = rng.range(-HALF + 20, HALF); const c = rng.pick([0xff5a7a, 0x2fc4b2, 0xffb02e, 0xffffff]);
     pushBox(B, x, 0, z, 0.12, 2.4, 0.12, 0xeeeeee); pushBox(B, x, 2.3, z, 2.8, 0.3, 2.8, c); pushBox(B, x + 2.2, 0.05, z, 0.9, 0.12, 2.0, 0xffe9c0); }
-  pushBox(B, HALF + 22, 0, lineCoord(6) + 10, 5, 3, 5, 0xf2f0e8); pushBox(B, HALF + 22, 3, lineCoord(6) + 10, 6, 0.4, 6, 0xff5a7a);
   for (let k = 0; k < 3; k++) { const x = lineCoord(1) + k * 90, z = lineCoord(0) + 20;
     for (const dx of [-8, 8]) pushBox(B, x + dx, 0, z, 1.2, 30, 1.2, 0xe8a030); pushBox(B, x, 28, z, 20, 1.5, 1.5, 0xe8a030); pushBox(B, x, 26, z + 14, 1.5, 1.5, 28, 0xe8a030); }
   const m = new THREE.Mesh(toGeometry(B), new THREE.MeshLambertMaterial({ vertexColors: true })); m.castShadow = true; scene.add(m);
