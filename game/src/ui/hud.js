@@ -43,10 +43,10 @@ export function updateHud(dt) {
   if (M) { set('mChap', M.def.side ? 'SIDE JOB' : `CH ${M.def.chapter}`); set('mTitle', M.def.title); set('mObj', M.text); set('mStage', `STAGE ${Math.max(1, M.idx + 1)} / ${M.total}`); set('mTimer', M.timer > 0 ? fmt(M.timer) : ''); const nx = M.def.stages[M.idx + 1]; const nh = `<b>NEXT</b>${nx ? nx.text : `Payout $${M.def.reward.money.toLocaleString('en-US')} · +${M.def.reward.xp} rep`}`; if (cache.nh !== nh) { cache.nh = nh; $('mNext').innerHTML = nh; } $('mBar').style.width = `${Math.max(6, (M.idx / M.total) * 100)}%`; }
   polT -= dt; show('policeCard', w.stars > 0);
   if (w.stars > 0 && polT <= 0) {
-    polT = 0.25; const cs = copCars().map((c) => ({ c, d: Math.hypot(c.x - p.x, c.z - p.z) })).sort((a, b) => a.d - b.d).slice(0, 4);
+    polT = 0.25; const units = [...copCars(), ...(G.boats || []).filter((b) => b.type.police && b.driver === 'ai' && !b.dead)], cs = units.map((c) => ({ c, d: Math.hypot(c.x - p.x, c.z - p.z) })).sort((a, b) => a.d - b.d).slice(0, 4);
     let h = cs.map(({ c, d }) => `<div class="prow"><span class="cs">${c.callsign || 'SB-00'}</span><span class="d">${Math.round(d)} m</span><span class="tag ${c.ai}">${c.ai || 'PURSUIT'}</span></div>`).join('');
     if (G.heli) h += `<div class="prow"><span class="cs">AIR-1</span><span class="d">${Math.round(Math.hypot(G.heli.x - p.x, G.heli.z - p.z))} m</span><span class="tag TRACKING">TRACKING</span></div>`;
-    $('policeRows').innerHTML = h; set('policeCount', `${copCars().length} UNITS`);
+    $('policeRows').innerHTML = h; set('policeCount', `${units.length} UNITS`);
   }
   const hh = Math.floor(G.clock) % 24, mm = Math.floor((G.clock % 1) * 60); set('clock', `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`);
   set('money', `$${Math.floor(G.money).toLocaleString('en-US')}`);

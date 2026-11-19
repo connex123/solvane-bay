@@ -105,7 +105,7 @@ function boatRun(api) {
   finish(api); }
 // staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
 const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4]],
-  lead: [12, 7], settle: 30, cam: { f: 9.5, r: 4, h: 3.2, k: 0.1, lr: 5,  ly: 2.0, fov: 56, roll: -0.02 } };
+  lead: [12, 7], settle: 30, cam: { f: 7.4, r: 3.4, h: 2.7, k: 0.1, lr: 4.2,  ly: 2.0, fov: 56, roll: -0.02 } };
 // Crew & Chapters screen opened from a ride on The Strand: six chapters done, Dex has turned, Sol's HOT SWAP cooling down.
 function crewScreen(api) {
   const p = G.p, done = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; clearTraffic(); G.mode = 'pause'; G.clock = 17.1; G.magicForce = 0.6; G.completed = done; G.territory = null; G.xp = 2200; G.money = 21400; G.crew = { cd: { sol: 18 }, swaps: 1 }; G.wanted.stars = 0;

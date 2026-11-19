@@ -16,6 +16,7 @@ export const BOAT_TYPES = {
 };
 G.boats = G.boats || [];
 const WAKE_N = 44;
+let launchN = 1;
 let wakeMat = null;
 
 function hullShape(len, wid) {
@@ -51,6 +52,7 @@ function wakeMesh() {
 export function createBoat(key, x, z, heading, kind = 'moored') {
   const type = BOAT_TYPES[key], mesh = boatMesh(key);
   const b = { isBoat: true, key, type, mesh, x, z, y: 0, heading, vx: 0, vz: 0, speed: 0, lat: 0, steerA: 0, hp: type.hp, maxHp: type.hp, input: { throttle: 0, brake: 0, steer: 0, hand: 0 }, driver: null, kind, dead: false, hitT: 0, ph: Math.random() * 6, trail: [], trailT: 0, wake: wakeMesh() };
+  if (type.police) { b.callsign = `HARBOUR-${launchN++}`; b.ai = 'PURSUIT'; }
   mesh.position.set(x, 0, z); mesh.rotation.y = heading; G.scene.add(mesh); G.boats.push(b); return b;
 }
 export function removeBoat(b) { b.mesh.removeFromParent(); b.wake.removeFromParent(); b.wake.geometry.dispose(); G.boats = G.boats.filter((q) => q !== b); }
@@ -74,7 +76,7 @@ function patrolInput(b, dt) {
   const lead = clamp(Math.hypot(t.x - b.x, t.z - b.z) / 30, 0, 1.2), tx = t.x + t.vx * lead, tz = t.z + t.vz * lead;
   const diff = wrapAngle(Math.atan2(tx - b.x, tz - b.z) - b.heading); i.steer = clamp(diff * 2.2, -1, 1); i.throttle = Math.abs(diff) < 1.4 ? 1 : 0.5;
   const ahead = waterBlock(b.x + Math.sin(b.heading) * 9, b.z + Math.cos(b.heading) * 9, 2); if (ahead) i.steer = ahead.nx * Math.cos(b.heading) - ahead.nz * Math.sin(b.heading) > 0 ? 1 : -1;
-  b.pmax = Math.hypot(t.x - b.x, t.z - b.z) > 60 ? 1.15 : 1; // catch-up so the chase stays close
+  const d = Math.hypot(t.x - b.x, t.z - b.z); b.pmax = d > 60 ? 1.15 : 1; b.ai = d < 16 ? 'RAMMING' : 'PURSUIT'; // catch-up so the chase stays close
 }
 export function stepBoat(b, dt) {
   const t = b.type, i = b.input, sn = Math.sin(b.heading), cs = Math.cos(b.heading);
