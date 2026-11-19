@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { G } from '../core/gameState.js';
 
 export function createHeli(x, z) {
-  const g = new THREE.Group(), body = new THREE.MeshLambertMaterial({ color: 0x1b2438 }), glass = new THREE.MeshLambertMaterial({ color: 0x7ab8e0 });
+  const g = new THREE.Group(), body = new THREE.MeshLambertMaterial({ color: 0xf2f4ee, emissive: 0x3a4846 }) /* white SBPD air unit livery: reads against a bright sky */, glass = new THREE.MeshLambertMaterial({ color: 0x1f5a6c });
   const cab = new THREE.Mesh(new THREE.SphereGeometry(1.5, 10, 8), body); cab.scale.set(1, 0.9, 1.5); g.add(cab);
   const win = new THREE.Mesh(new THREE.SphereGeometry(1.1, 8, 6), glass); win.position.set(0, 0.25, 0.9); win.scale.set(1, 0.8, 1); g.add(win);
   const tail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.4, 4.5), body); tail.position.set(0, 0.2, -3.8); g.add(tail);

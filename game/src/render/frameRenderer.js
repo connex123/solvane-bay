@@ -1,6 +1,8 @@
 // Renders one frame: camera update, sky/sun, the bloom + grade pipeline (plain renderer as fallback) and the speed/glare overlays.
 import { G } from '../core/gameState.js';
 import { updateCamera, rig } from '../camera/cameraRig.js';
+import { updateLandmarks } from '../world/landmarks.js';
+import { currentGrade } from './colourScript.js';
 
 const speedEl = document.getElementById('speedfx'), glareEl = document.getElementById('glare');
 const postOn = () => G.post && G.settings.post !== false;
@@ -11,7 +13,7 @@ function titleCamera() {
 }
 function draw() {
   if (postOn()) {
-    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; G.post.params.fringe = G.mode === 'play' ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; G.post.params.exposure = G.exposure || 1.25; G.post.params.magic = G.magic || 0; G.post.render(G.scene, G.camera, G.time); return; }
+    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; G.post.params.fringe = G.mode === 'play' ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; G.post.params.exposure = G.exposure || 1.25; G.post.params.magic = G.magic || 0; G.post.params.grade = currentGrade(); G.post.render(G.scene, G.camera, G.time); return; }
     catch (e) { console.warn('post-processing disabled: ' + e.message); G.post = null; }
   }
   G.renderer.setRenderTarget(null); G.renderer.render(G.scene, G.camera);
@@ -22,5 +24,5 @@ function screenFx() {
 }
 // snap: jump the camera straight to its target (staged shots); dt drives camera smoothing.
 export function renderFrame(snap, dt = 0.016) {
-  titleCamera(); updateCamera(dt, !!snap); G.sky.update(G.clock, G.mode === 'title' && G.titleCam ? { x: G.titleCam.x, z: G.titleCam.z - 30 } : rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); draw(); screenFx();
+  titleCamera(); updateCamera(dt, !!snap); G.sky.update(G.clock, G.mode === 'title' && G.titleCam ? { x: G.titleCam.x, z: G.titleCam.z - 30 } : rig.mode === 'aerial' ? { x: 0, z: 0 } : G.p, G.camera); updateLandmarks(G.clock, G.time); draw(); screenFx();
 }

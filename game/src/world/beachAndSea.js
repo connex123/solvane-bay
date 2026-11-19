@@ -28,7 +28,7 @@ export function buildBeachAndSea(scene, rng) {
     for (const dx of [-8, 8]) pushBox(B, x + dx, 0, z, 1.2, 30, 1.2, 0xe8a030); pushBox(B, x, 28, z, 20, 1.5, 1.5, 0xe8a030); pushBox(B, x, 26, z + 14, 1.5, 1.5, 28, 0xe8a030); }
   const m = new THREE.Mesh(toGeometry(B), new THREE.MeshLambertMaterial({ vertexColors: true })); m.castShadow = true; scene.add(m);
   // Smooth layered coastal hills: rounded ridgelines (sum of sines), pale far layers fading into the haze.
-  const LAYERS = [[860, 330, 0x9a8cc4, 0xe6b9c4], [740, 250, 0x7a72ae, 0xc9a2bb], [650, 175, 0x4f6f9c, 0x9f95b4], [590, 105, 0x2f7a62, 0x7fa58c]];
+  const LAYERS = [[860, 330, 0x9cc8c4, 0xf2cdb0], [740, 250, 0x72aeb0, 0xdcb8a0], [650, 175, 0x3f8890, 0xa8b4a4], [590, 105, 0x2f7a62, 0x7fa58c]] // teal ridgelines into warm haze;
   LAYERS.forEach(([r, H, top, low], li) => {
     const N = 160, pos = [], col = [], idx = [], ct = new THREE.Color(top), cl = new THREE.Color(low), ph = [rng() * 6, rng() * 6, rng() * 6];
     for (let i = 0; i <= N; i++) {
