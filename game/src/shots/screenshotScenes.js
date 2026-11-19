@@ -34,30 +34,32 @@ function typed() { dlg.t = 99; }
 // Cover: the VELOCE GT drifts sideways on nitro down the palm boulevard toward the sea and the sun, an SBPD cruiser
 // ramming its rear quarter, two more chasing, a roadblock with a spike strip ahead and AIR-1's spotlight on the car.
 function chase(api) {
-  const p = G.p, z0 = lineCoord(3), zc = z0 + LANE, x0 = -8; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 760; G.radio = 1; api.showHud(true);
-  const car = createCar('veloce', x0, zc, Math.PI / 2 + 0.55, 'parked', 0xd01020); enterCar(car); car.vx = 38; car.vz = -1.5; car.speed = 38; car.steerA = -0.5; car.input.throttle = 1;
+  const p = G.p, z0 = lineCoord(3), zc = z0 + 0.5, x0 = -8; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.money = 48250; G.xp = 760; G.radio = 1; api.showHud(true);
+  const car = createCar('veloce', x0, zc, Math.PI / 2 - 0.55, 'parked', 0xd01020); enterCar(car); car.vx = 38; car.vz = 1.5; car.speed = 38; car.steerA = 0.5; car.input.throttle = 1;
   car.hp = car.maxHp * 0.68; car.nitro = 0.62; car.boosting = true; p.x = car.x; p.z = car.z; p.hp = 86; p.armor = 60; p.weapon = 2; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 84, smg: 210, shotgun: 24 };
   const cop = (x, z, h, v, ai) => { const c = spawnCop(x, z, h, ai); c.vx = Math.sin(h) * v; c.vz = Math.cos(h) * v; c.speed = v; c.ai = ai; c.heading = h; return c; };
-  cop(x0 - 2.9, zc + 2.3, Math.PI / 2 + 0.38, 39, 'RAMMING'); cop(x0 + 0.5, zc - 5.4, Math.PI / 2 + 0.22, 37, 'PURSUIT'); cop(x0 - 16, zc + 0.6, Math.PI / 2 + 0.1, 36, 'PURSUIT');
-  const rb = [cop(x0 + 33, z0 + 3.4, 0.32, 0, 'ROADBLOCK'), cop(x0 + 35, z0 - 3.2, -0.28, 0, 'ROADBLOCK')]; rb.forEach((c) => { c.rbT = 40; });
-  createSpikeStrip(x0 + 27, z0, 0, 11);
+  // one cruiser rams the left rear quarter, one closes on the right, a third trails behind
+  cop(x0 - 1.4, zc - 2.6, 1.12, 39, 'RAMMING'); cop(x0 + 8, zc + 4.2, Math.PI / 2 + 0.2, 37, 'PURSUIT'); cop(x0 - 18, zc - 3, Math.PI / 2 - 0.12, 36, 'PURSUIT');
+  const rb = [cop(x0 + 36, z0 + 3.4, 0.32, 0, 'ROADBLOCK'), cop(x0 + 38, z0 - 3.2, -0.28, 0, 'ROADBLOCK')]; rb.forEach((c) => { c.rbT = 40; });
+  createSpikeStrip(x0 + 30, z0, 0, 11);
   const tc = (key, x, dir, col, spd = 11) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.nav.spd = spd; return c; };
-  tc('marlin', x0 + 3, -1, 0x2f7fd8, 14); tc('cadia', 58, -1, 0x2fb89a); tc('rumble', 92, -1, 0x8fd3c8); tc('pico', 120, 1, 0xff8a3d); tc('tupelo', 140, -1, 0xf6c21c); tc('hawke', 112, -1, 0xe9c46a); tc('pico', 76, -1, 0xc3a6e0);
+  tc('marlin', x0 + 56, -1, 0x2f7fd8, 14); tc('cadia', 66, -1, 0x2fb89a); tc('rumble', 92, -1, 0x8fd3c8); tc('pico', 120, 1, 0xff8a3d); tc('tupelo', 140, -1, 0xf6c21c); tc('hawke', 112, -1, 0xe9c46a); tc('pico', 80, -1, 0xc3a6e0);
   [[12, -1, -1], [26, -1, 1], [42, -1, -1], [6, 1, 1], [20, 1, -1], [40, 1, 1], [58, -1, -1], [-4, 1, -1], [76, 1, -1], [-2, -1, 1], [64, 1, 1], [2, 1, 1], [9, -1, -1], [15, 1, -1], [30, 1, 1], [48, 1, -1], [34, -1, 1]].forEach(([x, s, d], i) => { const a = spawnPed('x', 3, x, s, d); if (i % 2 === 0) { a.scared = 6; a.nav.dir = d; } animateWalk(a.mesh, i * 1.3, i % 2 ? 0.6 : 0.95, false); a.mesh.position.y = 0.25; a.y = 0.25; });
   G.heli = createHeli(x0 + 30, zc + 1); G.heli.y = 15; G.heli.mesh.position.set(G.heli.x, 15, G.heli.z); G.heli.mesh.rotation.set(0.12, -Math.PI / 2 - 0.6, -0.16); G.heli.rotor.rotation.y = 0.7; placeCone(G.heli, car.x, car.z); G.shotLock = true;
   addMarker({ x: 150, z: zc, kind: 'obj', label: 'Safehouse', color: 0xffd23c, auto: false }); setStars(4); G.wanted.heat = 4.3; fakeMission(5, 3, 'Escape the SBPD, then reach the Alder Hills safehouse', 87);
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   updateSirens(0.1); updateLineOfSight(1);
-  // the drift so far: an arc of twin skid marks behind the rear wheels, and tyre smoke rolling off them
-  for (let k = 0; k < 60; k++) { const u = k / 60, x = x0 - 2 - u * 30, z = zc - 0.4 + u * u * 4.5, h = Math.PI / 2 + 0.44 * (1 - u) - 0.2 * u; for (const sg of [-1, 1]) skidMark(x + Math.cos(h) * sg * 0.85, z - Math.sin(h) * sg * 0.85, h); }
+  // the drift so far: an arc of twin skid marks behind the rear wheels, and light sunlit tyre smoke rolling off them, kept low and to the side
+  for (let k = 0; k < 60; k++) { const u = k / 60, x = x0 - 2 - u * 30, z = zc + 0.4 - u * u * 4.5, h = Math.PI / 2 - 0.44 * (1 - u) + 0.2 * u; for (const sg of [-1, 1]) skidMark(x + Math.cos(h) * sg * 0.85, z - Math.sin(h) * sg * 0.85, h); }
   const sn = Math.sin(car.heading), cs = Math.cos(car.heading), rx = car.x - sn * 1.45, rz = car.z - cs * 1.45;
-  for (let k = 0; k < 14; k++) { const back = k * 0.3, sg = k % 2 ? 1 : -1; particle({ x: rx - back * 0.7 + sg * 0.4, y: 0.4 + k * 0.08, z: rz + 0.6 + back * 0.9 + sg * 0.5, life: 1.4, size: 1.0 + k * 0.22, color: 0xfff0f6, op: 0.6 - k * 0.03 }); }
-  for (let k = 0; k < 6; k++) particle({ x: car.x - sn * 2.55 - k * 0.35, y: 0.33, z: car.z - cs * 2.55, life: 0.3, size: 0.8 - k * 0.08, color: 0x7fc8ff, add: true });
+  for (let k = 0; k < 8; k++) { const back = k * 0.5, sg = k % 2 ? 1 : -1; particle({ x: rx - back - 0.3, y: 0.3 + k * 0.05, z: rz - 1.0 - back * 0.55 + sg * 0.5, life: 1.4, size: 0.9 + k * 0.18, color: 0xfff0e4, hdr: 1.45, op: 0.34 - k * 0.025, tex: 'puff' }); }
+  for (let k = 0; k < 6; k++) particle({ x: car.x - sn * 2.55 - k * 0.35, y: 0.33, z: car.z - cs * 2.55, life: 0.3, size: 0.8 - k * 0.08, color: 0x7fc8ff, add: true, hdr: 1.6 });
   // the ram: sparks where the cruiser's push bar meets the rear quarter
-  const hx = x0 - 1.2, hz = zc + 1.0; sparks(hx, 0.7, hz, 34); sparks(hx, 0.55, hz, 18); particle({ x: hx, y: 0.75, z: hz, life: 1, size: 3, color: 0xffc070, add: true });
+  const hx = x0 - 0.3, hz = zc - 1.45; sparks(hx, 0.7, hz, 34); sparks(hx, 0.55, hz, 18); particle({ x: hx, y: 0.75, z: hz, life: 1, size: 2.2, color: 0xffc070, add: true });
   G.money = 48000; api.updateHud(0.016); popup('DRIFT x3', 150, 'drift'); popup('NEAR MISS', 100, 'near');
-  G.exposure = 1.12; G.shotCam = { pos: [x0 - 8.2, 2.85, zc - 2.0], look: [x0 + 40, 0.9, zc + 5], fov: 56, roll: 0.03 };
-  const rim = new THREE.PointLight(0xffe0c0, 60, 14, 1.6); rim.position.set(car.x - 3.5, 3.2, car.z - 2.5); G.scene.add(rim);
+  say({ who: 'sol', text: 'Spikes at the bridge! Hit the nitro and thread the gap!' }); typed();
+  G.exposure = 1.12; G.shotCam = { pos: [x0 - 9, 2.0, zc - 0.5], look: [x0 + 40, -0.6, zc - 0.5], fov: 44, roll: 0.03 };
+  const rim = new THREE.PointLight(0xffe0c0, 60, 14, 1.6); rim.position.set(car.x - 3.5, 3.2, car.z + 1.5); G.scene.add(rim);
   finish(api); }
 // Daylight firefight on the Palmetto Beach road: Nico fires on SBPD officers behind their cruiser while a car they hit
 // goes up in a fireball; beachgoers flee across the sand, the sea and the palms on the right.
