@@ -1,5 +1,5 @@
 // ?selftest=1 smoke test: drives the real systems headlessly (enter a car, drive, wanted level and police, mission, shooting,
-// helicopter, menus, death and respawn) and sets the page title to SELFTEST PASS or SELFTEST FAIL.
+// helicopter, menus, death and respawn, the chapter 7 yacht and boat run, the chapter 8 Causeway roadblock) and sets the page title to SELFTEST PASS or SELFTEST FAIL.
 import { G } from '../core/gameState.js';
 import { input } from '../core/input.js';
 import { crime } from '../police/wantedSystem.js';
@@ -17,6 +17,7 @@ import { grantMolotovs, activeFirePools } from '../combat/molotov.js';
 import { wheel } from '../combat/weaponWheel.js';
 import { buyUpgrade, garageLevel } from '../shop/garageShop.js';
 import { saveGame, readSave, applySave } from '../save/saveGame.js';
+import { setPieceChecks } from './setPieceTest.js';
 
 // Chapters, territory, crew abilities, molotov, weapon wheel, garage and save/load, driven through the real systems.
 async function storyDepthChecks(api) {
@@ -66,6 +67,7 @@ export async function runSelfTest(api) {
     input.keys.delete('KeyW'); startMission(MISSIONS[0]); for (let i = 0; i < 60; i++) api.stepGame(0.016); api.updateHud(0.016); api.renderFrame();
     if (!G.mission || Number.isNaN(G.p.x)) throw new Error('mission/NaN');
     await storyDepthChecks(api);
+    await setPieceChecks(api);
     // more systems: on-foot shooting, heli at 5 stars, steal-stage completion, map, radio, shop, flatlined
     input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear(); G.p.car = G.p.car; if (G.p.car) { G.p.car.speed = 0; G.p.car.vx = 0; G.p.car.vz = 0; input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear(); }
     G.p.weapon = 1; input.left = true; for (let i = 0; i < 120; i++) { input.leftPressed = i % 10 === 0; api.stepGame(0.016); } input.left = false;
