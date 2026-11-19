@@ -20,7 +20,7 @@ export const LANDMARKS = [
   { id: 'lagoon', name: 'Lagoon Market', x: LAGOON.x, z: LAGOON.z },
 ];
 
-const CORAL = 0xe8604c, CREAM = 0xf6ead2, GOLD = 0xe8b84a;
+const CORAL = 0xe8604c, CREAM = 0xf6ead2, GOLD = 0xe8b84a, PYLON = 0xf06a50;
 const live = { crown: null, lamp: null, glow: null, beam: null };
 
 function radialTexture(inner, outer) {
@@ -37,13 +37,23 @@ function causeway(scene, B) {
   for (const s of [-1, 1]) pushBox(B, (x0 + x1) / 2, deckY, z + s * 10.4, x1 - x0, 1.1, 0.25, CREAM);
   pushBox(B, x0 - 2, -2, z, 10, deckY - 0.4, 26, 0xcfc6b6);
   for (let x = x0 + 50; x < x1; x += 70) if (pylons.every((p) => Math.abs(p - x) > 30)) pushBox(B, x, -2, z, 4, deckY - 2.4 + 2, 14, 0xcfc6b6);
-  // two H pylons: twin tapering legs outside the deck, a crossbeam under the deck and one near the top
-  const H = 128;
+  // two H pylons: twin tapering legs outside the deck, a crossbeam under the deck and one near the top. They have their own
+  // floodlit material (see floodlitMaterial): from late afternoon the coral faces glow from the deck floodlights so the
+  // pylons read coral against the low sun, and gold strips on every leg corner catch the light like a rim.
+  const H = 128, P = newBuf(), R = newBuf(), L = newBuf();
   for (const px of pylons) {
-    for (const s of [-1, 1]) for (let k = 0; k < 8; k++) { const w = 6.2 - k * 0.45, y = -2 + k * (H / 8); pushBox(B, px, y, z + s * (13.5 - k * 0.5), w, H / 8 + 0.2, w, CORAL); }
-    pushBox(B, px, deckY - 6, z, 5, 3.5, 30, CORAL); pushBox(B, px, H * 0.74, z, 4, 4.5, 24, CORAL); pushBox(B, px, -3, z, 16, 3, 36, 0xbfb6a6);
-    pushBox(B, px, H - 2, z, 4.4, 2, 24, 0xfff2dc);
+    for (const s of [-1, 1]) for (let k = 0; k < 8; k++) { const w = 6.2 - k * 0.45, y = -2 + k * (H / 8), zc = z + s * (13.5 - k * 0.5); pushBox(P, px, y, zc, w, H / 8 + 0.2, w, PYLON);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) pushBox(R, px + sx * w / 2, y, zc + sz * w / 2, 0.55, H / 8 + 0.2, 0.55, GOLD); }
+    pushBox(P, px, deckY - 6, z, 5, 3.5, 30, PYLON); pushBox(P, px, H * 0.74, z, 4, 4.5, 24, PYLON); pushBox(B, px, -3, z, 16, 3, 36, 0xbfb6a6);
+    pushBox(R, px, H * 0.74 - 0.3, z, 4.3, 0.5, 24.3, GOLD); pushBox(R, px, H * 0.74 + 4.3, z, 4.3, 0.5, 24.3, GOLD);
+    pushBox(P, px, H - 2, z, 4.4, 2, 24, 0xfff2dc);
+    for (const s of [-1, 1]) for (const y of [deckY + 30, H * 0.5, H * 0.74 + 2]) pushBox(L, px + 3.4, y, z + s * 12, 0.9, 0.9, 0.9, 0xffffff); // white marker lamps up the legs
   }
+  live.pylonMat = floodlitMaterial(); live.rimMat = floodlitMaterial();
+  for (const [b, m] of [[P, live.pylonMat], [R, live.rimMat]]) { const mesh = new THREE.Mesh(toGeometry(b), m); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); }
+  // deck lamps: a warm bead every 24 m along both kerbs, the whole way out to sea
+  for (let x = x0 + 10; x < x1; x += 24) for (const s of [-1, 1]) pushBox(L, x, deckY + 1.1, z + s * 10.4, 0.7, 0.45, 0.7, 0xffffff);
+  scene.add(new THREE.Mesh(toGeometry(L), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 1.9, 1.1) })));
   // cable fans: from anchor points high on each leg down to the deck edge on both sides of the pylon
   const pts = [];
   for (const px of pylons) for (const s of [-1, 1]) for (const dir of [-1, 1]) for (let i = 0; i < 11; i++) {
@@ -51,10 +61,16 @@ function causeway(scene, B) {
     const dx = px + dir * (22 + i * 11.5); pts.push(ax, ay, az, dx, deckY + 0.6, z + s * 10.4);
   }
   const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  scene.add(new THREE.LineSegments(cg, new THREE.LineBasicMaterial({ color: 0xfff4e0 })));
+  scene.add(new THREE.LineSegments(cg, live.cableMat = new THREE.LineBasicMaterial({ color: 0xfff4e0 })));
   // red aviation lamps on the pylon tops
   const lampM = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 0.5, 0.35) }), lg = new THREE.SphereGeometry(1.1, 8, 6);
   for (const px of pylons) for (const s of [-1, 1]) { const m = new THREE.Mesh(lg, lampM); m.position.set(px, H + 0.6, z + s * 10); scene.add(m); }
+}
+// Lambert with an emissive that follows the vertex colour (coral glows coral, gold glows gold); the strength is set per frame.
+function floodlitMaterial() {
+  const m = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0xffffff, emissiveIntensity: 0 });
+  m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance *= vColor.rgb;'); };
+  return m;
 }
 
 function lighthouse(scene, B) {
@@ -143,6 +159,9 @@ export function updateLandmarks(clock, time) {
   const dusk = Math.min(1, Math.max(0, (clock - 17.0) / 2.2)) + (clock < 6 ? 1 : 0), d = Math.min(1, dusk);
   if (live.crown) live.crown.emissiveIntensity = 0.25 + d * 1.6;
   if (live.towerMats) for (const m of live.towerMats) m.emissiveIntensity = d * 0.35;
+  // Causeway floodlights come up through the late afternoon (full by 17:30) and stay on all night
+  const fl = clock < 6.5 ? 1 : Math.min(1, Math.max(0, (clock - 16.2) / 1.3));
+  if (live.pylonMat) { live.pylonMat.emissiveIntensity = 0.06 + fl * 0.62; live.rimMat.emissiveIntensity = 0.15 + fl * 1.5; live.cableMat.color.setRGB(1, 0.96, 0.88).multiplyScalar(1 + fl * 0.7); }
   if (live.glow) { const s = 12 + d * 14; live.glow.scale.set(s, s, 1); live.glow.material.opacity = 0.55 + d * 0.45; }
   if (live.beam) { live.beam.rotation.y = time * 0.7; live.beam.children[0].material.opacity = 0.03 + d * 0.12; }
 }
