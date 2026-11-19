@@ -56,7 +56,7 @@ function thinPalms(cx, cz, b0, b1, minD) {
 // Planned by projecting the key points: car centre-left low (x 350-890), pylon top at x~800 y~70 between the HUD columns,
 // AIR-1 at x~500 y~130 left of the pylon, the cone and its pool on the road left of the car's nose.
 const COVER = { clock: 17.62, drift: 0.66, at: [286.5, 192], cam: [-6.57, -0.9, 1.1], look: [32.4, 8.1, 3.6], fov: 46, roll: 0.03,
-  rammer: [5.2, -2.3, -0.4], second: [22, 6.5, 0.1], burner: [30, -6, 0.9], heli: [19, 1, 10], spot: [18, -4], roadblock: 92, paint: 0xf22a1c };
+  rammer: [5.2, -2.3, -0.4], second: [22, 6.5, 0.1], burner: [30, -6, 0.9], heli: [20, 0.5, 9], spot: [18, -4], roadblock: 92, paint: 0xf22a1c };
 function chase(api) {
   const p = G.p, C = COVER, [XS, ZS] = C.at, T = (u, v) => [XS + v, ZS - u], H = (d) => Math.PI + d; clearTraffic();
   G.mode = 'play'; G.clock = C.clock; G.magicForce = 1; G.time = 12; G.money = 48250; G.xp = 760; G.radio = 1; G.shotCrisp = true; api.showHud(true);
@@ -127,10 +127,10 @@ function boatRun(api) {
   updateLineOfSight(1); G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.34, threshold: 1.2, vignette: 0.3 });
   finish(api); }
 // Chapter 3, Coral Kings Don't Share: the gunfight on the road along the Old Town lagoon market. Nico fires the SMG from
-// behind the car he skidded in sideways; his rounds just touched off the gas cage at the market's south landing, and the
+// the tail of the car he skidded in (parked beside his line of fire so the rounds really reach the cage); his rounds just touched off the gas cage at the market's south landing, and the
 // fireball is rolling up over the Coral Kings bunched by the stalls while the others shoot back. Crown Tower stands over
 // the stilt market and the lagoon in the low sun. Camera low behind Nico's right shoulder looking east-north-east.
-const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.5, 211.5], fov: 54, nico: [-263.4, 223.6], cover: [-260.2, 222.4, Math.PI / 2 + 0.55], ride: [-246.5, 228.6, Math.PI / 2 - 0.3] };
+const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.5, 211.5], fov: 54, nico: [-263.4, 223.6], cover: [-262.0, 225.6, 2.07], ride: [-246.5, 228.6, Math.PI / 2 - 0.3] };
 function marketFight(api) {
   const p = G.p, S = SHOT3; clearTraffic(); G.mode = 'play'; G.clock = S.clock; G.magicForce = 1; G.time = 40; G.money = 6420; G.xp = 380; G.radio = 1; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
   G.completed = ['m1', 'm2']; G.territory = null; G.crew = { cd: { wren: 0 }, swaps: 0 };
