@@ -61,7 +61,7 @@ export function pause(on) { if (on && G.mode === 'play') { G.mode = 'pause'; sho
 export const handlers = {
   new: () => startGame(false), continue: () => startGame(true), controls: () => { G.prevScreen = G.mode; showScreen('controls'); }, settings: () => showScreen('settings'),
   back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), crew: () => showScreen('crew'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
-  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); swallowClick(); requestLock(); },
+  quit: () => toTitle(), closeShop: () => { G.mode = 'play'; G.garageCam = null; hideScreens(); swallowClick(); requestLock(); },
 };
 window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
 input.onUnlock = () => { if (G.mode === 'play') { pause(true); G.unlockPauseAt = performance.now(); } };

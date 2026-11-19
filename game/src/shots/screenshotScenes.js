@@ -32,6 +32,8 @@ import { fire as shootRay } from '../combat/projectiles.js';
 import { WEAPONS } from '../combat/weapons.js';
 import { BOTTLES, detonate, updateGasBottles } from '../combat/gasBottles.js';
 import { MARKET_ROAD, KINGS_SPOTS } from '../missions/storyMissions.js';
+import { WORKSHOP } from '../world/wrenGarage.js';
+import { WREN_GARAGE } from '../shop/garageShop.js';
 
 function clearTraffic() { for (const c of G.cars.slice()) if (c.kind === 'traffic' || c.kind === 'parked') removeCar(c); for (const a of G.actors.slice()) removeActor(a); }
 function fakeMission(idx, stageIdx, text, timer) {
@@ -158,6 +160,21 @@ function marketFight(api) {
   // warm low sun bounce off the road onto Nico's back and the tail of his car, so he reads as a figure, not a cut-out
   { const fill = new THREE.PointLight(0xffb27a, 140, 11, 1.3); fill.position.set(p.x - 2.4, 2.8, p.z + 3.4); G.scene.add(fill); }
   finish(api); }
+// Chapter 7, between stealing Brandt's Veloce and the marina gate: Nico detours into Wren's garage at Point Wren. The car
+// rolls onto the lift, the garage screen docks on the right with the tune so far (engine 2, armour 1, nitro 1) as stat
+// bars, the next upgrades with their prices and the respray swatches; the avenue glows outside the open front.
+function garage(api) {
+  const p = G.p; clearTraffic(); G.mode = 'play'; G.clock = 17.45; G.magicForce = 1; G.time = 20; G.money = 18450; G.xp = 1500; G.radio = 1; G.shotCrisp = true; G.wanted.stars = 0;
+  G.completed = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']; G.territory = null; G.crew = { cd: {}, swaps: 1 }; G.garage = { engine: 2, armour: 1, nitro: 1, color: null };
+  p.hp = 100; p.armor = 50; p.owned = { 0: 1, 1: 1, 2: 1, 3: 1 }; p.ammo = { pistol: 90, smg: 160, shotgun: 16 };
+  const car = createCar('veloce', WREN_GARAGE.x, WREN_GARAGE.z + 2, Math.PI, 'parked', 0xd01020); enterCar(car); fakeMission(6, 1, MISSIONS[6].stages[1].text, 0);
+  { const { x, z } = MARINA_GATE; addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); }
+  // the avenue outside: traffic both ways and people on the far sidewalk
+  const tc = (key, x, dir, col) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
+  tc('tidebus', WORKSHOP.x1 + 16, -1); tc('pico', WORKSHOP.x1 + 2, 1, 0xff8a3d); tc('tupelo', WORKSHOP.x1 + 34, 1, 0xf6c21c); tc('hawke', WORKSHOP.x1 + 52, -1, 0x2fd6c4);
+  [[WORKSHOP.x1 + 6, 1, 1], [WORKSHOP.x1 + 11, 1, -1], [WORKSHOP.x1 + 22, 1, 1], [WORKSHOP.x1 + 30, -1, -1]].forEach(([x, sd, d], i) => { const a = spawnPed('x', 3, x, sd, d); animateWalk(a.mesh, i * 1.7, 0.6, false); });
+  api.showHud(true); G.hooks.openGarage(); G.exposure = 1.2; if (G.post) Object.assign(G.post.params, { bloom: 0.4, threshold: 1.15, vignette: 0.22 });
+  finish(api); }
 // staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
 const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4], [398, -246, 0.55]],
   lead: [12, 7], blast: [12, -6.5], settle: 30, cam: { f: 6.7, r: 3.1, h: 2.6, k: 0.1, lr: 4.2,  ly: 2.0, fov: 54, roll: -0.02 } };
@@ -195,7 +212,7 @@ function title(api) {
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
-  G.shot = name; ({ '1-chase': chase, '2-boat': boatRun, '3-market': marketFight, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
+  G.shot = name; ({ '1-chase': chase, '2-boat': boatRun, '3-market': marketFight, '4-garage': garage, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
   {
     const c = G.renderer.domElement, img = new Image(); img.id = 'shotImg'; img.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0';
     img.src = c.toDataURL('image/jpeg', 0.93); await img.decode(); c.style.display = 'none'; document.body.insertBefore(img, document.getElementById('hud'));

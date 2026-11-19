@@ -28,6 +28,7 @@ export function updateCamera(dt, snap = false) {
     rig.yaw = y; fov = aim ? 52 : 60;
     if (G.shotCam?.pos) { pos.set(...G.shotCam.pos); look.set(...G.shotCam.look); fov = G.shotCam.fov; } // staged on-foot shots frame the scene explicitly
   }
+  const gc = G.mode === 'pause' && G.garageCam; if (gc) { pos.set(...gc.pos); look.set(...gc.look); fov = gc.fov; snap = true; } // Wren's garage: the car on the lift
   cam.position.lerp(pos, snap ? 1 : p.car ? 1 - Math.exp(-dt * 14) : k * 1.4 > 1 ? 1 : k * 1.4);
   if (G.shake > 0) cam.position.add(tmp.set((Math.random() - .5) * G.shake * 0.5, (Math.random() - .5) * G.shake * 0.4, (Math.random() - .5) * G.shake * 0.5));
   rig.look.lerp(look, snap ? 1 : 1 - Math.exp(-dt * 12)); cam.lookAt(rig.look); if (G.shotCam?.roll) cam.rotateZ(G.shotCam.roll);

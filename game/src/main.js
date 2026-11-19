@@ -35,6 +35,7 @@ import { buildCausewayRamp } from './world/causewayDeck.js';
 import { buildBeachLife } from './world/beachLife.js';
 import { initMotoTaxis } from './vehicles/motoTaxis.js';
 import { warmUpShaders } from './render/shaderWarmup.js';
+import { buildWrenGarage } from './world/wrenGarage.js';
 
 const params = new URLSearchParams(location.search), shotName = params.get('shot'), selftest = params.has('selftest');
 window.addEventListener('error', (e) => console.error('CONSOLE_ERROR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
@@ -50,7 +51,7 @@ async function boot() {
   G.settings.post = params.get('post') !== '0';
   initInput(canvas);
   buildLayout(rng); const tex = { facade: facadeMaps() };
-  G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); buildLandmarks(scene, rng); buildMarina(scene); buildCausewayRamp(scene); buildBeachLife(scene, rng); initMotoTaxis(scene); initEffects(scene); initMolotovGlow(scene);
+  G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); buildLandmarks(scene, rng); buildMarina(scene); buildCausewayRamp(scene); buildBeachLife(scene, rng); buildWrenGarage(scene); initMotoTaxis(scene); initEffects(scene); initMolotovGlow(scene);
   createPlayer(); populateParked(40); initSideActivities(); initGarage(); initMenus(handlers);
   for (let k = 0; k < 18; k++) spawnTrafficNear(0, 0, 20, 280); for (let k = 0; k < 22; k++) spawnPedsNear(0, 0, 10, 250);
   const api = { stepGame, renderFrame, startGame, showScreen, showHud, updateHud, handlers };
