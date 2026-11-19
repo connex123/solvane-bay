@@ -1,7 +1,7 @@
 // Teal-and-coral sky dome (palette from render/colourScript.js), sun/moon light with a shadow box following the player, fog and the day/night colour ramp.
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
-import { currentGrade } from '../render/colourScript.js';
+import { currentGrade, BLAZE } from '../render/colourScript.js';
 
 // The sun's path is turned south of the bay's east-west avenues so it sets over the sea beside the Causeway, not dead ahead.
 const SUN_YAW = 0.35, CY = Math.cos(SUN_YAW), SY = Math.sin(SUN_YAW);
@@ -54,7 +54,10 @@ export function createSky(scene) {
       if (G.mode === 'title' || G.shotCrisp) { scene.fog.near = 300; scene.fog.far = 1700; } else { scene.fog.near = 180; scene.fog.far = 950; }
       for (const hm of G.hillMats || []) hm.color.setScalar((G.mode === 'title' ? 1 : 0.78) * Math.max(0.35, Math.min(1, 0.45 + (e + 0.1) * 1.4)));
       const day = Math.max(0.28, Math.min(1, (e + 0.08) * 5));
-      sun.color.copy(u.sunCol.value).lerp(tmpA.set('#ffa850'), mg * 0.5); sun.intensity = e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1);
+      const bz = gr.blaze * mg; // the Low Tide Blaze: hotter gold key, gold sand, sun glints on the sea
+      sun.color.copy(u.sunCol.value).lerp(tmpA.set('#ffa850'), mg * 0.5).lerp(BLAZE.key, bz * 0.6); sun.intensity = (e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1)) * (1 + (BLAZE.keyBoost - 1) * bz);
+      if (G.sandMat) G.sandMat.color.setRGB(1, 1, 1).lerp(BLAZE.sand, bz * 0.75);
+      if (G.seaMat) { G.seaMat.specular.set(0xffb090).lerp(BLAZE.glint, bz).multiplyScalar(1 + bz * 1.5); G.seaMat.shininess = 90 - bz * 50; }
       hemi.color.copy(u.top.value).lerp(tmpA.set('#d8e8ff'), 0.55); hemi.intensity = 0.4 + day * 1.0; hemi.color.lerp(gr.hemiSky, mg * 0.6); hemi.groundColor.set(0xc89878).lerp(gr.hemiGround, mg * 0.6); // teal fill: shadows go teal, never purple
       sun.position.set(focus.x + dir.x * 160, dir.y * 160, focus.z + dir.z * 160); sun.target.position.set(focus.x, 0, focus.z);
       dome.position.copy(camera.position);

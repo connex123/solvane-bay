@@ -10,11 +10,11 @@ export function buildBeachAndSea(scene, rng) {
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x9aa56c }));
   ground.position.y = -0.05; ground.receiveShadow = true; scene.add(ground);
   const st = sandTex(); st.repeat.set(30, 120);
-  const sand = new THREE.Mesh(new THREE.PlaneGeometry(SEA_X - HALF + 6, 2000).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: st }));
+  const sand = new THREE.Mesh(new THREE.PlaneGeometry(SEA_X - HALF + 6, 2000).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: st })); G.sandMat = sand.material;
   sand.position.set((SEA_X + HALF - 6) / 2, 0.0, 0); sand.receiveShadow = true; scene.add(sand);
   const wt = waterTex(); wt.repeat.set(40, 40); water = wt;
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400).rotateX(-Math.PI / 2), new THREE.MeshPhongMaterial({ map: wt, color: 0x9fe0f0, emissiveMap: wt, emissive: 0x6a9cb4, shininess: 90, specular: 0xffb090 }));
-  sea.position.set(SEA_X + 1200, 0.03, 0); scene.add(sea);
+  sea.position.set(SEA_X + 1200, 0.03, 0); G.seaMat = sea.material; scene.add(sea);
   const B = newBuf(); // piers, boats, umbrellas, huts, cranes
   for (let k = 0; k < 16; k++) rng(); // the old pier boats' draws: keeps the seeded layout downstream unchanged
   for (let k = 0; k < 26; k++) { const x = HALF + rng.range(10, 36), z = rng.range(-HALF + 20, HALF); const c = rng.pick([0xff5a7a, 0x2fc4b2, 0xffb02e, 0xffffff]);
