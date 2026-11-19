@@ -24,5 +24,6 @@ function frame(t) {
   renderFrame(false, real);
   if (G.mode !== 'title') updateHud(real);
   const t3 = performance.now(), pf = G.perf ||= { sim: 0, render: 0, steps: 0 }; pf.sim += ((t2 - t1) - pf.sim) * 0.2; pf.render += ((t3 - t2) - pf.render) * 0.2; pf.steps = n; pf.raw = real;
+  G.frameNo = (G.frameNo || 0) + 1; // rendered-frame counter: tools wait on it to know input has been consumed
 }
 export function startLoop() { requestAnimationFrame(frame); }

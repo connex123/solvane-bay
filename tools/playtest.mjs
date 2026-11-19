@@ -42,6 +42,10 @@ const down = (c) => key(c, 'rawKeyDown'), up = (c) => key(c, 'keyUp');
 const tap = async (c, ms = 120) => { await down(c); await sleep(ms); await up(c); };
 const click = async (x, y) => { await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 }); await sleep(40); await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 }); };
 const clickSel = async (sel) => { const r = await evalJs(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e || e.offsetParent === null) return null; const b = e.getBoundingClientRect(); return [b.x + b.width / 2, b.y + b.height / 2]; })()`); if (r) await click(r[0], r[1]); return !!r; };
+// Readiness: wait until the game has rendered at least two frames after an input (its global keys and simulation edges
+// are consumed once per frame), with a minimum wall time; at 1-5 fps a fixed sleep can read state before the key is handled.
+const settle = async (f0, ms) => { await sleep(ms); let s; for (let i = 0; i < 80; i++) { s = await state(); if (s && s.frame >= f0 + 2) return s; await sleep(100); } return s; };
+const frameNo = async () => (await state())?.frame ?? 0;
 const report = []; const check = (name, ok, info = '') => { report.push(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`); return ok; };
 const t0 = Date.now();
 
@@ -78,7 +82,7 @@ check('police respond', s.cops + s.copsOnFoot > 0, `${s.cops} cruisers, ${s.cops
 let entered = false;
 for (let i = 0; i < 90 && !entered; i++) {
   s = await state(); if (!s.onFoot) { entered = true; break; }
-  if (s.nearCar) { await tap('KeyF'); await sleep(400); continue; }
+  if (s.nearCar) { const f0 = await frameNo(); await tap('KeyF'); await settle(f0, 400); continue; } // one F per handled frame: a second tap would step back out
   const n = s.nearestCar; if (!n) break;
   let diff = Math.atan2(n.dx, n.dz) - s.camYaw; while (diff > Math.PI) diff -= 2 * Math.PI; while (diff < -Math.PI) diff += 2 * Math.PI;
   if (Math.abs(diff) > 0.25) { await up('KeyW'); const k = diff > 0 ? 'ArrowLeft' : 'ArrowRight'; await down(k); await sleep(Math.min(500, Math.abs(diff) / 1.8 * 1000)); await up(k); }
@@ -99,11 +103,11 @@ if (!s.onFoot) {
 }
 
 // City map and pause menu; Resume by click must not fire.
-await tap('KeyM'); await sleep(700); s = await state(); check('M opens the city map', s.screen === 'cityMap', `screen=${s.screen}`);
-await tap('KeyM'); await sleep(700); s = await state(); check('M closes the map', s.mode === 'play' && !s.screen, `mode=${s.mode}`);
-await tap('Escape'); await sleep(700); s = await state(); check('Esc pauses', s.mode === 'pause' && s.screen === 'pause', `screen=${s.screen}`);
+let f0 = await frameNo(); await tap('KeyM'); s = await settle(f0, 700); check('M opens the city map', s.screen === 'cityMap', `screen=${s.screen}`);
+f0 = await frameNo(); await tap('KeyM'); s = await settle(f0, 700); check('M closes the map', s.mode === 'play' && !s.screen, `mode=${s.mode}`);
+f0 = await frameNo(); await tap('Escape'); s = await settle(f0, 700); check('Esc pauses', s.mode === 'pause' && s.screen === 'pause', `screen=${s.screen}`);
 const simP = s.simTime; await sleep(1200); s = await state(); check('pause freezes the world', s.simTime - simP < 0.6 || s.mode === 'pause', `mode=${s.mode}`);
-const ammoR = JSON.stringify(s.ammo); await clickSel('[data-act=resume]'); await sleep(900); s = await state();
+const ammoR = JSON.stringify(s.ammo); f0 = await frameNo(); await clickSel('[data-act=resume]'); s = await settle(f0, 900);
 check('Resume returns to play without firing', s.mode === 'play' && JSON.stringify(s.ammo) === ammoR, `mode=${s.mode}`);
 
 s = await state();

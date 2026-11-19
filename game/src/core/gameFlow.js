@@ -64,10 +64,12 @@ export const handlers = {
   quit: () => toTitle(), closeShop: () => { G.mode = 'play'; hideScreens(); swallowClick(); requestLock(); },
 };
 window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
-input.onUnlock = () => { if (G.mode === 'play') pause(true); };
+input.onUnlock = () => { if (G.mode === 'play') { pause(true); G.unlockPauseAt = performance.now(); } };
 
 // Global hotkeys, read once per rendered frame.
 export function handleGlobalKeys() {
+  // Esc while the pointer is locked both releases the lock (which pauses) and arrives as a key: that is one pause, not pause+resume
+  if (pressed('Escape') && performance.now() - (G.unlockPauseAt || -1e9) < 500) input.edge.delete('Escape');
   if (pressed('Escape')) { if (G.mode === 'play') pause(true); else if (G.mode === 'pause') { if (!hidden('cityMap') || !hidden('pause')) pause(false); else showScreen('pause'); } }
   if (pressed('KeyM') && G.mode === 'play') { G.mode = 'pause'; showScreen('cityMap'); releaseLock(); } else if (pressed('KeyM') && G.mode === 'pause' && !hidden('cityMap')) pause(false);
   if (pressed('KeyJ') && G.mode === 'play') { G.mode = 'pause'; showScreen('crew'); releaseLock(); } else if (pressed('KeyJ') && G.mode === 'pause' && !hidden('crew')) pause(false);
