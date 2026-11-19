@@ -15,8 +15,12 @@ SOLVANE BAY is an original open-world crime game for desktop Chrome (keyboard + 
 - Steal any car; lane-following traffic with signals; pedestrians that flee gunfire
 - Wanted level 0-5: SBPD patrol cars that pursue and ram, roadblocks, officers on foot, a police helicopter, CUFFED / FLATLINED respawns
 - Police line of sight: units only see you with a clear sight line within range (IN SIGHT / SEARCHING tag), and heat only cools while nobody has eyes on you; roadblocks lay spike strips that shred your tyres
-- Six-chapter story with portraits and dialogue (steal, deliver, collect, shoot-out, car chase, escape, heist), plus taxi fares, a street race, 16 hidden packages
-- Respect levels unlock weapons at the Calder Arms shop; Glow Coat Respray clears heat; health/armor pickups
+- Story, SOLVANE BAY: LOW TIDE: Nico Varela comes home on the night ferry to find his mother's diner taken by Viktor Brandt's Crown Syndicate. 8 chapters in 3 acts (steal, deliver, collect, shoot-outs, car chase, transmitter plant, yacht heist, live broadcast escape) with portraits and dialogue, a countdown to the Causeway Gala, and a chapter-complete card (beat, cash, rep, unlocks, turf change)
+- Territory: every district is held by the CROWN or the LOW TIDE crew; chapters flip them; HUD waterfront bar and city map tinted by holder
+- Crew abilities unlocked by the story: Sol HOT SWAP (Z, a car delivered beside you), Tamsin BLACKOUT (X, police lose sight for 10 s), Wren PATCH UP (C, instant repair), with cooldown rings on the HUD crew cards
+- Five weapon slots (fists, pistol, SMG, shotgun, thrown MOLOTOV that sets cars alight), HUD slot bar and a Tab weapon wheel; rep levels unlock guns at Calder Arms; Glow Coat Respray clears heat; health/armor pickups
+- Crew & Chapters screen (J or pause menu): crew cards, act/chapter list, territory, days to the Gala, unlocks
+- Wren's garage at Point Wren: engine, armour plating, nitro tank and respray upgrades; save/load covers chapters, territory, crew, weapons and garage
 - Game HUD in condensed display type with colour-coded cards: huge money with +gains, WANTED with big stars and the line-of-sight tag, RESPECT level bar, weapon card with drawn icon and mag/reserve ammo, car card with speed, CONDITION and NITRO bars, mission card with stage bar, timer and NEXT step; mission card, SBPD response list, radio card, speedometer, on-screen waypoint with distance, and a rotating minimap with the road network, parks, beach and sea, a GPS route along the streets, north marker, icon blips (flashing police, objective star, shops), district name and a red/blue rim when wanted
 - City map (M) with street names and clear district labels, pause menu, save/load, three synthesized radio stations
 - Fixed-step simulation (1/60 s with an accumulator) so low frame rates never run in slow motion; menu clicks never fire the gun
