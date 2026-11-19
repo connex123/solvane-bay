@@ -129,9 +129,9 @@ function crewScreen(api) {
   p.x = HALF - 1; p.z = 30; p.yaw = 0.3; G.cam.yaw = Math.PI + 0.5; G.cam.pitch = 0.12; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; animateWalk(p.mesh, 0, 0, false);
   const tc = (key, z, dir, col) => { const c = placeTraffic('z', N, z, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
   tc('tupelo', 70, 1, 0xf6c21c); tc('pico', 110, -1, 0xff8a3d);
-  refreshStartMarker(); G.markers.forEach((m) => { if (m.mesh) m.mesh.visible = false; }); api.showHud(false); rig.mode = 'auto'; G.exposure = 1.2;
+  refreshStartMarker(); G.markers.forEach((m) => { if (m.mesh) m.mesh.visible = false; }); api.showHud(false); rig.mode = 'auto'; G.exposure = 1.45;
   // behind the panels: the Strand at golden hour, the sand, the sea and both Causeway pylons
-  G.shotCrisp = true; G.shotCam = { pos: [HALF - 4, 9, 78], look: [HALF + 60, 24, -40], fov: 62 }; thinPalms(HALF - 4, 78, 15, 60, 6);
+  G.shotCrisp = true; G.shotCam = { pos: [HALF - 4, 9, 78], look: [HALF + 74, 22, -10], fov: 62 }; // turned toward the low sun: the sea and sand glow gold thinPalms(HALF - 4, 78, 15, 60, 6);
   for (let i = 0; i < 3; i++) api.renderFrame(true); api.showScreen('crew'); finish(api, 1); }
 // Key art: low on the Strand at golden hour looking north-east, the VELOCE GT and Nico in front, the sea gold under the
 // low sun and both coral Causeway pylons with their cable fans standing over it. Camera placed so the sun disc sits in
