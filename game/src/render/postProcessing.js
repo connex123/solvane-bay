@@ -20,7 +20,7 @@ void main(){ vec3 c = texture2D(tSrc, vUv).rgb * 0.2270270270;
 
 const COPY = 'uniform sampler2D tSrc; varying vec2 vUv; void main(){ gl_FragColor = vec4(texture2D(tSrc, vUv).rgb, 1.0); }';
 
-const COMPOSITE = `uniform sampler2D tScene, tB1, tB2, tB3; uniform float uBloom, uExposure, uFringe, uVignette, uTime, uWarm, uMagic, uSat, uContrast; uniform vec3 uShadowTint, uHighTint;
+const COMPOSITE = `uniform sampler2D tScene, tB1, tB2, tB3; uniform float uBloom, uExposure, uFringe, uVignette, uTime, uWarm, uMagic, uSat, uContrast, uRadial; uniform vec2 uCenter; uniform vec3 uShadowTint, uHighTint;
 varying vec2 vUv;
 vec3 aces(vec3 x){ // Narkowicz fit of the ACES filmic curve, with the RRT/ODT input/output matrices
   const mat3 I = mat3(0.59719, 0.07600, 0.02840, 0.35458, 0.90834, 0.13383, 0.04823, 0.01566, 0.83777);
@@ -33,6 +33,9 @@ void main(){
   if (uFringe > 0.001) { vec2 off = d * uFringe * r2 * 0.035;
     col = vec3(texture2D(tScene, vUv + off).r, texture2D(tScene, vUv).g, texture2D(tScene, vUv - off).b); }
   else col = texture2D(tScene, vUv).rgb;
+  // at-speed radial blur: the frame edges smear out from the vanishing point (6 taps, only while fast or on nitro)
+  if (uRadial > 0.001) { vec2 dir = vUv - uCenter; float w = smoothstep(0.24, 0.72, length(dir * vec2(1.5, 1.0))) * uRadial; vec3 acc = col;
+    for (int i = 1; i < 7; i++) acc += texture2D(tScene, vUv - dir * (float(i) * 0.0075 * w)).rgb; col = acc / 7.0; }
   vec3 bloom = texture2D(tB1, vUv).rgb * 0.5 + texture2D(tB2, vUv).rgb * 0.8 + texture2D(tB3, vUv).rgb * 1.1;
   col += bloom * uBloom;
   col *= uExposure;
@@ -67,7 +70,7 @@ export function createPostProcessing(renderer, opts = {}) {
   const bright = mat(BRIGHT, { tSrc: { value: null }, uThreshold: { value: 1.0 }, uKnee: { value: 0.5 } });
   const blur = mat(BLUR, { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } });
   const copy = mat(COPY, { tSrc: { value: null } });
-  const comp = mat(COMPOSITE, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null }, uBloom: { value: 0.55 }, uExposure: { value: 1.0 }, uFringe: { value: 0 }, uVignette: { value: 0.55 }, uTime: { value: 0 }, uWarm: { value: 1 }, uMagic: { value: 0 }, uSat: { value: 1.1 }, uContrast: { value: 0.3 }, uShadowTint: { value: new THREE.Vector3(0.8, 0.98, 1.0) }, uHighTint: { value: new THREE.Vector3(1.08, 0.99, 0.84) } });
+  const comp = mat(COMPOSITE, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null }, uBloom: { value: 0.55 }, uExposure: { value: 1.0 }, uFringe: { value: 0 }, uVignette: { value: 0.55 }, uTime: { value: 0 }, uWarm: { value: 1 }, uMagic: { value: 0 }, uSat: { value: 1.1 }, uContrast: { value: 0.3 }, uRadial: { value: 0 }, uCenter: { value: new THREE.Vector2(0.5, 0.55) }, uShadowTint: { value: new THREE.Vector3(0.8, 0.98, 1.0) }, uHighTint: { value: new THREE.Vector3(1.08, 0.99, 0.84) } });
   const pass = (m, target) => { quad.material = m; renderer.setRenderTarget(target); renderer.render(fsScene, camera); };
 
   function setSize(w, h) {
@@ -90,7 +93,7 @@ export function createPostProcessing(renderer, opts = {}) {
       src = L.a;
     }
     const u = comp.uniforms; u.tScene.value = sceneRT.texture; u.tB1.value = levels[0].a.texture; u.tB2.value = levels[1].a.texture; u.tB3.value = levels[2].a.texture;
-    u.uBloom.value = params.lite ? 0 : params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0;
+    u.uBloom.value = params.lite ? 0 : params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0; u.uRadial.value = params.radial || 0;
     if (params.grade) { u.uSat.value = params.grade.sat; u.uContrast.value = params.grade.contrast ?? 0.3; u.uShadowTint.value.fromArray(params.grade.shadow); u.uHighTint.value.fromArray(params.grade.high); }
     pass(comp, null); renderer.toneMapping = prevTM;
   }

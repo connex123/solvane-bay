@@ -69,6 +69,8 @@ export function updateHud(dt) {
   const tl = G.toasts.map((t) => `<div class="toast ${t.kind}">${t.text}</div>`).join(''); if (cache.tl !== tl) { cache.tl = tl; $('toasts').innerHTML = tl; }
   for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter((t) => t.t > 0);
   let pu = (G.popups || []).map((q) => `<div class="popup ${q.kind}" style="opacity:${Math.min(1, q.t * 2).toFixed(2)}"><b>${q.text}</b>${q.cash ? `<span>+$${q.cash}</span>` : ''}</div>`).join('');
+  $('radioCard').style.visibility = (G.popups || []).length >= 2 ? 'hidden' : ''; // the stunt combo takes the radio card's slot while it runs
+  if ((G.popups || []).length >= 2) pu = `<div class="popup combo"><b>COMBO x${G.popups.length}</b><span>+$${G.popups.reduce((s, q) => s + q.cash, 0)}</span></div>` + pu; // two or more stunts chained
   if (p.car && driftState.t > 0.3) pu = `<div class="popup live"><b>DRIFT x${driftState.mult}</b><span>${Math.round(driftState.pts * driftState.mult)}</span></div>` + pu;
   if (cache.pu !== pu) { cache.pu = pu; $('popups').innerHTML = pu; }
   updateChapterCard(dt); updateCrewCards();

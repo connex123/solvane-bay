@@ -3,6 +3,7 @@ import { G, notify } from '../core/gameState.js';
 import { clamp, wrapAngle } from '../core/config.js';
 import { CAR_TYPES, buildCarMesh, burntMat, burntLampMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
+import { popup } from './driftScoring.js';
 import { sparks, smoke, explosion, skidMark, addSiren, removeSiren, tyreSmoke, fire } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
 import { conditionEffects } from './vehicleCondition.js';
@@ -76,7 +77,7 @@ export function carCollisions() {
     if (rv < 0) {
       const j = -rv * 1.25; A.vx -= best.nx * j * wb / tw; A.vz -= best.nz * j * wb / tw; B.vx += best.nx * j * wa / tw; B.vz += best.nz * j * wa / tw;
       if (-rv > 3) { const dmg = -rv * 9; sparks((A.x + B.x) / 2, 0.7, (A.z + B.z) / 2, 4); damageCar(A, dmg); damageCar(B, dmg);
-        const pl = A === G.p.car ? B : B === G.p.car ? A : null; if (pl) { sfx.crash(-rv); G.shake = Math.max(G.shake, Math.min(0.6, -rv / 25)); if (pl.kind === 'cop') pl.rammed = true; else G.hooks.crime('ram'); }
+        const pl = A === G.p.car ? B : B === G.p.car ? A : null; if (pl) { sfx.crash(-rv); G.shake = Math.max(G.shake, Math.min(0.6, -rv / 25)); if (pl.kind === 'cop') { pl.rammed = true; if (-rv > 6 && (pl.paintT || 0) < G.time) { pl.paintT = G.time + 3; sparks((A.x + B.x) / 2, 0.7, (A.z + B.z) / 2, 18); popup('TRADE PAINT', 75, 'ram'); } } else G.hooks.crime('ram'); }
         if (A.kind === 'traffic') A.kind = 'stalled'; if (B.kind === 'traffic') B.kind = 'stalled'; }
     }
   }
