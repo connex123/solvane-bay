@@ -13,6 +13,7 @@ import { conditionPct, conditionWord } from '../vehicles/vehicleCondition.js';
 import { nitroLevel } from '../vehicles/nitroBoost.js';
 import { driftState } from '../vehicles/driftScoring.js';
 import { updateChapterCard } from './chapterCompleteCard.js';
+import { updateCrewCards } from './crewCardStack.js';
 import { shares } from '../story/territoryControl.js';
 import { galaLabel } from '../story/chapterArc.js';
 
@@ -72,7 +73,7 @@ export function updateHud(dt) {
   let pu = (G.popups || []).map((q) => `<div class="popup ${q.kind}" style="opacity:${Math.min(1, q.t * 2).toFixed(2)}"><b>${q.text}</b>${q.cash ? `<span>+$${q.cash}</span>` : ''}</div>`).join('');
   if (p.car && driftState.t > 0.3) pu = `<div class="popup live"><b>DRIFT x${driftState.mult}</b><span>${Math.round(driftState.pts * driftState.mult)}</span></div>` + pu;
   if (cache.pu !== pu) { cache.pu = pu; $('popups').innerHTML = pu; }
-  updateChapterCard(dt);
+  updateChapterCard(dt); updateCrewCards();
   const sh = shares(); set('galaBadge', galaLabel(G.completed.length)); set('turfCrownT', `Crown ${sh.crown}%`); set('turfTideT', `Low Tide ${sh.tide}%`); $('turfCrown').style.width = `${sh.crown}%`; $('turfTide').style.width = `${sh.tide}%`;
   G.hudRate += dt; if (G.hudRate > 0.04) { G.hudRate = 0; drawMinimap($('minimap')); }
   updateWaypoint();

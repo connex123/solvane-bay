@@ -99,3 +99,15 @@
 #turfCard .trow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; } .tlab { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: #bff6ef; }
 #galaBadge { font: 17px var(--big); letter-spacing: 1px; color: #1a0c08; background: linear-gradient(90deg, #ffb35a, #ff6a4f); padding: 1px 9px; border-radius: 3px; transform: skewX(-12deg); box-shadow: 0 0 10px rgba(255, 120, 70, 0.5); }
 #turfCard .turflab { font-size: 15px; }
+/* Crew card stack: portrait inside a cooldown ring, name, ability, status and hotkey. */
+#crewStack { position: absolute; left: 20px; bottom: 262px; display: flex; flex-direction: column; gap: 6px; }
+.crewc { display: flex; align-items: center; gap: 8px; width: 196px; padding: 4px 8px 4px 4px; border-radius: 26px 6px 6px 26px; background: linear-gradient(100deg, rgba(16, 10, 34, 0.88), rgba(22, 12, 40, 0.6)); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+.crewc .ring { width: 46px; height: 46px; border-radius: 50%; padding: 3px; flex: none; background: conic-gradient(#ffb35a var(--p, 360deg), rgba(255, 255, 255, 0.15) 0); }
+.crewc.ready .ring { background: #4fe08a; box-shadow: 0 0 10px rgba(79, 224, 138, 0.8); }
+.crewc canvas { width: 46px; height: 46px; border-radius: 50%; display: block; }
+.cinfo { display: flex; flex-direction: column; line-height: 1.05; flex: 1; } .cinfo b { font: 18px var(--big); letter-spacing: 1px; color: #fff; } .cinfo span { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #ffd9a8; } .cinfo em { font-style: normal; font-size: 12px; font-weight: 800; color: #ffb35a; letter-spacing: 1px; }
+.crewc.ready .cinfo em { color: #4fe08a; }
+.crewc kbd { font: 20px var(--big); color: #1a1030; background: #fff; border-radius: 4px; padding: 0 8px; box-shadow: 0 3px 0 #9a90b8; }
+/* BLACKOUT: the screen stutters like a failing grid. */
+#hud.blackout #vignette { background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 10, 30, 0.75)); animation: bo 0.35s steps(2) infinite; }
+@keyframes bo { 50% { opacity: 0.55; } }
