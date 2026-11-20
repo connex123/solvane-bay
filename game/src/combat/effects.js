@@ -25,7 +25,7 @@ export function initEffects(scene) {
 // o.tex 'puff' = billowing noise puff (fire/smoke), o.c2 = colour reached at end of life, o.hdr = brightness boost for bloom
 export function particle(o) {
   const p = pool.find((q) => q.life <= 0); if (!p) return;
-  p.life = p.max = o.life; p.vx = o.vx || 0; p.vy = o.vy || 0; p.vz = o.vz || 0; p.grow = o.grow || 0; p.g = o.g || 0; p.size = o.size; p.op = o.op ?? 1; p.spin = o.spin || 0; p.drag = o.drag || 0;
+  p.life = p.max = o.life; p.vx = o.vx || 0; p.vy = o.vy || 0; p.vz = o.vz || 0; p.grow = o.grow || 0; p.g = o.g || 0; p.size = o.size; p.op = o.op ?? 1; p.spin = o.spin || 0; p.drag = o.drag || 0; p.fin = o.fin || 0; // fin: seconds to fade in (smoke that emerges instead of popping in)
   const m = p.s.material; m.map = o.tex === 'puff' ? puff : glow; m.rotation = o.rot ?? (o.tex === 'puff' ? Math.random() * 6.283 : 0);
   p.c1.set(o.color).multiplyScalar(o.hdr || 1); p.c2 = o.c2 != null ? new THREE.Color(o.c2).multiplyScalar(o.hdr2 || 1) : null; m.color.copy(p.c1);
   p.s.position.set(o.x, o.y, o.z); m.blending = o.add ? THREE.AdditiveBlending : THREE.NormalBlending; p.s.visible = true; p.s.scale.setScalar(o.size);
@@ -49,8 +49,8 @@ export function explosion(x, y, z) {
   for (let i = 0; i < 7; i++) particle({ x: x + (R() - .5) * 1.2, y: y + 0.6 + R() * 1.2, z: z + (R() - .5) * 1.2, vx: (R() - .5) * 3, vy: 1 + R() * 2, vz: (R() - .5) * 3, life: 0.45 + R() * 0.2, size: 2 + R() * 1.4, grow: 4, color: 0xfff6d0, c2: 0xff9a30, hdr: 2.6, hdr2: 1.6, add: true, op: 0.9, tex: P, spin: 1.5, drag: 2 });
   for (let i = 0; i < 22; i++) { const a = R() * 6.283, sp = 3 + R() * 5; particle({ x: x + Math.cos(a) * 0.8, y: y + 0.5 + R() * 1.6, z: z + Math.sin(a) * 0.8, vx: Math.cos(a) * sp, vy: 2 + R() * 6, vz: Math.sin(a) * sp, life: 0.9 + R() * 0.6, size: 1.8 + R() * 1.6, grow: 3.2, color: [0xffd050, 0xffa030, 0xff7a20][i % 3], c2: 0x5a1208, hdr: 1.9, hdr2: 0.7, op: 0.95, tex: P, spin: (R() - .5) * 2, drag: 2.2 }); }
   for (let i = 0; i < 8; i++) particle({ x: x + (R() - .5) * 2, y: y + 1 + R(), z: z + (R() - .5) * 2, vx: (R() - .5) * 5, vy: 2 + R() * 4, vz: (R() - .5) * 5, life: 0.7, size: 3 + R() * 2, grow: 3, color: 0xff7020, hdr: 1.4, add: true, op: 0.5, tex: P, drag: 2 });
-  // billowing smoke column rising above the fireball: warm grey, fire-lit and see-through rather than a flat black mass
-  for (let i = 0; i < 18; i++) particle({ x: x + (R() - .5) * 2, y: y + 2 + i * 0.35 + R(), z: z + (R() - .5) * 2, vx: (R() - .5) * 1.6, vy: 2.5 + R() * 2.5, vz: (R() - .5) * 1.6, life: 3 + R(), size: 2.6 + i * 0.12 + R(), grow: 2.4, color: i % 3 ? 0x8a6656 : 0xa8785c, c2: 0xc8b4a4, op: 0.5, tex: P, spin: (R() - .5) * 0.6, drag: 0.6 });
+  // billowing smoke column rising out of the fireball (fading in over half a second, so the first instant is a clean bright burst): warm grey, fire-lit and see-through
+  for (let i = 0; i < 18; i++) particle({ fin: 0.5, x: x + (R() - .5) * 2, y: y + 1.2 + i * 0.18 + R() * 0.6, z: z + (R() - .5) * 2, vx: (R() - .5) * 1.6, vy: 2.5 + R() * 2.5, vz: (R() - .5) * 1.6, life: 3 + R(), size: 2.6 + i * 0.12 + R(), grow: 2.4, color: i % 3 ? 0x8a6656 : 0xa8785c, c2: 0xc8b4a4, op: 0.5, tex: P, spin: (R() - .5) * 0.6, drag: 0.6 });
   // flying burning debris trailing glow, dark chunks, sparks and a ground glow
   for (let i = 0; i < 16; i++) { const vx = (R() - .5) * 22, vy = 6 + R() * 10, vz = (R() - .5) * 22; particle({ x, y: y + 0.8, z, vx, vy, vz, g: 14, life: 1.3, size: 0.55, color: 0xffb040, hdr: 2.2, add: true }); particle({ x, y: y + 0.8, z, vx: vx * 0.9, vy: vy * 0.9, vz: vz * 0.9, g: 14, life: 1.2, size: 0.32, color: 0x1a1210 }); }
   sparks(x, y + 1, z, 26);
@@ -75,7 +75,7 @@ export function updateEffects(dt) {
     p.life -= dt; if (p.life <= 0) { p.s.visible = false; continue; }
     if (p.drag) { const k = Math.max(0, 1 - p.drag * dt); p.vx *= k; p.vz *= k; p.vy *= k; }
     p.vy -= p.g * dt; p.s.material.rotation += p.spin * dt; if (p.c2) p.s.material.color.copy(p.c1).lerp(p.c2, Math.min(1, (1 - p.life / p.max) * 1.4));
-    p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt; p.size += p.grow * dt; p.s.scale.setScalar(p.size); p.s.material.opacity = p.op * (p.life / p.max);
+    p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt; p.size += p.grow * dt; p.s.scale.setScalar(p.size); p.s.material.opacity = p.op * (p.life / p.max) * (p.fin ? Math.min(1, (p.max - p.life) / p.fin) : 1);
   }
   if (flashT > 0) { flashT -= dt; flash.intensity = flashT > 0 ? 900 * (flashT / 0.6) ** 2 : 0; }
   for (const c of scorches) if (c.life > 0) { c.life -= dt; c.m.material.opacity = Math.min(1, c.life / 5); if (c.life <= 0) c.m.visible = false; }
