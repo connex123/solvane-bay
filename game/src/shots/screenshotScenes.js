@@ -129,7 +129,7 @@ function boatRun(api) {
 // the tail of the car he skidded in (parked beside his line of fire so the rounds really reach the cage); his rounds just touched off the gas cage at the market's south landing, and the
 // fireball is rolling up over the Coral Kings bunched by the stalls while the others shoot back. Crown Tower stands over
 // the stilt market and the lagoon in the low sun. Camera low behind Nico's right shoulder looking east-north-east.
-const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.5, 211.5], fov: 54, nico: [-263.4, 223.6], cover: [-262.0, 225.6, 2.07], ride: [-246.5, 228.6, Math.PI / 2 - 0.3],
+const SHOT3 = { clock: 17.35, cam: [-268, 2.8, 229.8], look: [-248, 3.2, 211.5], fov: 48, nico: [-263.4, 223.6], cover: [-262.0, 225.6, 2.07], ride: [-246.5, 228.6, Math.PI / 2 - 0.3],
   cops: [{ at: [-231, 222.4, -Math.PI / 2 + 0.12], sp: 9, ai: 'PURSUIT' }, { at: [-225.5, 211.5, -2.35], sp: 6, ai: 'PURSUIT' }, { at: [-222, 120, Math.PI], sp: 24, ai: 'ARRIVING' }] };
 function marketFight(api) {
   const p = G.p, S = SHOT3; clearTraffic(); G.mode = 'play'; G.clock = S.clock; G.magicForce = 1; G.time = 40; G.money = 6420; G.xp = 380; G.radio = 1; G.shotCrisp = true; api.showHud(true); rig.mode = 'auto';
@@ -149,6 +149,7 @@ function marketFight(api) {
   // the burst that holes the cage, the cage going up (combat/gasBottles.js: real blast damage), the fireball rolling up
   for (let k = 0; k < 8 && cage.live; k++) { burst(cage.x, cage.y, cage.z); step(4); }
   step(14, (i) => { if (i % 5 === 0) burst(kings[2].x, 1.2, kings[2].z); });
+  step(190); // three seconds on: the fireball has burned down to the cage's after-fire and its smoke has climbed and thinned, long enough for SBPD to roll up
   // the Kings still standing fire back: muzzle flashes and tracers, rounds sparking off Nico's car
   kings.filter((a) => !a.dead).forEach((a) => { const ox = a.x + Math.sin(a.yaw) * 0.6, oz = a.z + Math.cos(a.yaw) * 0.6, dx = p.x - a.x, dz = p.z - a.z, l = Math.hypot(dx, dz);
     shootRay(a, { id: 'pistol', dmg: 0, range: 60, pellets: 1, spread: 0.02 }, ox, 1.4, oz, dx / l, -0.012, dz / l, { x: ox, y: 1.3, z: oz }); });
@@ -160,7 +161,7 @@ function marketFight(api) {
   { const c = G.cars.find((k) => k.kind === 'cop' && k.ai === 'PURSUIT'); if (c) for (let k = 0; k < 24; k++) for (const sg of [-1, 1]) skidMark(c.x - Math.sin(c.heading) * (1.4 + k * 0.4) + Math.cos(c.heading) * sg * 0.85 + k * k * 0.004, c.z - Math.cos(c.heading) * (1.4 + k * 0.4) - Math.sin(c.heading) * sg * 0.85, c.heading + k * 0.01); }
   setStars(3); G.wanted.heat = 3.3; updateSirens(0.1); updateLineOfSight(1);
   say({ who: 'wren', text: 'Told you they cook on bottled gas. Now SBPD heard it too: drop the last Kings and get out of Old Town!' }); typed();
-  G.shotCam = { pos: S.cam, look: S.look, fov: S.fov, roll: -0.02 }; G.exposure = 1.22; if (G.post) Object.assign(G.post.params, { bloom: 0.32, threshold: 1.3, vignette: 0.22 });
+  G.shotCam = { pos: S.cam, look: S.look, fov: S.fov, roll: -0.02 }; G.exposure = 1.22; G.settings.hudCompact = true; if (G.post) Object.assign(G.post.params, { bloom: 0.2, threshold: 1.55, vignette: 0.18 });
   { const [x, , z] = S.cam; thinPalms(x, z, 30, 95, 4); }
   // the low sun is behind the towers: a broad warm bounce from the sunlit lagoon and road lifts the facades and stalls out of silhouette
   { const b = new THREE.DirectionalLight(0xffd2a8, 0.85); b.position.set(S.cam[0] - 40, 30, S.cam[2] + 30); b.target.position.set(S.look[0], 0, S.look[2]); G.scene.add(b, b.target); }
