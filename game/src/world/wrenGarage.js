@@ -17,7 +17,7 @@ function signTexture() {
   const c = document.createElement('canvas'); c.width = 1024; c.height = 128; const g = c.getContext('2d');
   g.fillStyle = '#0f4650'; g.fillRect(0, 0, 1024, 128); g.fillStyle = '#ff6a4f'; g.fillRect(0, 112, 1024, 16);
   g.font = 'bold 76px Impact, "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = '#ffd23c'; g.fillText("WREN'S GARAGE", 380, 60); g.font = 'bold 40px "Arial Black", sans-serif'; g.fillStyle = '#fff4e0'; g.fillText('TUNE · ARMOUR · RESPRAY', 820, 60);
+  g.fillStyle = '#ffd23c'; g.fillText("WREN'S GARAGE", 360, 60, 640); g.font = 'bold 40px "Arial Black", sans-serif'; g.fillStyle = '#fff4e0'; g.fillText('TUNE · ARMOUR · RESPRAY', 860, 60, 290); // max widths: the two lines never overlap, whatever font is installed
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 export function buildWrenGarage(scene) {

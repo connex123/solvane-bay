@@ -184,7 +184,7 @@ function garage(api) {
   const tc = (key, x, dir, col) => { const c = placeTraffic('x', 3, x, dir, key, 'traffic', col); c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; return c; };
   tc('tidebus', WORKSHOP.x1 + 16, -1); tc('pico', WORKSHOP.x1 + 2, 1, 0xff8a3d); tc('tupelo', WORKSHOP.x1 + 34, 1, 0xf6c21c); tc('hawke', WORKSHOP.x1 + 52, -1, 0x2fd6c4);
   [[WORKSHOP.x1 + 6, 1, 1], [WORKSHOP.x1 + 11, 1, -1], [WORKSHOP.x1 + 22, 1, 1], [WORKSHOP.x1 + 30, -1, -1]].forEach(([x, sd, d], i) => { const a = spawnPed('x', 3, x, sd, d); animateWalk(a.mesh, i * 1.7, 0.6, false); });
-  api.showHud(true); G.hooks.openGarage(); G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.28, threshold: 1.35, vignette: 0.18 });
+  api.showHud(true); G.settings.hudCompact = true; G.hooks.openGarage(); G.exposure = 1.1; if (G.post) Object.assign(G.post.params, { bloom: 0.17, threshold: 1.6, vignette: 0.16 });
   finish(api); }
 // staging numbers for the boat run (start x, z, heading, speed; steps of 1/60 s; when the hard turn starts; camera offsets in the boat's frame)
 const SHOT2 = { start: [414, -204, 0.6], v0: 26, steps: 100, turnAt: 70, steer: -0.6, launches: [[409, -226, 0.5], [426, -236, 0.4], [398, -246, 0.55]],
