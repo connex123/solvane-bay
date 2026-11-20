@@ -72,8 +72,8 @@ function chase(api) {
   for (const c of G.cars) { c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.y = c.heading; for (const w of c.mesh.userData.fw || []) w.rotation.y = c.steerA * 0.9; }
   // the third cruiser lost it on the kerb: wrecked, nose up on the palm planter, and it just went up (the real wreck + explosion)
   burner.mesh.rotation.z = 0.22; burner.mesh.position.y = 0.35; wreck(burner);
-  for (let i = 0; i < 9; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i % 3 === 0) fire(burner.x, 1.2, burner.z); }
-  for (let i = 0; i < 10; i++) fire(burner.x, 1.4 + i * 0.25, burner.z);
+  for (let i = 0; i < 9; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i % 4 === 0) fire(burner.x, 1.2, burner.z); }
+  for (let i = 0; i < 3; i++) fire(burner.x, 1.3 + i * 0.3, burner.z); // a small kerb fire: heat beside the chase, not a second subject
   // AIR-1 low over the Strand in near profile, nose to the left and a little toward the camera, searchlight on the road ahead of the car
   { const [hx, hz] = T(C.heli[0], C.heli[1]); G.heli = createHeli(hx, hz); G.heli.y = C.heli[2]; G.heli.mesh.position.set(hx, C.heli[2], hz);
     G.heli.mesh.rotation.order = 'YXZ'; G.heli.mesh.rotation.set(0.1, -1.22, 0.08); G.heli.rotor.rotation.y = 0.5; const [sx, sz] = T(C.spot[0], C.spot[1]); placeCone(G.heli, sx, sz); } G.shotLock = true;
@@ -82,15 +82,14 @@ function chase(api) {
   // the drift so far: twin skid marks behind the rear wheels; thick tyre smoke rolling back off them
   const fx = Math.sin(car.heading), fz = Math.cos(car.heading), rx = car.x - fx * 1.45, rz = car.z - fz * 1.45;
   for (let k = 0; k < 50; k++) { const q = k / 50; for (const sg of [-1, 1]) { const [sx, sz] = T(-1.6 - q * 34 - Math.sin(C.drift * (1 - q)) * sg * 0.4, q * q * 2.5 + sg * 0.85); skidMark(sx, sz, H(C.drift * (1 - q))); } }
-  for (let k = 0; k < 6; k++) { const b = k * 0.55; for (const sg of [-1, 1]) particle({ x: rx - b * 0.9 + sg * fz * 0.9, y: 0.4 + k * 0.07, z: rz + sg * -fx * 0.9 + b * (0.35 + sg * 0.15), life: 1.5, size: 1.1 + k * 0.3, color: 0xfff2e6, hdr: 1.1, op: 0.26 - k * 0.03, tex: 'puff' }); } // kept short of the lens
+  for (let k = 2; k < 6; k++) { const b = k * 0.55; for (const sg of [-1, 1]) particle({ x: rx - b * 0.9 + sg * fz * 0.9, y: 0.3 + k * 0.05, z: rz + sg * -fx * 0.9 + b * (0.35 + sg * 0.15), life: 1.5, size: 0.8 + k * 0.2, color: 0xfff2e6, hdr: 1.0, op: 0.16 - k * 0.02, tex: 'puff' }); } // thin wisps low behind the tyres, never over the wheels
   // nitro: blue-white exhaust flame
-  for (let k = 0; k < 7; k++) particle({ x: car.x - fx * (2.45 + k * 0.32), y: 0.38, z: car.z - fz * (2.45 + k * 0.32), life: 0.3, size: 1.05 - k * 0.1, color: k < 2 ? 0xe8f6ff : 0x7fc8ff, add: true, hdr: 2.4 });
+  for (let k = 0; k < 4; k++) particle({ x: car.x - fx * (2.45 + k * 0.3), y: 0.38, z: car.z - fz * (2.45 + k * 0.3), life: 0.3, size: 0.6 - k * 0.1, color: k < 2 ? 0xe8f6ff : 0x7fc8ff, add: true, hdr: 1.8 });
   // the sideswipe: sparks where the cruiser's push bar grinds the left front wing (stepped a few frames so they streak out)
-  { const hx = (car.x + fx * 1.4 + rammer.x) / 2, hz = (car.z + fz * 1.4 + rammer.z) / 2; sparks(hx, 0.7, hz, 40); for (let i = 0; i < 3; i++) { G.time += 1 / 60; updateEffects(1 / 60); sparks(hx, 0.7, hz, 18); }
-    particle({ x: hx, y: 0.75, z: hz, life: 1, size: 1.2, color: 0xffc070, add: true, hdr: 1.6 }); }
+  { const hx = (car.x + fx * 1.4 + rammer.x) / 2, hz = (car.z + fz * 1.4 + rammer.z) / 2; sparks(hx, 0.7, hz, 24); for (let i = 0; i < 3; i++) { G.time += 1 / 60; updateEffects(1 / 60); sparks(hx, 0.7, hz, 10); } }
   G.money = 47995; api.updateHud(0.016); popup('DRIFT x4', 180, 'drift'); popup('TRADE PAINT', 75, 'ram');
   say({ who: 'sol', text: 'Dex sold us out! Stay on the Strand and floor it for the marina gate!' }); typed();
-  G.exposure = 1.05; if (G.post) Object.assign(G.post.params, { bloom: 0.32, threshold: 1.3, vignette: 0.38 }); // crisp: bloom only on the hot spots
+  G.exposure = 1.08; G.settings.hudCompact = true; if (G.post) Object.assign(G.post.params, { bloom: 0.18, threshold: 1.6, vignette: 0.22 }); // crisp: bloom only on the hottest spots; compact corner HUD (V)
   const [px, pz] = T(C.cam[0], C.cam[1]), [lx, lz] = T(C.look[0], C.look[1]); G.shotCam = { pos: [px, C.cam[2], pz], look: [lx, C.look[2], lz], fov: C.fov, roll: C.roll };
   const rim = new THREE.PointLight(0xffb070, 160, 12, 1.4); { const [x, z] = T(0.5, -2.6); rim.position.set(x, 2.4, z); } G.scene.add(rim);
   // warm bounce off the sunlit asphalt onto the tail and right flank, so the paint reads glossy coral instead of backlit dark

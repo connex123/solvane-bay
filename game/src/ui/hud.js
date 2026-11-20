@@ -39,6 +39,7 @@ const show = (id, on) => $(id).classList.toggle('hidden', !on);
 const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 export function updateHud(dt) {
   const p = G.p, M = G.mission, w = G.wanted;
+  $('hud').classList.toggle('compact', !!G.settings.hudCompact); // V: compact corners layout
   show('missionCard', !!M);
   if (M) { set('mChap', M.def.side ? 'SIDE JOB' : `CH ${M.def.chapter}`); set('mTitle', M.def.title); set('mObj', M.text); set('mStage', `STAGE ${Math.max(1, M.idx + 1)} / ${M.total}`); set('mTimer', M.timer > 0 ? fmt(M.timer) : ''); const nx = M.def.stages[M.idx + 1]; const nh = `<b>NEXT</b>${nx ? nx.text : `Payout $${M.def.reward.money.toLocaleString('en-US')} · +${M.def.reward.xp} rep`}`; if (cache.nh !== nh) { cache.nh = nh; $('mNext').innerHTML = nh; } $('mBar').style.width = `${Math.max(6, (M.idx / M.total) * 100)}%`; }
   polT -= dt; show('policeCard', w.stars > 0);

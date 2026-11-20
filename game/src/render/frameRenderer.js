@@ -15,13 +15,13 @@ function titleCamera() {
 function speedBlur() { const c = G.mode === 'play' ? G.p.car : null; if (!c) return 0; return Math.min(1, Math.max(0, (Math.abs(c.speed) - 24) / 26) * 0.75 + (c.boosting ? 0.35 : 0)); }
 function draw() {
   if (postOn()) {
-    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; G.post.params.fringe = G.mode === 'play' && !G.shotCrisp ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; G.post.params.radial = speedBlur(); G.post.params.exposure = G.exposure || 1.25; G.post.params.magic = G.magic || 0; G.post.params.grade = currentGrade(); G.post.render(G.scene, G.camera, G.time); return; }
+    try { const sp = G.p.car ? Math.abs(G.p.car.speed) : 0; G.post.params.fringe = G.mode === 'play' && !G.shotCrisp ? Math.max(0, Math.min(1, (sp - 22) / 28)) : 0; G.post.params.radial = speedBlur() * (G.shotCrisp ? 0.3 : 1); G.post.params.exposure = G.exposure || 1.25; G.post.params.magic = G.magic || 0; G.post.params.grade = currentGrade(); G.post.render(G.scene, G.camera, G.time); return; }
     catch (e) { console.warn('post-processing disabled: ' + e.message); G.post = null; }
   }
   G.renderer.setRenderTarget(null); G.renderer.render(G.scene, G.camera);
 }
 function screenFx() {
-  const sp = G.mode === 'play' && G.p.car ? Math.abs(G.p.car.speed) : 0; speedEl.style.opacity = String(Math.max(0, Math.min(0.85, (sp - 18) / 30) * (G.shotCrisp ? 0.6 : 1))); // speed lines at the frame edges
+  const sp = G.mode === 'play' && G.p.car ? Math.abs(G.p.car.speed) : 0; speedEl.style.opacity = String(Math.max(0, Math.min(0.85, (sp - 18) / 30) * (G.shotCrisp ? 0.25 : 1))); // speed lines at the frame edges
   const gl = G.sunScreen; glareEl.style.opacity = gl && G.mode === 'play' ? String(gl.a * (postOn() ? 0.2 : 1) * (G.shotCrisp ? 0.4 : 1)) : '0'; if (gl) glareEl.firstElementChild.style.transform = `translate(${gl.x}px, ${gl.y}px)`;
 }
 // snap: jump the camera straight to its target (staged shots); dt drives camera smoothing.

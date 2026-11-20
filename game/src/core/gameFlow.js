@@ -77,6 +77,7 @@ export function handleGlobalKeys() {
   if (pressed('KeyM') && G.mode === 'play') { G.mode = 'pause'; showScreen('cityMap'); releaseLock(); } else if (pressed('KeyM') && G.mode === 'pause' && !hidden('cityMap')) pause(false);
   if (pressed('KeyJ') && G.mode === 'play') { G.mode = 'pause'; showScreen('crew'); releaseLock(); } else if (pressed('KeyJ') && G.mode === 'pause' && !hidden('crew')) pause(false);
   if (pressed('KeyR') && G.mode === 'play') { cycleRadio(); sfx.click(); }
+  if (pressed('KeyV') && G.mode === 'play') { G.settings.hudCompact = !G.settings.hudCompact; sfx.click(); } // HUD layout: full cards / compact corners
   if (G.mode === 'play' && !input.locked && input.leftPressed && hidden('dialog')) requestLock();
-  for (const k of ['Escape', 'KeyM', 'KeyR', 'KeyJ']) input.edge.delete(k); // consumed here; other edges wait for the next simulation step
+  for (const k of ['Escape', 'KeyM', 'KeyR', 'KeyJ', 'KeyV']) input.edge.delete(k); // consumed here; other edges wait for the next simulation step
 }
