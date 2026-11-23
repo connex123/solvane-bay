@@ -2,17 +2,23 @@
 // points onto the road grid.
 import { N, S, HALF, lineCoord, DISTRICTS, clamp } from '../core/config.js';
 
-const inRange = (v, lo, hi) => v >= lo && v <= hi;
+// District map as rectangles of block columns (cols) and rows, inclusive, checked top to bottom: the first
+// rectangle containing a block names its district, and anything left over is Old Town.
+const ANY = [-Infinity, Infinity];
+const DISTRICT_RECTS = [
+  { key: 'downtown', cols: [3, 5], rows: [3, 5] },
+  { key: 'marina', cols: [6, Infinity], rows: [-Infinity, 3] },
+  { key: 'docks', cols: [-Infinity, 5], rows: [-Infinity, 1] },
+  { key: 'neon', cols: [1, 4], rows: [6, Infinity] },
+  { key: 'beach', cols: [6, Infinity], rows: [4, Infinity] },
+  { key: 'hills', cols: [-Infinity, 1], rows: [2, 5] },
+  { key: 'old', cols: ANY, rows: ANY },
+];
+const within = ([lo, hi], v) => v >= lo && v <= hi;
 
-/** District key for block column i, row j (rules are checked in priority order). */
+/** District key for block column i, row j. */
 export function districtOfBlock(i, j) {
-  if (inRange(i, 3, 5) && inRange(j, 3, 5)) return 'downtown';
-  if (i >= 6 && j <= 3) return 'marina';
-  if (j <= 1 && i <= 5) return 'docks';
-  if (inRange(i, 1, 4) && j >= 6) return 'neon';
-  if (i >= 6 && j >= 4) return 'beach';
-  if (i <= 1 && inRange(j, 2, 5)) return 'hills';
-  return 'old';
+  return DISTRICT_RECTS.find((rect) => within(rect.cols, i) && within(rect.rows, j)).key;
 }
 
 // Hand-placed special blocks: Crown Tower and the Old Town lagoon market are built in world/landmarks.js.

@@ -4,14 +4,16 @@
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
 
-// pr: pixel-ratio cap; shadows: full shadow map updated every frame; post: bloom on (off = lite post).
-export const LEVELS = [
-  { name: 'High', pr: 1.5, shadows: true, post: true },
-  { name: 'Medium', pr: 1.0, shadows: true, post: true },
-  { name: 'Low', pr: 0.8, shadows: false, post: true },
-  { name: 'Lowest', pr: 0.6, shadows: false, post: false },
-  { name: 'Minimal', pr: 0.4, shadows: false, post: false }, // for software renderers: keeps the game responsive
+// Columns: name, pixel-ratio cap, live full-size shadows, bloom (without it, post runs in lite mode).
+// Minimal exists for software renderers: it keeps the game responsive.
+const LEVEL_TABLE = [
+  ['High', 1.5, true, true],
+  ['Medium', 1.0, true, true],
+  ['Low', 0.8, false, true],
+  ['Lowest', 0.6, false, false],
+  ['Minimal', 0.4, false, false],
 ];
+export const LEVELS = LEVEL_TABLE.map(([name, pr, shadows, post]) => ({ name, pr, shadows, post }));
 
 const NAMED = { high: 0, medium: 1, low: 2 };
 const BOTTOM = LEVELS.length - 1;

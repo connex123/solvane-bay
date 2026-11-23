@@ -9,10 +9,12 @@ import { sfx } from '../audio/soundEngine.js';
 
 export const WREN_GARAGE = { x: BAY.x, z: BAY.z + 3 };
 
+// One entry per upgrade line; `costs` holds the price of each level in turn, so its length is the level cap.
+const upgrade = (id, name, desc, ...costs) => ({ id, name, desc, costs });
 export const UPGRADES = [
-  { id: 'engine', name: 'Engine rebuild', desc: '+12% acceleration, +5% top speed per level', costs: [1500, 3000, 5000] },
-  { id: 'armour', name: 'Armour plating', desc: '-15% damage taken per level', costs: [1200, 2500, 4000] },
-  { id: 'nitro', name: 'Nitro tank', desc: 'Boost lasts 40% longer per level', costs: [1000, 2500] },
+  upgrade('engine', 'Engine rebuild', '+12% acceleration, +5% top speed per level', 1500, 3000, 5000),
+  upgrade('armour', 'Armour plating', '-15% damage taken per level', 1200, 2500, 4000),
+  upgrade('nitro', 'Nitro tank', 'Boost lasts 40% longer per level', 1000, 2500),
 ];
 
 const PAINT_JOBS = [

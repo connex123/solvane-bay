@@ -8,7 +8,16 @@ import { damageCar } from '../vehicles/carPhysics.js';
 import { fire, smoke, particle } from './effects.js';
 import { sfx } from '../audio/soundEngine.js';
 
-export const MOLOTOV = { speed: 17, lift: 5.5, gravity: 18, poolR: 3.6, poolTime: 7, carBurn: 8, burnDps: 85, poolCarDps: 140 };
+export const MOLOTOV = {
+  speed: 17, // m/s of throw along the aim
+  lift: 5.5, // extra upward m/s for the lob
+  gravity: 18,
+  poolR: 3.6, // burning pool radius (m)
+  poolTime: 7, // seconds a pool burns
+  carBurn: 8, // seconds a car keeps burning once lit
+  burnDps: 85, // damage per second to a burning car
+  poolCarDps: 140, // damage per second to a car standing in a pool
+};
 
 const MAX_FLIGHT = 4; // seconds before a bottle bursts wherever it is
 const POOL_TICK = 0.25; // seconds between pool damage ticks on people

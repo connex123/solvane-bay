@@ -10,9 +10,16 @@ import { sfx } from '../audio/soundEngine.js';
 import { waterBlock, dockSpotNear } from '../world/marina.js';
 import { buildCharacter, STYLES } from '../characters/characterModel.js';
 
+// len/wid in metres, max in m/s, acc in m/s^2, turn in rad/s at full lock; then hull, stripe and deck paint.
 export const BOAT_TYPES = {
-  skipjack: { name: 'Skipjack 28', len: 7.6, wid: 2.7, max: 36, acc: 15, turn: 1.35, hp: 420, hull: 0xfaf6ee, stripe: 0xe8604c, deck: 0x2fb8a8 },
-  patrol: { name: 'SBPD Harbour Launch', len: 9, wid: 3.1, max: 31, acc: 13, turn: 1.05, hp: 380, hull: 0xf4f6f8, stripe: 0x1d4fa0, deck: 0x2a3440, police: true },
+  skipjack: {
+    name: 'Skipjack 28', len: 7.6, wid: 2.7, max: 36, acc: 15, turn: 1.35, hp: 420,
+    hull: 0xfaf6ee, stripe: 0xe8604c, deck: 0x2fb8a8,
+  },
+  patrol: {
+    name: 'SBPD Harbour Launch', len: 9, wid: 3.1, max: 31, acc: 13, turn: 1.05, hp: 380,
+    hull: 0xf4f6f8, stripe: 0x1d4fa0, deck: 0x2a3440, police: true,
+  },
 };
 
 if (!G.boats) G.boats = [];
