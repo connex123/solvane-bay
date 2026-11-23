@@ -1,24 +1,34 @@
-// A tiny static server for game/ (Node 22, standard library only), so an entry can be played
-// locally without a build step: `node serve.ts` serves game/ on http://localhost:8080.
-// It sends the MIME types a browser game needs, refuses any path outside game/, and otherwise
-// does nothing clever: this is a development convenience, not a web server for the internet.
+// Local play server for the game/ folder (Node 22, standard library only), so the entry runs with no build step:
+//   node serve.ts              serves game/ on http://localhost:8080
+//   node serve.ts --port 9000  picks another port
+// It answers with the content types a browser game needs, refuses anything outside game/, binds to the loopback
+// interface only, and is meant for development on your own machine, not for serving the internet.
 import { createReadStream, statSync } from 'node:fs';
-import { createServer } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(fileURLToPath(new URL('./game', import.meta.url)));
-const args = process.argv.slice(2);
-const portIndex = args.indexOf('--port');
-const requested = portIndex === -1 ? 8080 : Number(args[portIndex + 1]);
-const port = Number.isInteger(requested) && requested > 0 && requested < 65536 ? requested : 8080;
+const GAME_DIR = resolve(fileURLToPath(new URL('./game', import.meta.url)));
+const DEFAULT_PORT = 8080;
 
-const MIME: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
+function portFromArgs(argv: string[]): number {
+  const flag = argv.indexOf('--port');
+  if (flag === -1) return DEFAULT_PORT;
+  const value = Number(argv[flag + 1]);
+  const valid = Number.isInteger(value) && value > 0 && value < 65536;
+  return valid ? value : DEFAULT_PORT;
+}
+
+const UTF8 = '; charset=utf-8';
+const CONTENT_TYPES: Record<string, string> = {
+  // text
+  '.html': 'text/html' + UTF8,
+  '.js': 'text/javascript' + UTF8,
+  '.mjs': 'text/javascript' + UTF8,
+  '.css': 'text/css' + UTF8,
+  '.json': 'application/json' + UTF8,
+  '.txt': 'text/plain' + UTF8,
+  // images
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -26,47 +36,68 @@ const MIME: Record<string, string> = {
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
+  // fonts, models, binaries
   '.woff2': 'font/woff2',
   '.glb': 'model/gltf-binary',
   '.gltf': 'model/gltf+json',
   '.bin': 'application/octet-stream',
   '.wasm': 'application/wasm',
+  // audio
   '.wav': 'audio/wav',
   '.mp3': 'audio/mpeg',
   '.ogg': 'audio/ogg',
-  '.txt': 'text/plain; charset=utf-8',
 };
+const FALLBACK_TYPE = 'application/octet-stream';
 
-createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost');
+function reply(response: ServerResponse, status: number, message: string): void {
+  response.writeHead(status).end(message);
+}
+
+// Map a request path to a file inside game/, or null if it would escape the folder.
+function fileFor(pathname: string): string | null {
+  const wanted = pathname.endsWith('/') ? pathname + 'index.html' : pathname;
+  const file = resolve(join(GAME_DIR, normalize(wanted)));
+  const insideGame = file === GAME_DIR || file.startsWith(GAME_DIR + sep);
+  return insideGame ? file : null;
+}
+
+// Size of a regular file, or null when there is no such file.
+function regularFileSize(file: string): number | null {
+  try {
+    const info = statSync(file);
+    return info.isFile() ? info.size : null;
+  } catch {
+    return null;
+  }
+}
+
+function handle(request: IncomingMessage, response: ServerResponse): void {
   let pathname: string;
   try {
-    pathname = decodeURIComponent(url.pathname);
+    pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname);
   } catch {
-    response.writeHead(400).end('bad request');
+    reply(response, 400, 'bad request'); // malformed percent-encoding
     return;
   }
-  if (pathname.endsWith('/')) pathname += 'index.html';
-  const file = resolve(join(root, normalize(pathname)));
-  if (file !== root && !file.startsWith(root + sep)) {
-    response.writeHead(403).end('forbidden');
+  const file = fileFor(pathname);
+  if (file === null) {
+    reply(response, 403, 'forbidden');
     return;
   }
-  let size: number;
-  try {
-    const stats = statSync(file);
-    if (!stats.isFile()) throw new Error('not a file');
-    size = stats.size;
-  } catch {
-    response.writeHead(404).end('not found');
+  const size = regularFileSize(file);
+  if (size === null) {
+    reply(response, 404, 'not found');
     return;
   }
   response.writeHead(200, {
-    'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
+    'content-type': CONTENT_TYPES[extname(file).toLowerCase()] ?? FALLBACK_TYPE,
     'content-length': size,
-    'cache-control': 'no-store',
+    'cache-control': 'no-store', // always serve the latest edit
   });
   createReadStream(file).pipe(response);
-}).listen(port, '127.0.0.1', () => {
+}
+
+const port = portFromArgs(process.argv.slice(2));
+createServer(handle).listen(port, '127.0.0.1', () => {
   console.log(`game/ is on http://localhost:${port}`);
 });
