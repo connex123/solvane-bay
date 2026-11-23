@@ -34,6 +34,7 @@ import { BOTTLES, updateGasBottles } from '../combat/gasBottles.js';
 import { MARKET_ROAD, KINGS_SPOTS } from '../missions/storyMissions.js';
 import { WORKSHOP } from '../world/wrenGarage.js';
 import { WREN_GARAGE } from '../shop/garageShop.js';
+import { coverChase } from './coverChaseScene.js';
 
 function clearTraffic() { for (const c of G.cars.slice()) if (c.kind === 'traffic' || c.kind === 'parked') removeCar(c); for (const a of G.actors.slice()) removeActor(a); }
 function fakeMission(idx, stageIdx, text, timer) {
@@ -223,7 +224,7 @@ function title(api) {
   api.showHud(false); api.showScreen('title'); finish(api, 2); }
 
 export async function runShot(name, api) {
-  G.shot = name; ({ '1-chase': chase, '2-boat': boatRun, '3-market': marketFight, '4-garage': garage, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
+  G.shot = name; ({ '1-cover': coverChase, '1-chase': chase, '2-boat': boatRun, '3-market': marketFight, '4-garage': garage, '3-crew': crewScreen, '4-title': title }[name] || title)(api);
   {
     const c = G.renderer.domElement, img = new Image(); img.id = 'shotImg'; img.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0';
     img.src = c.toDataURL('image/jpeg', 0.93); await img.decode(); c.style.display = 'none'; document.body.insertBefore(img, document.getElementById('hud'));

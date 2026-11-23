@@ -9,7 +9,7 @@ export const STATIONS = [
 ];
 let step = 0, nextT = 0;
 export const radioInfo = () => (G.radio === 0 ? null : { ...STATIONS[G.radio - 1], track: STATIONS[G.radio - 1].tracks[Math.floor(G.time / 90) % 3] });
-export function cycleRadio() { G.radio = (G.radio + 1) % (STATIONS.length + 1); step = 0; nextT = 0; }
+export function cycleRadio() { G.radio = (G.radio + 1) % (STATIONS.length + 1); step = 0; nextT = 0; G.radioShowT = 5; }
 const f = (n) => 440 * Math.pow(2, (n - 69) / 12);
 function note(t, freq, dur, type, vol, filt) {
   const c = audio.ctx, o = c.createOscillator(), g = c.createGain(), fl = c.createBiquadFilter(); o.type = type; o.frequency.value = freq; fl.frequency.value = filt;

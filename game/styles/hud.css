@@ -175,3 +175,22 @@
 #hud.compact .popup b { font-size: 22px; margin-right: 6px; } #hud.compact .popup span { font-size: 20px; } #hud.compact .popup.combo b { font-size: 28px; -webkit-text-stroke-width: 1px; text-shadow: 3px 3px 0 #000; } #hud.compact .popup.combo span { font-size: 24px; }
 #hud.compact #dialog { width: 400px; left: 50%; bottom: 14px; gap: 10px; padding: 6px 10px 6px 14px; } #hud.compact #portrait { width: 48px; height: 48px; } #hud.compact #dName { font-size: 11px; margin-bottom: 2px; } #hud.compact #dText { font-size: 13px; line-height: 1.25; }
 #hud.compact #rightCol { width: 232px; } #hud.compact .vlab span { display: none; } #hud.compact .vlab { justify-content: flex-end; }
+/* ---- Full HUD layout: four clear corners around an open centre, sized to stay legible when the screen is shrunk ----
+ top-left mission card and SBPD list; top-right cash, wanted stars, rep and turf; bottom-left a large 250 px minimap with
+ the crew chips and vitals beside it; bottom-right the weapon bar, weapon and speedometer. The radio card only shows for
+ a few seconds after a station change. */
+#sideStack { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+#hud:not(.compact) #crewStack { left: 20px; bottom: 300px; }
+#hud:not(.compact) #mapWrap { width: 250px; height: 250px; border-width: 5px; }
+#hud:not(.compact) #mmDistrict { font-size: 16px; padding: 3px 14px; margin-top: -22px; position: relative; }
+#hud:not(.compact) #vitals { width: 190px; box-sizing: border-box; }
+#hud:not(.compact) #district { font-size: 22px; }
+#hud:not(.compact) .vrow { font-size: 15px; } #hud:not(.compact) #vitals .bar { height: 12px; }
+#hud:not(.compact) #leftCol { width: 330px; }
+#hud:not(.compact) .mtitle { font-size: 34px; } #hud:not(.compact) #mObj { font-size: 19px; } #hud:not(.compact) .chap { font-size: 16px; }
+#hud:not(.compact) #stars i { width: 42px; height: 42px; } #hud:not(.compact) .wlab { font-size: 30px; }
+#hud:not(.compact) #moneyDelta:empty { display: none; }
+#hud:not(.compact) .wt { height: 52px; } #hud:not(.compact) .wt svg { height: 26px; } #hud:not(.compact) .wt span { font-size: 16px; } #hud:not(.compact) .wt b { font-size: 15px; }
+#hud:not(.compact) #wAmmo { font-size: 34px; }
+#radioCard.idle { display: none; }
+#galaBadge { white-space: nowrap; font-size: 15px; } .vlab b { white-space: nowrap; } #carName { white-space: nowrap; } .sinfo { min-width: 0; }

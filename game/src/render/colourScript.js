@@ -22,8 +22,8 @@ export const GRADES = {
 // glint = sea specular, contrast = S-curve strength, split = how hard shadows go teal / highlights go gold.
 export const BLAZE = { name: 'LOW TIDE BLAZE', horizon: c('#ffb238'), band: c('#ff7448'), sky: c('#2f9aa6'), zenith: c('#0a3e56'), fog: c('#ffa46a'), hemiSky: c('#4ab4b8'), hemiGround: c('#d07848'),
   shadow: [0.62, 0.9, 1.0], high: [1.16, 0.98, 0.72], sat: 1.3, contrast: 0.55, key: c('#ffa040'), keyBoost: 1.35, sand: c('#ffc070'), glint: c('#ffd080') };
-// How much of the blaze is on: full in staged shots and on the title, otherwise it rides the evening magic hour.
-export const blazeAmount = () => (G.mode === 'title' || G.shotCrisp ? 1 : Math.max(0, Math.min(1, G.magic || 0)));
+// How much of the blaze is on: full in staged shots and on the title (a scene may set G.blazeForce), otherwise it rides the evening magic hour.
+export const blazeAmount = () => G.blazeForce ?? (G.mode === 'title' || G.shotCrisp ? 1 : Math.max(0, Math.min(1, G.magic || 0)));
 const mixed = { horizon: new THREE.Color(), band: new THREE.Color(), sky: new THREE.Color(), zenith: new THREE.Color(), fog: new THREE.Color(), hemiSky: new THREE.Color(), hemiGround: new THREE.Color(), shadow: [1, 1, 1], high: [1, 1, 1], sat: 1, contrast: 0.3, blaze: 0 };
 // The act the story is in: the act holding the first unfinished chapter (Act III once everything is done).
 export function currentAct() {

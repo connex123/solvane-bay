@@ -56,6 +56,7 @@ export function updateHud(dt) {
   const lv = levelFromXp(G.xp), lo = RESPECT_XP[lv - 1], hi = RESPECT_XP[lv]; set('respLv', `LV ${lv}`); $('respBar').style.width = `${hi ? Math.round((G.xp - lo) / (hi - lo) * 100) : 100}%`;
   const st = $('stars').children; for (let i = 0; i < 5; i++) st[i].classList.toggle('on', i < w.stars); $('stars').classList.toggle('flash', w.stars > 0 && !w.seen);
   show('losTag', w.stars > 0); if (w.stars > 0) { set('losTag', w.seen ? 'IN SIGHT' : 'SEARCHING'); $('losTag').className = w.seen ? 'seen' : 'search'; }
+  G.radioShowT = Math.max(0, (G.radioShowT ?? 6) - dt); $('radioCard').classList.toggle('idle', !(G.radioShowT > 0)); // the radio card shows for a few seconds after a station change
   const r = radioInfo(); set('rName', r ? r.name : 'RADIO OFF'); set('rTrack', r ? `${r.track} · ${r.dj}` : 'Press R to tune in');
   $('hpBar').style.width = `${Math.max(0, p.hp)}%`; $('arBar').style.width = `${p.armor}%`; set('hpNum', String(Math.max(0, Math.round(p.hp)))); set('arNum', String(Math.round(p.armor))); set('district', districtAt(p.x, p.z).toUpperCase());
   const wp = WEAPONS[p.weapon] || WEAPONS[0], wh = WEAPONS.map((q, i) => `<div class="wt${p.owned[i] ? ' own' : ''}${p.weapon === i ? ' sel' : ''}"><b>${i + 1}</b>${gunSvg(q.id)}<span>${!p.owned[i] ? '' : q.id === 'fists' ? '∞' : p.ammo[q.id] ?? 0}</span></div>`).join('');

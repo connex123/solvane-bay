@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SOLVANE BAY</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="./styles/base.css">
 <link rel="stylesheet" href="./styles/hud.css">
 <link rel="stylesheet" href="./styles/menus.css">
@@ -27,14 +28,15 @@
   <div id="crewStack"></div>
   <div id="waypoint"><i></i><span id="wpDist"></span></div>
   <div id="bottomLeft">
-    <div id="mmCol"><div id="mapWrap"><canvas id="minimap" width="190" height="190"></canvas></div><div id="mmDistrict"></div></div>
-    <div id="vitals" class="card acc-green"><div id="district"></div><div class="vrow"><span>HEALTH</span><b id="hpNum"></b></div><div class="bar hp"><i id="hpBar"></i></div><div class="vrow"><span>ARMOR</span><b id="arNum"></b></div><div class="bar ar"><i id="arBar"></i></div></div>
+    <div id="mmCol"><div id="mapWrap"><canvas id="minimap" width="250" height="250"></canvas></div><div id="mmDistrict"></div></div>
+    <div id="sideStack">
+    <div id="vitals" class="card acc-green"><div id="district"></div><div class="vrow"><span>HEALTH</span><b id="hpNum"></b></div><div class="bar hp"><i id="hpBar"></i></div><div class="vrow"><span>ARMOR</span><b id="arNum"></b></div><div class="bar ar"><i id="arBar"></i></div></div></div>
   </div>
   <div id="rightCol">
     <div id="popups"></div>
     <div id="wbar"></div>
     <div id="weaponCard" class="card acc-yellow"><div id="wIcon"></div><div class="winfo"><div id="wName"></div><div id="wAmmo"></div></div></div>
-    <div id="speedo" class="card acc-cyan hidden"><div class="sv"><div id="carName"></div><b id="speedVal">0</b><small>KM/H <span class="gear" id="gear">D</span></small></div><div class="sinfo"><div class="vlab"><span>CONDITION</span><b id="condPct"></b></div><div class="bar dmg"><i id="carBar"></i></div><div class="vlab"><span>NITRO</span><b id="nitroKey">SHIFT</b></div><div class="bar nitro"><i id="nitroBar"></i></div></div></div>
+    <div id="speedo" class="card acc-cyan hidden"><div class="sv"><div id="carName"></div><b id="speedVal">0</b><small>KM/H <span class="gear" id="gear">D</span></small></div><div class="sinfo"><div class="vlab"><span>BODY</span><b id="condPct"></b></div><div class="bar dmg"><i id="carBar"></i></div><div class="vlab"><span>NITRO</span><b id="nitroKey">SHIFT</b></div><div class="bar nitro"><i id="nitroBar"></i></div></div></div>
   </div>
   <div id="dialog" class="card hidden"><canvas id="portrait" width="96" height="96"></canvas><div class="dbody"><div id="dName"></div><div id="dText"></div></div><span class="dhint">E ▸</span></div>
   <div id="prompt" class="hidden"></div>
