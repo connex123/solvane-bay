@@ -1,9 +1,30 @@
-// Weapon definitions for the five slots: fists, pistol, SMG, shotgun and the thrown molotov (unlocked by rep level, shop, story).
-export const WEAPONS = [
-  { id: 'fists', name: 'Fists', dmg: 14, rate: 0.42, range: 2.4, pellets: 1, spread: 0, auto: false, price: 0, level: 1, mag: 0 },
-  { id: 'pistol', name: 'Pistol', dmg: 30, rate: 0.28, range: 90, pellets: 1, spread: 0.008, auto: false, price: 0, level: 1, mag: 12, ammoPrice: 60 },
-  { id: 'smg', name: 'SMG', dmg: 15, rate: 0.075, range: 80, pellets: 1, spread: 0.03, auto: true, price: 700, level: 2, mag: 30, ammoPrice: 90 },
-  { id: 'shotgun', name: 'Shotgun', dmg: 14, rate: 0.85, range: 40, pellets: 7, spread: 0.07, auto: false, price: 1000, level: 3, mag: 8, ammoPrice: 100 },
-  { id: 'molotov', name: 'Molotov', dmg: 0, rate: 0.9, range: 24, pellets: 0, spread: 0, auto: false, thrown: true, price: 600, level: 2, mag: 1, ammoPrice: 150 },
+// The five weapon slots: fists, pistol, SMG, shotgun and the thrown molotov. Guns unlock by respect level,
+// in the shop, or through the story.
+
+// Columns: id, name, damage, seconds between shots, range (m), pellets, spread, automatic, price, level, magazine.
+const TABLE = [
+  ['fists', 'Fists', 14, 0.42, 2.4, 1, 0, false, 0, 1, 0],
+  ['pistol', 'Pistol', 30, 0.28, 90, 1, 0.008, false, 0, 1, 12],
+  ['smg', 'SMG', 15, 0.075, 80, 1, 0.03, true, 700, 2, 30],
+  ['shotgun', 'Shotgun', 14, 0.85, 40, 7, 0.07, false, 1000, 3, 8],
+  ['molotov', 'Molotov', 0, 0.9, 24, 0, 0, false, 600, 2, 1],
 ];
-export const maxAmmo = (id) => ({ pistol: 120, smg: 300, shotgun: 48, molotov: 10 }[id] || 0);
+
+// Price of a box of ammo, and the most a player can carry.
+const AMMO = {
+  pistol: { box: 60, cap: 120 },
+  smg: { box: 90, cap: 300 },
+  shotgun: { box: 100, cap: 48 },
+  molotov: { box: 150, cap: 10 },
+};
+
+export const WEAPONS = TABLE.map(([id, name, dmg, rate, range, pellets, spread, auto, price, level, mag]) => {
+  const weapon = { id, name, dmg, rate, range, pellets, spread, auto, price, level, mag };
+  if (id === 'molotov') weapon.thrown = true;
+  if (AMMO[id]) weapon.ammoPrice = AMMO[id].box;
+  return weapon;
+});
+
+export function maxAmmo(id) {
+  return AMMO[id] ? AMMO[id].cap : 0;
+}

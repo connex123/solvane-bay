@@ -1,39 +1,104 @@
-// Driving score: sustained slides build a DRIFT xN chain that pays cash when it ends cleanly, and passing traffic
-// closely at speed pays a NEAR MISS bonus. Both raise floating popups (G.popups) that the HUD renders.
+// Driving score. Holding a slide builds a "DRIFT xN" chain that pays out when it ends cleanly; slipping past
+// moving traffic at speed pays a NEAR MISS bonus. Both push floating popups onto G.popups for the HUD.
 import { G } from '../core/gameState.js';
+import { wrapAngle } from '../core/config.js';
 
 export const DRIFT = { minSpeed: 9, minSlip: 0.22, step: 0.9, maxMult: 9, grace: 0.45, minTime: 0.9 };
 export const NEAR = { minSpeed: 14, dist: 3.1, cash: 100, cooldown: 2.5 };
-const d = { t: 0, pts: 0, mult: 1, off: 0, hp: 0 };
-export const driftState = d;
+
+const MAX_POPUPS = 3;
+const POPUP_LIFE = 2.4;
+const MAX_SLIP = 2.2; // past this the car is spinning, not drifting
+
+// The running chain (read by the HUD): t = time sliding, pts = raw score, mult = multiplier,
+// off = time since the slide stopped, hp = car health when the chain began.
+export const driftState = { t: 0, pts: 0, mult: 1, off: 0, hp: 0 };
+const chain = driftState;
+
+function resetChain() {
+  chain.t = 0;
+  chain.pts = 0;
+  chain.mult = 1;
+}
+
+/** Show a popup; any cash is paid at once, along with a little XP. */
 export function popup(text, cash = 0, kind = 'drift') {
-  if (cash) { G.money += cash; G.xp = (G.xp || 0) + Math.round(cash / 25); }
-  G.popups = G.popups || []; G.popups.push({ text, cash, kind, t: 2.4 }); if (G.popups.length > 3) G.popups.shift();
+  if (cash) {
+    G.money += cash;
+    G.xp = (G.xp || 0) + Math.round(cash / 25);
+  }
+  if (!G.popups) G.popups = [];
+  G.popups.push({ text, cash, kind, t: POPUP_LIFE });
+  if (G.popups.length > MAX_POPUPS) G.popups.shift();
 }
-// Slip angle between where the car points and where it is travelling.
+
+/** Angle between the car's nose and its direction of travel (0 when barely moving). */
 export function slipAngle(car) {
-  const sp = Math.hypot(car.vx, car.vz); if (sp < 1) return 0;
-  let a = Math.atan2(car.vx, car.vz) - car.heading; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a;
+  if (Math.hypot(car.vx, car.vz) < 1) return 0;
+  return wrapAngle(Math.atan2(car.vx, car.vz) - car.heading);
 }
-export const driftCash = (pts, mult) => Math.round(pts * mult / 10) * 10;
+
+/** Payout for a finished chain, rounded to tens. */
+export function driftCash(pts, mult) {
+  return Math.round((pts * mult) / 10) * 10;
+}
+
+function trackDrift(car, dt, speed, slip) {
+  // A real knock mid-slide breaks the chain.
+  if (chain.t > 0 && car.hp < chain.hp - 5) {
+    resetChain();
+    popup('DRIFT BROKEN', 0, 'bad');
+  }
+  const sliding = speed > DRIFT.minSpeed && slip > DRIFT.minSlip && slip < MAX_SLIP;
+  if (sliding) {
+    if (chain.t === 0) chain.hp = car.hp;
+    chain.t += dt;
+    chain.off = 0;
+    chain.pts += speed * slip * dt * 1.6;
+    chain.mult = Math.min(DRIFT.maxMult, 1 + Math.floor(chain.t / DRIFT.step));
+    return;
+  }
+  if (chain.t <= 0) return;
+  chain.off += dt;
+  if (chain.off <= DRIFT.grace) return;
+  if (chain.t >= DRIFT.minTime) popup(`DRIFT x${chain.mult}`, Math.max(50, driftCash(chain.pts, chain.mult)), 'drift');
+  resetChain();
+}
+
+function isNearMiss(car, other, speed) {
+  const dx = other.x - car.x;
+  const dz = other.z - car.z;
+  if (Math.abs(dx) > 8 || Math.abs(dz) > 8) return false;
+  const gap = Math.hypot(dx, dz);
+  const closing = Math.hypot(other.vx - car.vx, other.vz - car.vz);
+  const alongTrack = (dx * car.vx + dz * car.vz) / speed; // how far ahead/behind, along our heading
+  const width = car.type.wid;
+  return gap < NEAR.dist + width && gap > width * 0.95 && Math.abs(alongTrack) < 1.2 &&
+    closing > NEAR.minSpeed && (other.nearT || 0) < G.time && car.hitT < 0.1;
+}
+
+function trackNearMisses(car, speed) {
+  if (speed <= NEAR.minSpeed) return;
+  for (const other of G.cars) {
+    if (other === car || other.dead) continue;
+    if (other.kind !== 'traffic' && other.kind !== 'cop') continue;
+    if (!isNearMiss(car, other, speed)) continue;
+    other.nearT = G.time + NEAR.cooldown;
+    popup('NEAR MISS', NEAR.cash, 'near');
+  }
+}
+
 export function updateDriftScore(car, dt) {
-  const sp = Math.hypot(car.vx, car.vz), slip = Math.abs(slipAngle(car));
-  if (d.t > 0 && car.hp < d.hp - 5) { d.t = 0; d.pts = 0; d.mult = 1; popup('DRIFT BROKEN', 0, 'bad'); }
-  if (sp > DRIFT.minSpeed && slip > DRIFT.minSlip && slip < 2.2) {
-    if (d.t === 0) d.hp = car.hp; d.t += dt; d.off = 0; d.pts += sp * slip * dt * 1.6;
-    d.mult = Math.min(DRIFT.maxMult, 1 + Math.floor(d.t / DRIFT.step));
-  } else if (d.t > 0) {
-    d.off += dt;
-    if (d.off > DRIFT.grace) { if (d.t >= DRIFT.minTime) popup(`DRIFT x${d.mult}`, Math.max(50, driftCash(d.pts, d.mult)), 'drift'); d.t = 0; d.pts = 0; d.mult = 1; }
-  }
-  // near misses: a moving car slides past within a few metres while we are fast, without contact
-  if (sp > NEAR.minSpeed) for (const o of G.cars) {
-    if (o === car || o.dead || (o.kind !== 'traffic' && o.kind !== 'cop')) continue;
-    const dx = o.x - car.x, dz = o.z - car.z; if (Math.abs(dx) > 8 || Math.abs(dz) > 8) continue;
-    const dist = Math.hypot(dx, dz), rel = Math.hypot(o.vx - car.vx, o.vz - car.vz), along = (dx * car.vx + dz * car.vz) / sp;
-    if (dist < NEAR.dist + car.type.wid && dist > car.type.wid * 0.95 && Math.abs(along) < 1.2 && rel > NEAR.minSpeed && (o.nearT || 0) < G.time && car.hitT < 0.1) {
-      o.nearT = G.time + NEAR.cooldown; popup('NEAR MISS', NEAR.cash, 'near');
-    }
-  }
+  const speed = Math.hypot(car.vx, car.vz);
+  trackDrift(car, dt, speed, Math.abs(slipAngle(car)));
+  trackNearMisses(car, speed);
 }
-export function tickPopups(dt) { if (!G.popups) return; for (const p of G.popups) p.t -= dt; G.popups = G.popups.filter((p) => p.t > 0); }
+
+/** Age the popups and drop the expired ones. */
+export function tickPopups(dt) {
+  if (!G.popups) return;
+  G.popups = G.popups.filter((item) => {
+    item.t -= dt;
+    return item.t > 0;
+  });
+}

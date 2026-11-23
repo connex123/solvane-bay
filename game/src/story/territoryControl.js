@@ -1,27 +1,63 @@
-// Who holds the Bay: every district belongs to Brandt's CROWN syndicate or Nico's LOW TIDE crew. Shares are measured
-// in real city blocks; finishing a chapter flips the districts its arc entry names. The holder map is saved.
+// Control of the Bay. Each district is held either by Brandt's CROWN syndicate or by Nico's LOW TIDE crew;
+// finishing a chapter flips the districts its arc entry lists. Shares count real city blocks. Saved with the game.
 import { G } from '../core/gameState.js';
 import { DISTRICTS } from '../core/config.js';
 import { blocks } from '../world/cityLayout.js';
 import { ARC } from './chapterArc.js';
 
-export const HOLDERS = { crown: { name: 'CROWN', color: '#e0463c' }, tide: { name: 'LOW TIDE', color: '#2fd6c4' } };
-export const startingTerritory = () => Object.fromEntries(Object.keys(DISTRICTS).map((k) => [k, 'crown']));
-// Replays the flips of every completed chapter in story order (used for new games and saves that predate territory).
-export function territoryFromChapters(completed) {
-  const t = startingTerritory();
-  for (const id of Object.keys(ARC)) if (completed.includes(id)) for (const [d, h] of ARC[id].flips) t[d] = h;
-  return t;
+export const HOLDERS = {
+  crown: { name: 'CROWN', color: '#e0463c' },
+  tide: { name: 'LOW TIDE', color: '#2fd6c4' },
+};
+
+/** Every district under the Crown. */
+export function startingTerritory() {
+  const map = {};
+  for (const key of Object.keys(DISTRICTS)) map[key] = 'crown';
+  return map;
 }
-export const territory = () => (G.territory ||= territoryFromChapters(G.completed || []));
-export const holderOf = (district) => territory()[district] || 'crown';
+
+/** Rebuild the holder map by replaying completed chapters in story order (new games, older saves). */
+export function territoryFromChapters(completed) {
+  const map = startingTerritory();
+  const done = new Set(completed);
+  for (const [id, entry] of Object.entries(ARC)) {
+    if (!done.has(id)) continue;
+    for (const [district, holder] of entry.flips) map[district] = holder;
+  }
+  return map;
+}
+
+export function territory() {
+  if (!G.territory) G.territory = territoryFromChapters(G.completed || []);
+  return G.territory;
+}
+
+export function holderOf(district) {
+  return territory()[district] || 'crown';
+}
+
+/** Apply a chapter's flips; returns the districts that actually changed hands. */
 export function applyChapterFlips(id) {
-  const t = territory(), changed = [];
-  for (const [d, h] of ARC[id]?.flips || []) if (t[d] !== h) { t[d] = h; changed.push({ district: d, name: DISTRICTS[d].name, holder: h }); }
+  const map = territory();
+  const flips = (ARC[id] && ARC[id].flips) || [];
+  const changed = [];
+  for (const [district, holder] of flips) {
+    if (map[district] === holder) continue;
+    map[district] = holder;
+    changed.push({ district, name: DISTRICTS[district].name, holder });
+  }
   return changed;
 }
-// Percentage of city blocks each side holds.
+
+/** Percentage of city blocks each side holds. */
 export function shares() {
-  const t = territory(); let tide = 0; for (const b of blocks) if (t[b.district] === 'tide') tide++;
-  const pct = blocks.length ? Math.round((tide / blocks.length) * 100) : 0; return { tide: pct, crown: 100 - pct };
+  if (!blocks.length) {
+    territory();
+    return { tide: 0, crown: 100 };
+  }
+  const map = territory();
+  const tideBlocks = blocks.filter((block) => map[block.district] === 'tide').length;
+  const tide = Math.round((tideBlocks / blocks.length) * 100);
+  return { tide, crown: 100 - tide };
 }

@@ -1,12 +1,33 @@
-// Vehicle condition: collision damage expressed as a 0-100 % rating, with a status word and engine smoke/fire as it drops.
+// How battered a car is: damage shown as a 0-100 % rating with a one-word status, and engine smoke or
+// flames once the rating drops low enough.
 import { smoke, particle } from '../combat/effects.js';
 
-export const conditionPct = (car) => Math.max(0, Math.round(car.hp / car.maxHp * 100));
-export const conditionWord = (pct) => pct > 75 ? 'MINT' : pct > 45 ? 'DENTED' : pct > 20 ? 'SMOKING' : 'CRITICAL';
-// Engine-bay smoke grows from grey to black below 45 %, and flames lick out below 20 %.
+const SMOKE_BELOW = 0.45; // grey smoke starts here
+const FIRE_BELOW = 0.2; // black smoke and flames below this
+
+export function conditionPct(car) {
+  const pct = Math.round((car.hp / car.maxHp) * 100);
+  return pct < 0 ? 0 : pct;
+}
+
+export function conditionWord(pct) {
+  if (pct > 75) return 'MINT';
+  if (pct > 45) return 'DENTED';
+  if (pct > 20) return 'SMOKING';
+  return 'CRITICAL';
+}
+
+/** Puff smoke (and, when critical, flames) out of the engine bay at the front of the car. */
 export function conditionEffects(car, dt) {
-  if (car.dead) return; const pct = car.hp / car.maxHp; if (pct > 0.45) return;
-  const s = Math.sin(car.heading), c = Math.cos(car.heading), f = car.type.len * 0.35, x = car.x + s * f, z = car.z + c * f;
-  if (Math.random() < dt * (pct < 0.2 ? 14 : 6)) smoke(x, 1.1, z, pct < 0.2 ? 0x151515 : 0x888888);
-  if (pct < 0.2 && Math.random() < dt * 10) particle({ x, y: 0.95, z, vy: 1.6, life: 0.35, size: 0.8, grow: 1, color: 0xff7a2a, add: true });
+  if (car.dead) return;
+  const health = car.hp / car.maxHp;
+  if (health > SMOKE_BELOW) return;
+  const critical = health < FIRE_BELOW;
+  const reach = car.type.len * 0.35;
+  const bayX = car.x + Math.sin(car.heading) * reach;
+  const bayZ = car.z + Math.cos(car.heading) * reach;
+  if (Math.random() < dt * (critical ? 14 : 6)) smoke(bayX, 1.1, bayZ, critical ? 0x151515 : 0x888888);
+  if (critical && Math.random() < dt * 10) {
+    particle({ x: bayX, y: 0.95, z: bayZ, vy: 1.6, life: 0.35, size: 0.8, grow: 1, color: 0xff7a2a, add: true });
+  }
 }
