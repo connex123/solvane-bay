@@ -1,11 +1,13 @@
 // Arcade car physics: acceleration, braking, steering, drift, building and car-to-car collisions, damage and wrecks.
-import { G, notify } from '../core/gameState.js';
-import { clamp, wrapAngle } from '../core/config.js';
+import { G } from '../core/gameState.js';
+import { clamp } from '../core/config.js';
 import { CAR_TYPES, buildCarMesh, burntMat, burntLampMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
+import { popup } from './driftScoring.js';
 import { sparks, smoke, explosion, skidMark, addSiren, removeSiren, tyreSmoke, fire } from '../combat/effects.js';
 import { sfx } from '../audio/soundEngine.js';
 import { conditionEffects } from './vehicleCondition.js';
+import { deckHeight, RAMP } from '../world/causewayDeck.js';
 
 export function createCar(key, x, z, heading, kind = 'parked', tint) {
   const type = CAR_TYPES[key], mesh = buildCarMesh(key, tint);
@@ -16,7 +18,7 @@ export function createCar(key, x, z, heading, kind = 'parked', tint) {
 }
 export function removeCar(car) { car.mesh.removeFromParent(); removeSiren(car); const i = G.cars.indexOf(car); if (i >= 0) G.cars.splice(i, 1); }
 export function damageCar(car, amt) {
-  if (car.dead) return; car.hp -= amt; car.hitT = 4;
+  if (car.dead || car.driver === 'player' && G.resumeGrace > 0) return; car.hp -= amt * (car.driver === 'player' ? car.armourMul || 1 : 1); car.hitT = 4;
   if (car.hp <= 0) wreck(car);
 }
 export function wreck(car) {
@@ -34,8 +36,8 @@ export function stepCar(car, dt) {
   const i = car.input, t = car.type, sn = Math.sin(car.heading), cs = Math.cos(car.heading);
   let vF = car.vx * sn + car.vz * cs, vL = car.vx * cs - car.vz * sn;
   if (car.dead) { i.throttle = 0; i.brake = 0.6; }
-  const mx = t.max * (car.kind === 'cop' ? 0.97 : 1) * (car.tyresBurst ? 0.55 : 1);
-  if (i.throttle > 0) vF += t.acc * i.throttle * dt * clamp(1 - Math.max(0, vF) / mx, 0.05, 1) * (vF < 0 ? 2 : 1);
+  const mx = t.max * (car.pmax || 1) * (car.kind === 'cop' ? 0.97 : 1) * (car.tyresBurst ? 0.55 : 1);
+  if (i.throttle > 0) vF += t.acc * (car.pacc || 1) * i.throttle * dt * clamp(1 - Math.max(0, vF) / mx, 0.05, 1) * (vF < 0 ? 2 : 1);
   if (i.brake > 0) { if (vF > 0.8) vF -= 32 * i.brake * dt; else vF = Math.max(vF - t.acc * 0.55 * i.brake * dt, -11); }
   if (!i.throttle && !i.brake) vF -= Math.sign(vF) * Math.min(Math.abs(vF), 3.5 * dt);
   vF *= 1 - 0.12 * dt;
@@ -56,12 +58,12 @@ export function stepCar(car, dt) {
   car.hitT = Math.max(0, car.hitT - dt);
   conditionEffects(car, dt);
   if (car.dead) { car.wreckT -= dt; if (Math.random() < dt * 6) smoke(car.x, 1.6, car.z, 0x151515); if (car.wreckT > 26 && Math.random() < dt * 14) fire(car.x, 1.1, car.z); if (car.wreckT < 0 && car !== G.p.car) removeCar(car); }
-  const m = car.mesh; for (const w of m.userData.fw || []) w.rotation.y = car.steerA * 0.9; m.position.set(car.x, 0, car.z); m.rotation.y = car.heading; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
+  const m = car.mesh; for (const w of m.userData.fw || []) w.rotation.y = car.steerA * 0.9; car.y = deckHeight(car.x, car.z); m.position.set(car.x, car.y + (car.airY || 0), car.z); m.rotation.order = 'YXZ'; m.rotation.y = car.heading; m.rotation.x = car.y > 0 && car.x < RAMP.x1 ? -0.21 * Math.sin(car.heading) : 0; m.rotation.z = clamp(-car.steerA * vF * 0.012, -0.08, 0.08) + (car.dead ? 0.05 : 0);
 }
 export function carCollisions() {
   const cs = G.cars;
   for (let a = 0; a < cs.length; a++) for (let b = a + 1; b < cs.length; b++) {
-    const A = cs[a], B = cs[b], dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 5.5 || Math.abs(dz) > 5.5) continue;
+    const A = cs[a], B = cs[b], dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 5.5 || Math.abs(dz) > 5.5 || Math.abs((A.y || 0) - (B.y || 0)) > 2.5) continue;
     // three circles per car along its axis
     let best = null;
     for (const ao of [-1.5, 0, 1.5]) for (const bo of [-1.5, 0, 1.5]) {
@@ -75,7 +77,7 @@ export function carCollisions() {
     if (rv < 0) {
       const j = -rv * 1.25; A.vx -= best.nx * j * wb / tw; A.vz -= best.nz * j * wb / tw; B.vx += best.nx * j * wa / tw; B.vz += best.nz * j * wa / tw;
       if (-rv > 3) { const dmg = -rv * 9; sparks((A.x + B.x) / 2, 0.7, (A.z + B.z) / 2, 4); damageCar(A, dmg); damageCar(B, dmg);
-        const pl = A === G.p.car ? B : B === G.p.car ? A : null; if (pl) { sfx.crash(-rv); G.shake = Math.max(G.shake, Math.min(0.6, -rv / 25)); if (pl.kind === 'cop') pl.rammed = true; else G.hooks.crime('ram'); }
+        const pl = A === G.p.car ? B : B === G.p.car ? A : null; if (pl) { sfx.crash(-rv); G.shake = Math.max(G.shake, Math.min(0.6, -rv / 25)); if (pl.kind === 'cop') { pl.rammed = true; if (-rv > 6 && (pl.paintT || 0) < G.time) { pl.paintT = G.time + 3; sparks((A.x + B.x) / 2, 0.7, (A.z + B.z) / 2, 18); popup('TRADE PAINT', 75, 'ram'); } } else G.hooks.crime('ram'); }
         if (A.kind === 'traffic') A.kind = 'stalled'; if (B.kind === 'traffic') B.kind = 'stalled'; }
     }
   }

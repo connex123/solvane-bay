@@ -56,7 +56,7 @@ export function buildProps(scene, rng) {
     if (b.district === 'beach' || b.type === 'plaza') for (let k = 0; k < 4; k++) palms.push({ x: b.cx + rng.range(-20, 20), z: b.cz + rng.range(-20, 20), ry: rng() * 6, s: 1 });
   }
   for (let k = 0; k < 40; k++) palms.push({ x: HALF + rng.range(12, 34), z: rng.range(-HALF, HALF), ry: rng() * 6, s: 1.1 });
-  const pg0 = inst(palmGeo(), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), palms); pg0.castShadow = true; scene.add(pg0);
+  const pg0 = inst(palmGeo(), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), palms); pg0.castShadow = true; scene.add(pg0); G.palmProps = { mesh: pg0, list: palms }; // staged shots may thin palms that block a landmark
   // bus stops, benches and hydrants along the sidewalks
   const stops = [], benches = [], hyd = [];
   for (const b of blocks) for (const [dx, dz, ry] of [[0, -23.2, 0], [0, 23.2, Math.PI], [-23.2, 0, Math.PI / 2], [23.2, 0, -Math.PI / 2]]) {
@@ -71,7 +71,8 @@ export function buildProps(scene, rng) {
     inst(box(0.1, 0.7, 0.5, -1.1, 0.4, 0), new THREE.MeshLambertMaterial({ color: 0x33363c }), benches),
     inst(new THREE.CylinderGeometry(0.18, 0.22, 0.85, 8).translate(0, 0.65, 0), new THREE.MeshLambertMaterial({ color: 0xe0302a }), hyd), inst(new THREE.SphereGeometry(0.2, 8, 6).translate(0, 1.08, 0), new THREE.MeshLambertMaterial({ color: 0xe0302a }), hyd));
   const tt = new THREE.CylinderGeometry(0.25, 0.35, 3, 6); tt.translate(0, 1.5, 0); const cn = new THREE.IcosahedronGeometry(2.6, 0); cn.translate(0, 4.6, 0);
-  scene.add(inst(tt, new THREE.MeshLambertMaterial({ color: 0x6a4a3a }), trees), inst(cn, new THREE.MeshLambertMaterial({ color: 0x4f9a3f, flatShading: true }), trees));
+  { const trunk = inst(tt, new THREE.MeshLambertMaterial({ color: 0x6a4a3a }), trees), crown = inst(cn, new THREE.MeshLambertMaterial({ color: 0x4f9a3f, flatShading: true }), trees);
+    scene.add(trunk, crown); G.treeProps = [{ mesh: trunk, list: trees }, { mesh: crown, list: trees }]; } // buildings placed later may clear trees off their footprint
   const pole = new THREE.CylinderGeometry(0.09, 0.15, 7, 8); pole.translate(0, 3.5, 0); const arm = box(1.8, 0.12, 0.12, 0.85, 7, 0);
   const head = box(0.9, 0.18, 0.4, 1.6, 6.9, 0); G.lampMat = new THREE.MeshBasicMaterial({ color: 0xffe2a8 });
   scene.add(inst(pole, new THREE.MeshLambertMaterial({ color: 0x2f3440 }), lamps), inst(arm, new THREE.MeshLambertMaterial({ color: 0x2f3440 }), lamps), inst(head, G.lampMat, lamps));

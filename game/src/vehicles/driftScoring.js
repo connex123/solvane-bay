@@ -18,7 +18,7 @@ export function slipAngle(car) {
 export const driftCash = (pts, mult) => Math.round(pts * mult / 10) * 10;
 export function updateDriftScore(car, dt) {
   const sp = Math.hypot(car.vx, car.vz), slip = Math.abs(slipAngle(car));
-  if (d.t > 0 && car.hp < d.hp - 5) { d.t = 0; d.pts = 0; d.mult = 1; popup('DRIFT BUSTED', 0, 'bad'); }
+  if (d.t > 0 && car.hp < d.hp - 5) { d.t = 0; d.pts = 0; d.mult = 1; popup('DRIFT BROKEN', 0, 'bad'); }
   if (sp > DRIFT.minSpeed && slip > DRIFT.minSlip && slip < 2.2) {
     if (d.t === 0) d.hp = car.hp; d.t += dt; d.off = 0; d.pts += sp * slip * dt * 1.6;
     d.mult = Math.min(DRIFT.maxMult, 1 + Math.floor(d.t / DRIFT.step));

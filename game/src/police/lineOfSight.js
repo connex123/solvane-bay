@@ -11,10 +11,11 @@ export function canSee(ox, oz, tx, tz, range) {
 }
 export function updateLineOfSight(dt) {
   const w = G.wanted; t -= dt; if (t > 0) return !!w.seen; t = SIGHT.every;
-  if (w.stars <= 0) { w.seen = false; return false; }
+  if (w.stars <= 0 || G.blackoutT > 0) { w.seen = false; return false; } // Tamsin's BLACKOUT blinds every unit
   const p = G.p, tx = p.car ? p.car.x : p.x, tz = p.car ? p.car.z : p.z, range = SIGHT.base + w.stars * SIGHT.perStar;
   let seen = !!(G.heli && Math.hypot(G.heli.x - tx, G.heli.z - tz) < SIGHT.heli);
   if (!seen) for (const c of G.cars) if (c.kind === 'cop' && !c.dead && canSee(c.x, c.z, tx, tz, range)) { seen = true; break; }
+  if (!seen) for (const b of G.boats || []) if (b.type.police && b.driver === 'ai' && !b.dead && canSee(b.x, b.z, tx, tz, range)) { seen = true; break; } // harbour launches
   if (!seen) for (const a of G.actors) if (a.kind === 'cop' && !a.dead && canSee(a.x, a.z, tx, tz, range * 0.6)) { seen = true; break; }
   w.seen = seen; return seen;
 }

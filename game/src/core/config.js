@@ -11,9 +11,9 @@ export const DISTRICTS = {
   neon: { name: 'Neon Row', color: '#ff4fd8' },
   marina: { name: 'Marina Cala', color: '#4fd8ff' },
   docks: { name: 'Port Calder', color: '#a0a8b8' },
-  beach: { name: 'Palmetto Beach', color: '#ffe08a' },
-  hills: { name: 'Alder Hills', color: '#7ed68a' },
-  old: { name: 'Casa Vieja', color: '#ff9a76' },
+  beach: { name: 'The Strand', color: '#ffe08a' },
+  hills: { name: 'Point Wren', color: '#7ed68a' },
+  old: { name: 'Old Town', color: '#ff9a76' },
 };
 export const RESPECT_XP = [0, 200, 500, 900, 1500];
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));

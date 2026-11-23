@@ -1,5 +1,5 @@
 // Dialogue queue: story lines with a speaker portrait; advance with E / Enter / click, or they auto-advance.
-import { G } from '../core/gameState.js';
+
 import { pressed, input } from '../core/input.js';
 
 export const dlg = { queue: [], cur: null, t: 0, onDone: null };

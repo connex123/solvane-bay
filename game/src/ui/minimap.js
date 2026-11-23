@@ -57,6 +57,7 @@ export function drawBlips(g, toXY, scale, clampR) {
   for (const m of G.markers) if (!m.hidden && !m.follow && m.kind !== 'obj') put(m.x, m.z, m.kind, hex(m.color), 6);
   for (const m of missionTargets()) put(m.x, m.z, m.label === '' ? 'dot' : 'star', hex(m.color), m.label === '' ? 4.5 : 7);
   for (const c of copCars()) put(c.x, c.z, 'cop', flash ? '#ff2a40' : '#3a6aff', 5);
+  for (const b of G.boats || []) if (b.type.police && b.driver === 'ai' && !b.dead) put(b.x, b.z, 'cop', flash ? '#ff2a40' : '#3a6aff', 5); // harbour launches
   if (G.heli) put(G.heli.x, G.heli.z, 'dot', flash ? '#ff2a40' : '#4a7aff', 5);
 }
 // GPS target: the first mission objective, else the next story start marker.

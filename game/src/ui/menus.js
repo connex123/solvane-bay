@@ -2,16 +2,26 @@
 import { G, notify } from '../core/gameState.js';
 import { WEAPONS, maxAmmo } from '../combat/weapons.js';
 import { levelFromXp } from '../core/gameState.js';
-import { readSave } from '../save/saveGame.js';
+import { latestSave } from '../save/saveGame.js';
 import { MISSIONS } from '../missions/storyMissions.js';
+import { completionPercent } from '../core/careerStats.js';
+import { territoryFromChapters } from '../story/territoryControl.js';
+import { blocks } from '../world/cityLayout.js';
+import { packageCount } from '../missions/sideActivities.js';
 const titleCase = (t) => t.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase());
-export function saveLine(sv) { const done = (sv.completed || []).length, m = MISSIONS[Math.min(done, MISSIONS.length - 1)]; const pct = Math.round(100 * (0.8 * done / MISSIONS.length + 0.2 * (sv.packages || []).length / 12)); return `CH ${m.chapter} \u00b7 ${titleCase(m.title)} \u00b7 ${pct}%`; }
+// The Continue line on the title: chapter, its title and the save's Bay completion (same formula as the career panel).
+export function saveLine(sv) {
+  const done = (sv.completed || []).length, m = MISSIONS[Math.min(done, MISSIONS.length - 1)], t = sv.territory || territoryFromChapters(sv.completed || []);
+  const tideShare = Math.round(100 * blocks.filter((b) => t[b.district] === 'tide').length / Math.max(1, blocks.length));
+  const pct = completionPercent({ chapters: done, totalChapters: MISSIONS.length, packages: (sv.packages || []).length, totalPackages: packageCount(), tideShare, stats: sv.stats || { taxiFares: 0, racesWon: 0 } }); return `CH ${m.chapter} \u00b7 ${titleCase(m.title)} \u00b7 ${pct}%`; }
 import { setVolume, sfx } from '../audio/soundEngine.js';
 import { drawCityMap } from './cityMap.js';
+import { fillCrewChapters } from './crewChaptersScreen.js';
+import { fillGarage } from '../shop/garageShop.js';
 import { setQuality } from '../render/qualityGovernor.js';
 
-const $ = (id) => document.getElementById(id); const ALL = ['title', 'pause', 'controls', 'settings', 'shop', 'cityMap', 'dead'];
-const KEYS = [['W A S D', 'Move / drive'], ['Shift', 'Sprint / nitro in a car'], ['Mouse', 'Look and aim'], ['L-Click', 'Shoot / punch'], ['R-Click', 'Aim'], ['1 – 4', 'Fists, pistol, SMG, shotgun'], ['F', 'Enter or steal nearest car / exit'], ['E', 'Interact, talk, advance dialogue'], ['Space', 'Handbrake (drift)'], ['H', 'Horn'], ['R', 'Radio station'], ['M', 'City map'], ['Esc', 'Pause'], ['Walk into gold markers', 'Start missions']];
+const $ = (id) => document.getElementById(id); const ALL = ['title', 'pause', 'controls', 'settings', 'shop', 'cityMap', 'dead', 'crew', 'garage'];
+const KEYS = [['W A S D', 'Move / drive'], ['Shift', 'Sprint / nitro in a car'], ['Mouse', 'Look and aim'], ['L-Click', 'Shoot / punch'], ['R-Click', 'Aim'], ['1 – 5', 'Fists, pistol, SMG, shotgun, molotov'], ['Tab (hold)', 'Weapon wheel'], ['Z / X / C', 'Crew: Hot Swap, Blackout, Patch Up'], ['J', 'Crew & Chapters'], ['F', 'Enter or steal nearest car / exit'], ['E', 'Interact, talk, advance dialogue'], ['Space', 'Handbrake (drift)'], ['H', 'Horn'], ['R', 'Radio station'], ['V', 'HUD: full cards / compact corners'], ['M', 'City map'], ['Esc', 'Pause'], ['Walk into gold markers', 'Start missions']];
 export function initMenus(handlers) {
   $('keysList').innerHTML = KEYS.map(([k, t]) => `<div><b>${k}</b>${t}</div>`).join('');
   document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => { sfx.click(); handlers[b.dataset.act]?.(); }));
@@ -19,14 +29,14 @@ export function initMenus(handlers) {
   $('setFx').addEventListener('change', (e) => setQuality(e.target.value));
 }
 export function showScreen(id) {
-  ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = readSave(); $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop();
+  ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = latestSave()?.s; $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop(); if (id === 'crew') fillCrewChapters(); if (id === 'garage') fillGarage();
 }
 export const hideScreens = () => ALL.forEach((s) => $(s).classList.add('hidden'));
 export function showDead(title, sub) { showScreen('dead'); $('deadTitle').textContent = title; $('deadTitle').style.color = title === 'CUFFED' ? '#5a8aff' : '#ff3a55'; $('deadSub').textContent = sub; }
 function fillShop() {
-  const p = G.p, lv = levelFromXp(G.xp); $('shopMoney').textContent = `Cash $${Math.floor(G.money)}  ·  Respect level ${lv}`;
+  const p = G.p, lv = levelFromXp(G.xp); $('shopMoney').textContent = `Cash $${Math.floor(G.money)}  ·  Rep level ${lv}`;
   let h = ''; WEAPONS.forEach((w, i) => { if (!i) return; const own = p.owned[i];
-    h += `<div class="item"><span>${w.name} ${own ? `(${p.ammo[w.id]} rounds)` : ''}</span>${own ? `<button data-buy="ammo${i}">+${w.mag * 2} ammo $${w.ammoPrice}</button>` : lv >= w.level ? `<button data-buy="gun${i}">Buy $${w.price}</button>` : `<span style="opacity:.5">Respect ${w.level} required</span>`}</div>`; });
+    h += `<div class="item"><span>${w.name} ${own ? `(${p.ammo[w.id]} rounds)` : ''}</span>${own ? `<button data-buy="ammo${i}">+${w.mag * 2} ammo $${w.ammoPrice}</button>` : lv >= w.level ? `<button data-buy="gun${i}">Buy $${w.price}</button>` : `<span style="opacity:.5">Rep ${w.level} required</span>`}</div>`; });
   h += `<div class="item"><span>Body armor</span><button data-buy="armor">Buy $250</button></div>`; $('shopList').innerHTML = h;
   $('shopList').querySelectorAll('[data-buy]').forEach((b) => b.addEventListener('click', () => { buy(b.dataset.buy); fillShop(); }));
 }

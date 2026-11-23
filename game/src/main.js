@@ -16,17 +16,27 @@ import { createPlayer } from './characters/playerController.js';
 import { populateParked, spawnTrafficNear } from './vehicles/trafficSystem.js';
 import { spawnPedsNear } from './characters/pedestrianSystem.js';
 import { initSideActivities } from './missions/sideActivities.js';
+import { initGarage } from './shop/garageShop.js';
 import { updateHud, showHud } from './ui/hud.js';
 import { initMenus, showScreen } from './ui/menus.js';
 import { createPostProcessing } from './render/postProcessing.js';
 import { renderFrame } from './render/frameRenderer.js';
-import { setQuality } from './render/qualityGovernor.js';
+import { setQuality, calibrateQuality } from './render/qualityGovernor.js';
 import { stepGame } from './core/simulation.js';
 import { handlers, startGame, toTitle } from './core/gameFlow.js';
 import { startLoop } from './core/gameLoop.js';
 import { exposeDebugState } from './core/debugState.js';
 import { runShot } from './shots/screenshotScenes.js';
 import { runSelfTest } from './shots/selfTest.js';
+import { initMolotovGlow } from './combat/molotov.js';
+import { buildLandmarks } from './world/landmarks.js';
+import { buildMarina } from './world/marina.js';
+import { buildCausewayRamp } from './world/causewayDeck.js';
+import { buildBeachLife } from './world/beachLife.js';
+import { initMotoTaxis } from './vehicles/motoTaxis.js';
+import { initDeliveryScooters } from './vehicles/deliveryScooters.js';
+import { warmUpShaders } from './render/shaderWarmup.js';
+import { buildWrenGarage } from './world/wrenGarage.js';
 
 const params = new URLSearchParams(location.search), shotName = params.get('shot'), selftest = params.has('selftest');
 window.addEventListener('error', (e) => console.error('CONSOLE_ERROR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
@@ -42,13 +52,15 @@ async function boot() {
   G.settings.post = params.get('post') !== '0';
   initInput(canvas);
   buildLayout(rng); const tex = { facade: facadeMaps() };
-  G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); initEffects(scene);
-  createPlayer(); populateParked(40); initSideActivities(); initMenus(handlers);
-  for (let k = 0; k < 18; k++) spawnTrafficNear(0, 0, 20, 280); for (let k = 0; k < 22; k++) spawnPedsNear(0, 0, 10, 250);
+  G.sky = createSky(scene); buildBeachAndSea(scene, rng); buildRoads(scene); buildCity(scene, tex, rng); buildProps(scene, rng); buildLandmarks(scene, rng); buildMarina(scene); buildCausewayRamp(scene); buildBeachLife(scene, rng); buildWrenGarage(scene); initMotoTaxis(scene); initDeliveryScooters(scene); initEffects(scene); initMolotovGlow(scene);
+  createPlayer(); populateParked(40); initSideActivities(); initGarage(); initMenus(handlers);
+  for (let k = 0; k < 24; k++) spawnTrafficNear(0, 0, 20, 280); for (let k = 0; k < 28; k++) spawnPedsNear(0, 0, 10, 250);
   const api = { stepGame, renderFrame, startGame, showScreen, showHud, updateHud, handlers };
   if (shotName) { await runShot(shotName, api); return; }
   if (selftest) { await runSelfTest(api); return; }
   if (params.get('post') !== '0') setQuality('auto');
-  exposeDebugState(); toTitle(); startLoop();
+  try { warmUpShaders(renderer, scene, camera, G.post); } catch (e) { console.warn('shader warm-up skipped: ' + e.message); }
+  toTitle(); calibrateQuality(() => renderFrame(true));
+  exposeDebugState(); startLoop();
 }
 boot().catch((e) => { console.error('CONSOLE_ERROR boot ' + (e.stack || e)); document.title = 'BOOT_FAIL ' + e.message; });

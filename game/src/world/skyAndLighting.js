@@ -1,6 +1,11 @@
-// Sunset sky dome, sun/moon light with a shadow box following the player, fog and the day/night colour ramp.
+// Teal-and-coral sky dome (palette from render/colourScript.js), sun/moon light with a shadow box following the player, fog and the day/night colour ramp.
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
+import { currentGrade, BLAZE } from '../render/colourScript.js';
+
+// The sun's path is turned south of the bay's east-west avenues so it sets over the sea beside the Causeway, not dead ahead.
+const SUN_YAW = 0.35, CY = Math.cos(SUN_YAW), SY = Math.sin(SUN_YAW);
+const yaw = (v) => v.set(v.x * CY + v.z * SY, v.y, -v.x * SY + v.z * CY);
 
 const KEYS = [ // sun elevation, zenith, horizon, sun colour
   [-0.3, '#060a26', '#1c1a48', '#6a7fc0'], [-0.05, '#1d2a70', '#d0607a', '#ff7a5a'], [0.08, '#1d55c0', '#ffa070', '#ffa050'],
@@ -13,18 +18,18 @@ function ramp(e, idx, out) {
   return out.copy(a[idx]).lerp(b[idx], t);
 }
 export function createSky(scene) {
-  const u = { magic: { value: 0 }, top: { value: new THREE.Color() }, hor: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(1, 0.1, 0) }, sunCol: { value: new THREE.Color() } };
+  const u = { mHor: { value: new THREE.Color() }, mBand: { value: new THREE.Color() }, mSky: { value: new THREE.Color() }, mZen: { value: new THREE.Color() }, magic: { value: 0 }, top: { value: new THREE.Color() }, hor: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(1, 0.1, 0) }, sunCol: { value: new THREE.Color() } };
   const mat = new THREE.ShaderMaterial({ uniforms: u, side: THREE.BackSide, depthWrite: false, fog: false,
     vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
-    fragmentShader: `uniform float magic; uniform vec3 top; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vD;
+    fragmentShader: `uniform vec3 mHor, mBand, mSky, mZen; uniform float magic; uniform vec3 top; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vD;
       void main(){ vec3 d = normalize(vD); float h = d.y; float s = max(dot(d, normalize(sunDir)), 0.0);
-        vec3 mid = mix(top, vec3(0.62, 0.78, 1.0), 0.55);
+        vec3 mid = mix(top, vec3(0.55, 0.86, 0.9), 0.55);
         vec3 c = mix(hor, mid, smoothstep(0.0, 0.22, h)); c = mix(c, top, smoothstep(0.12, 0.75, h));
-        // magic hour: molten orange at the horizon, hot magenta band, deep violet overhead, hotter toward the sun
-        vec3 mh = mix(vec3(1.0, 0.42, 0.16), vec3(1.0, 0.24, 0.52), smoothstep(0.02, 0.2, h)); mh = mix(mh, vec3(0.42, 0.2, 0.7), smoothstep(0.16, 0.6, h)); mh = mix(mh, vec3(0.16, 0.1, 0.42), smoothstep(0.55, 1.0, h));
-        mh = mix(mh, vec3(1.0, 0.6, 0.22), pow(s, 4.0) * (1.0 - smoothstep(0.0, 0.45, h)) * 0.8);
+        // the act's sky: coral/amber horizon, a warm band, turquoise sky and deep teal overhead, hotter toward the sun
+        vec3 mh = mix(mHor, mBand, smoothstep(0.0, 0.1, h)); mh = mix(mh, mSky, smoothstep(0.08, 0.42, h)); mh = mix(mh, mZen, smoothstep(0.42, 1.0, h));
+        mh = mix(mh, vec3(1.0, 0.7, 0.34), pow(s, 4.0) * (1.0 - smoothstep(0.0, 0.45, h)) * 0.7);
         c = mix(c, mh, magic);
-        c = mix(c, sunCol * 1.05, pow(s, 3.0) * (1.0 - smoothstep(0.0, 0.5, h)) * 0.6);
+        c = mix(c, sunCol * 1.05, pow(s, 6.0) * (1.0 - smoothstep(0.0, 0.5, h)) * 0.55);
         c = mix(c, hor * 0.75, clamp(-h * 3.0, 0.0, 1.0));
         c += vec3(1.0, 0.92, 0.75) * smoothstep(0.99935, 0.99955, s) * 5.0 + sunCol * (pow(s, 300.0) * 0.8 + pow(s, 30.0) * 0.35 + pow(s, 5.0) * 0.1);
         gl_FragColor = vec4(c, 1.0); }` });
@@ -32,7 +37,7 @@ export function createSky(scene) {
   const sun = new THREE.DirectionalLight(0xffb070, 3.0); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 3;
   const sc = sun.shadow.camera; sc.left = sc.bottom = -95; sc.right = sc.top = 95; sc.near = 1; sc.far = 500; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.4;
   scene.add(sun, sun.target);
-  const hemi = new THREE.HemisphereLight(0x9cc4ff, 0xc89878, 1.0); scene.add(hemi);
+  const hemi = new THREE.HemisphereLight(0x9cdcd8, 0xc89878, 1.0); scene.add(hemi);
   scene.fog = new THREE.Fog(0xffc49a, 180, 950);
   const dir = new THREE.Vector3();
   return {
@@ -40,16 +45,20 @@ export function createSky(scene) {
       const e = Math.sin((clock - 6) / 24 * Math.PI * 2), ang = (clock - 6) / 12 * Math.PI;
       dir.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.7 + 0.32, 0.12).normalize();
       if (e < 0.02) dir.set(-Math.cos(ang) * 0.5, 0.6, -0.3).normalize();
+      yaw(dir); const gr = currentGrade(); u.mHor.value.copy(gr.horizon); u.mBand.value.copy(gr.band); u.mSky.value.copy(gr.sky); u.mZen.value.copy(gr.zenith);
       ramp(e, 1, u.top.value); ramp(e, 2, u.hor.value); ramp(e, 3, u.sunCol.value);
       // magic hour peaks while the sun sits low (about 16:45-18:30); shot scenes may force it with G.magicForce
       const mg = G.magicForce ?? Math.max(0, Math.min(1, (e + 0.06) / 0.1, (0.36 - e) / 0.14)); G.magic = mg; u.magic.value = mg;
-      u.sunDir.value.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.62 - (e < 0 ? 0.3 : 0), -0.03).normalize();
-      scene.fog.color.copy(u.hor.value).lerp(tmpA.set('#ffe2c4'), e > 0 ? 0.35 : 0).lerp(tmpA.set('#e8709a'), mg * 0.55); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
-      if (G.mode === 'title') { scene.fog.near = 300; scene.fog.far = 1500; } else { scene.fog.near = 180; scene.fog.far = 950; }
+      yaw(u.sunDir.value.set(-Math.cos(ang), Math.max(0.03, Math.sin(ang)) * 0.62 - (e < 0 ? 0.3 : 0), -0.03)).normalize();
+      scene.fog.color.copy(u.hor.value).lerp(tmpA.set('#ffe2c4'), e > 0 ? 0.35 : 0).lerp(gr.fog, mg * 0.6); if (e < 0.0) scene.fog.color.multiplyScalar(0.8);
+      if (G.mode === 'title' || G.shotCrisp) { scene.fog.near = 300; scene.fog.far = 1700; } else { scene.fog.near = 180; scene.fog.far = 950; }
       for (const hm of G.hillMats || []) hm.color.setScalar((G.mode === 'title' ? 1 : 0.78) * Math.max(0.35, Math.min(1, 0.45 + (e + 0.1) * 1.4)));
       const day = Math.max(0.28, Math.min(1, (e + 0.08) * 5));
-      sun.color.copy(u.sunCol.value).lerp(tmpA.set('#ff8a40'), mg * 0.5); sun.intensity = e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1);
-      hemi.color.copy(u.top.value).lerp(tmpA.set('#d8e8ff'), 0.55); hemi.intensity = 0.4 + day * 1.0; hemi.color.lerp(tmpA.set('#9a86ff'), mg * 0.6); hemi.groundColor.set(0xc89878).lerp(tmpA.set('#a05aa0'), mg * 0.6);
+      const bz = gr.blaze * mg; // the Low Tide Blaze: hotter gold key, gold sand, sun glints on the sea
+      sun.color.copy(u.sunCol.value).lerp(tmpA.set('#ffa850'), mg * 0.5).lerp(BLAZE.key, bz * 0.6); sun.intensity = (e < 0 ? 0.55 : Math.min(3.4, 1.6 + e * 9) * (e < 0.04 ? 0.8 : 1)) * (1 + (BLAZE.keyBoost - 1) * bz);
+      if (G.sandMat) G.sandMat.color.setRGB(1, 1, 1).lerp(BLAZE.sand, bz * 0.75);
+      if (G.seaMat) { G.seaMat.specular.set(0xffb090).lerp(BLAZE.glint, bz).multiplyScalar(1 + bz * 1.5); G.seaMat.shininess = 90 - bz * 50; }
+      hemi.color.copy(u.top.value).lerp(tmpA.set('#d8e8ff'), 0.55); hemi.intensity = 0.4 + day * 1.0; hemi.color.lerp(gr.hemiSky, mg * 0.6); hemi.groundColor.set(0xc89878).lerp(gr.hemiGround, mg * 0.6); // teal fill: shadows go teal, never purple
       sun.position.set(focus.x + dir.x * 160, dir.y * 160, focus.z + dir.z * 160); sun.target.position.set(focus.x, 0, focus.z);
       dome.position.copy(camera.position);
       sunV.copy(u.sunDir.value).multiplyScalar(600).add(camera.position).project(camera); camera.getWorldDirection(fwd); const fa = fwd.dot(u.sunDir.value);

@@ -1,6 +1,6 @@
 // Post-processing for SOLVANE BAY, written from scratch on WebGLRenderTarget + ShaderMaterial full-screen passes:
 // HDR scene target -> soft-knee bright pass -> separable gaussian bloom pyramid (1/2, 1/4, 1/8 res)
-// -> composite with ACES filmic tone mapping, warm golden-hour grade, vignette and speed chromatic fringe.
+// -> composite with ACES filmic tone mapping, the act's teal-and-coral grade, vignette and speed chromatic fringe.
 import * as THREE from 'three';
 
 const VERT = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
@@ -20,7 +20,7 @@ void main(){ vec3 c = texture2D(tSrc, vUv).rgb * 0.2270270270;
 
 const COPY = 'uniform sampler2D tSrc; varying vec2 vUv; void main(){ gl_FragColor = vec4(texture2D(tSrc, vUv).rgb, 1.0); }';
 
-const COMPOSITE = `uniform sampler2D tScene, tB1, tB2, tB3; uniform float uBloom, uExposure, uFringe, uVignette, uTime, uWarm, uMagic;
+const COMPOSITE = `uniform sampler2D tScene, tB1, tB2, tB3; uniform float uBloom, uExposure, uFringe, uVignette, uTime, uWarm, uMagic, uSat, uContrast, uRadial; uniform vec2 uCenter; uniform vec3 uShadowTint, uHighTint;
 varying vec2 vUv;
 vec3 aces(vec3 x){ // Narkowicz fit of the ACES filmic curve, with the RRT/ODT input/output matrices
   const mat3 I = mat3(0.59719, 0.07600, 0.02840, 0.35458, 0.90834, 0.13383, 0.04823, 0.01566, 0.83777);
@@ -33,20 +33,23 @@ void main(){
   if (uFringe > 0.001) { vec2 off = d * uFringe * r2 * 0.035;
     col = vec3(texture2D(tScene, vUv + off).r, texture2D(tScene, vUv).g, texture2D(tScene, vUv - off).b); }
   else col = texture2D(tScene, vUv).rgb;
+  // at-speed radial blur, edges only: zero over the central ~60% of the frame (a squircle), ramping up to the frame border,
+  // so the car, the pursuers and the skyline stay sharp while the periphery streaks (6 taps, only while fast or on nitro)
+  if (uRadial > 0.001) { vec2 dir = vUv - uCenter, e = abs(d) * 2.0; e *= e; float L = sqrt(sqrt(dot(e, e)));
+    float w = smoothstep(0.6, 1.02, L) * uRadial; vec3 acc = col;
+    if (w > 0.001) { for (int i = 1; i < 7; i++) acc += texture2D(tScene, vUv - dir * (float(i) * 0.0075 * w)).rgb; col = acc / 7.0; } }
   vec3 bloom = texture2D(tB1, vUv).rgb * 0.5 + texture2D(tB2, vUv).rgb * 0.8 + texture2D(tB3, vUv).rgb * 1.1;
   col += bloom * uBloom;
   col *= uExposure;
   col = aces(col);
-  // golden-hour grade: warm highlights, teal-free cool lift in the shadows, gentle saturation
-  float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
-  col = mix(vec3(l), col, 1.12);
-  col *= mix(vec3(0.97, 0.99, 1.04), vec3(1.05, 1.0, 0.92), smoothstep(0.05, 0.8, l) * uWarm + (1.0 - uWarm) * 0.5);
-  // magic-hour grade: richer saturation, purple-blue shadows, hot coral highlights and a gentle S-curve
-  if (uMagic > 0.001) { float m = uMagic, lm = dot(clamp(col, 0.0, 1.0), vec3(0.2126, 0.7152, 0.0722));
-    col = mix(vec3(lm), col, 1.0 + 0.32 * m);
-    vec3 tone = mix(vec3(0.84, 0.76, 1.12), vec3(1.08, 0.97, 0.88), smoothstep(0.08, 0.7, lm));
+  // the act's grade (render/colourScript.js): teal shadows, warm act-tinted highlights, saturation and a gentle S-curve,
+  // strongest while the sun is low
+  { float m = 0.55 + 0.45 * uMagic, lm = dot(clamp(col, 0.0, 1.0), vec3(0.2126, 0.7152, 0.0722));
+    col = mix(vec3(lm), col, mix(1.0, uSat, m) + 0.1 * uMagic);
+    vec3 tone = mix(uShadowTint, uHighTint, smoothstep(0.06, 0.72, lm));
     col *= mix(vec3(1.0), tone, m);
-    col = mix(col, col * col * (3.0 - 2.0 * col), 0.35 * m); }
+    col = clamp(col, 0.0, 1.0); col = mix(col, col * col * (3.0 - 2.0 * col), uContrast * m);
+    col = max(col, vec3(0.018, 0.04, 0.05) * (1.0 - lm)); } // lifted teal blacks: never muddy
   col = clamp(col, 0.0, 1.0);
   col *= mix(1.0, smoothstep(0.95, 0.18, r2 * 2.2), uVignette);
   col = toSRGB(col);
@@ -61,26 +64,27 @@ export function createPostProcessing(renderer, opts = {}) {
   const mk = (w, h, samples = 0) => new THREE.WebGLRenderTarget(Math.max(1, w), Math.max(1, h), { type, samples: isGL2 ? Math.max(0, samples) : 0, depthBuffer: samples >= 0, colorSpace: THREE.LinearSRGBColorSpace, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
   const samples = opts.samples ?? 4;
   let W = 1, H = 1, sceneRT = null, levels = [];
+  // lite: no MSAA and no bloom passes, same shaders (the lowest quality level keeps the grade without a recompile)
+  const params = { threshold: 1.1, knee: 0.45, bloom: 0.42, exposure: 1.0, fringe: 0, vignette: 0.55, lite: false };
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)), fsScene = new THREE.Scene();
   quad.frustumCulled = false; fsScene.add(quad);
   const mat = (frag, uniforms) => new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: frag, uniforms, depthTest: false, depthWrite: false, toneMapped: false });
   const bright = mat(BRIGHT, { tSrc: { value: null }, uThreshold: { value: 1.0 }, uKnee: { value: 0.5 } });
   const blur = mat(BLUR, { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } });
   const copy = mat(COPY, { tSrc: { value: null } });
-  const comp = mat(COMPOSITE, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null }, uBloom: { value: 0.55 }, uExposure: { value: 1.0 }, uFringe: { value: 0 }, uVignette: { value: 0.55 }, uTime: { value: 0 }, uWarm: { value: 1 }, uMagic: { value: 0 } });
+  const comp = mat(COMPOSITE, { tScene: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null }, uBloom: { value: 0.55 }, uExposure: { value: 1.0 }, uFringe: { value: 0 }, uVignette: { value: 0.55 }, uTime: { value: 0 }, uWarm: { value: 1 }, uMagic: { value: 0 }, uSat: { value: 1.1 }, uContrast: { value: 0.3 }, uRadial: { value: 0 }, uCenter: { value: new THREE.Vector2(0.5, 0.55) }, uShadowTint: { value: new THREE.Vector3(0.8, 0.98, 1.0) }, uHighTint: { value: new THREE.Vector3(1.08, 0.99, 0.84) } });
   const pass = (m, target) => { quad.material = m; renderer.setRenderTarget(target); renderer.render(fsScene, camera); };
 
   function setSize(w, h) {
     W = w; H = h; sceneRT?.dispose(); levels.forEach((l) => { l.a.dispose(); l.b.dispose(); });
-    sceneRT = mk(w, h, samples); levels = [2, 4, 8].map((f) => ({ a: mk(w / f | 0, h / f | 0, -1), b: mk(w / f | 0, h / f | 0, -1), w: w / f | 0, h: h / f | 0 }));
+    sceneRT = mk(w, h, params.lite ? 0 : samples); levels = [2, 4, 8].map((f) => ({ a: mk(w / f | 0, h / f | 0, -1), b: mk(w / f | 0, h / f | 0, -1), w: w / f | 0, h: h / f | 0 }));
   }
-  const params = { threshold: 0.95, knee: 0.45, bloom: 0.6, exposure: 1.0, fringe: 0, vignette: 0.55 };
   function render(scene, cam, time = 0) {
     const prevTM = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
     renderer.setRenderTarget(sceneRT); renderer.render(scene, cam);
-    bright.uniforms.tSrc.value = sceneRT.texture; bright.uniforms.uThreshold.value = params.threshold; bright.uniforms.uKnee.value = params.knee; pass(bright, levels[0].a);
+    bright.uniforms.tSrc.value = sceneRT.texture; bright.uniforms.uThreshold.value = params.threshold; bright.uniforms.uKnee.value = params.knee; if (!params.lite) pass(bright, levels[0].a);
     let src = levels[0].a;
-    for (let i = 0; i < levels.length; i++) {
+    for (let i = 0; i < (params.lite ? 0 : levels.length); i++) {
       const L = levels[i];
       if (i > 0) { copy.uniforms.tSrc.value = src.texture; pass(copy, L.a); }
       const iters = i === 0 ? 1 : 2;
@@ -91,9 +95,10 @@ export function createPostProcessing(renderer, opts = {}) {
       src = L.a;
     }
     const u = comp.uniforms; u.tScene.value = sceneRT.texture; u.tB1.value = levels[0].a.texture; u.tB2.value = levels[1].a.texture; u.tB3.value = levels[2].a.texture;
-    u.uBloom.value = params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0;
+    u.uBloom.value = params.lite ? 0 : params.bloom; u.uExposure.value = params.exposure; u.uFringe.value = params.fringe; u.uVignette.value = params.vignette; u.uTime.value = time % 100; u.uMagic.value = params.magic || 0; u.uRadial.value = params.radial || 0;
+    if (params.grade) { u.uSat.value = params.grade.sat; u.uContrast.value = params.grade.contrast ?? 0.3; u.uShadowTint.value.fromArray(params.grade.shadow); u.uHighTint.value.fromArray(params.grade.high); }
     pass(comp, null); renderer.toneMapping = prevTM;
   }
   const size = renderer.getDrawingBufferSize(new THREE.Vector2()); setSize(size.x, size.y);
-  return { render, setSize, params, hdr: half };
+  return { render, setSize, params, hdr: half, target: () => sceneRT };
 }

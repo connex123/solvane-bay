@@ -17,7 +17,7 @@
 #mapCanvas { border-radius: 10px; display: block; }
 #mapSide { width: 300px; display: flex; flex-direction: column; gap: 10px; } #mapSide .card { padding: 10px 14px; font-size: 13px; } #mapSide h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: 2px; color: #ffb347; }
 .mrow { display: flex; gap: 8px; align-items: center; padding: 3px 0; } .mrow .st { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: #444; } .mrow.done .st { background: #3fbf6a; } .mrow.next .st { background: #ffd23c; color: #111; } .mrow.locked { opacity: 0.45; }
-.leg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; } .leg i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.leg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 15px; font-weight: 700; } .leg i { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 6px; }
 .slot { padding: 6px 8px; border: 1px dashed rgba(255, 255, 255, 0.3); border-radius: 8px; font-size: 12px; }
 .deadbox { text-align: center; } #deadTitle { font-size: 120px; margin: 0; letter-spacing: 10px; color: #ff3a55; text-shadow: 0 6px 0 #400; font-style: italic; } #deadSub { font-size: 20px; color: #f0e6ff; }
 
@@ -38,3 +38,105 @@
 #title .menu button { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; border-left: 5px solid #ff4fd8; border-radius: 6px; padding: 9px 18px; }
 #title .menu button:first-child { background: linear-gradient(90deg, #ff9a3c, #ff4fd8); border-color: #ffd23c; }
 #title .kicker { margin-bottom: 34px; text-shadow: 0 2px 6px #000; }
+/* Crew & Chapters: bold cards over a dimmed view of the city, same condensed type and accents as the HUD. */
+#crew { background: linear-gradient(180deg, rgba(8, 20, 30, 0.62), rgba(16, 8, 30, 0.35) 45%, rgba(16, 8, 30, 0.7)); font-family: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', 'Liberation Sans Narrow', sans-serif; --big: 'Anton', Impact, 'Arial Narrow', sans-serif; }
+.crewpanel { width: 1220px; display: flex; flex-direction: column; gap: 12px; }
+.cchead { display: flex; align-items: flex-end; gap: 26px; } .cchead .kick { font-size: 15px; font-weight: 800; letter-spacing: 5px; color: #2fd6c4; }
+.cchead h2 { margin: 0; font: 52px/1 var(--big); letter-spacing: 2px; color: #fff; text-shadow: 3px 3px 0 #ff6a4f; font-style: italic; }
+.ccprog { margin-left: auto; text-align: center; line-height: 1; } .ccprog b { display: block; font: 40px var(--big); color: #ffd23c; } .ccprog span { font-size: 13px; font-weight: 800; letter-spacing: 3px; color: #d8d0ee; }
+.ccturf { width: 380px; background: rgba(16, 10, 34, 0.85); border-left: 5px solid #2fd6c4; border-radius: 6px; padding: 8px 12px; } .ccturf .trow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 16px; font-weight: 800; letter-spacing: 2px; color: #bff6ef; }
+.ccturf em { font: 20px var(--big); font-style: normal; color: #1a0c08; background: linear-gradient(90deg, #ffb35a, #ff6a4f); padding: 0 10px; border-radius: 3px; letter-spacing: 1px; } .ccturf .turf { height: 14px; } .ccturf .turflab { font-size: 17px; }
+.crewrow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.ccard { position: relative; background: linear-gradient(170deg, rgba(30, 20, 56, 0.95), rgba(14, 10, 28, 0.95)); border-radius: 10px; padding: 12px; border-top: 5px solid #4fe08a; min-height: 236px; box-sizing: border-box; }
+.ccard canvas { width: 92px; height: 92px; border-radius: 50%; border: 3px solid #4fe08a; display: block; margin-bottom: 6px; }
+.ccard .nm { font: 25px/1 var(--big); color: #fff; letter-spacing: 1px; } .ccard .rl { font-size: 14px; font-weight: 700; color: #bdb2dc; margin: 2px 0 6px; }
+.ccard .ab { display: flex; align-items: center; gap: 6px; } .ccard .ab b { font: 19px var(--big); color: #ffd23c; letter-spacing: 1px; } .ccard p { margin: 3px 0 26px; font-size: 14px; font-weight: 600; color: #e6def8; line-height: 1.15; }
+.ccard kbd { font: 17px var(--big); background: #fff; color: #1a1030; border-radius: 4px; padding: 0 7px; box-shadow: 0 2px 0 #9a90b8; }
+.ccard .stt { position: absolute; left: 12px; right: 12px; bottom: 10px; font-size: 14px; font-weight: 800; letter-spacing: 1.5px; color: #4fe08a; }
+.ccard.you { border-top-color: #2fd6c4; } .ccard.you canvas { border-color: #2fd6c4; } .ccard.you .stt { color: #2fd6c4; }
+.ccard.ally { border-top-color: #b06aff; } .ccard.ally canvas { border-color: #b06aff; } .ccard.ally .stt { color: #d0a8ff; }
+.ccard.traitor { border-top-color: #ff2a40; } .ccard.traitor canvas { border-color: #ff2a40; filter: grayscale(0.6); } .ccard.traitor .stt { color: #ff5a6a; }
+.ccard.locked { border-top-color: #5a5470; } .ccard.locked canvas { border-color: #5a5470; filter: grayscale(1) brightness(0.55); } .ccard.locked .nm, .ccard.locked p { opacity: 0.6; } .ccard.locked .stt { color: #a8a0c0; }
+.actrow { display: grid; grid-template-columns: 1fr 1fr 1fr 0.9fr; gap: 10px; }
+.act { background: rgba(16, 10, 34, 0.8); align-self: start; border-radius: 10px; padding: 10px 12px; } .act h4 { margin: 0 0 8px; font: 20px var(--big); letter-spacing: 1.5px; color: #ffb35a; }
+.chrow { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); } .chrow i { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 15px var(--big); font-style: normal; background: #3a3456; color: #bdb2dc; }
+.chrow b { display: block; font-size: 17px; font-weight: 800; letter-spacing: 0.5px; color: #fff; } .chrow span { display: block; font-size: 13px; font-weight: 600; color: #cfc6e8; line-height: 1.15; margin-top: 2px; }
+.chrow.done i { background: #4fe08a; color: #08261a; } .chrow.done b { color: #b8f5cf; }
+.chrow.cur { background: linear-gradient(90deg, rgba(255, 154, 60, 0.25), transparent); border-radius: 6px; padding-left: 4px; } .chrow.cur i { background: #ff9a3c; color: #1a0c08; } .chrow.cur span { color: #ffe2b8; }
+.chrow.lock { opacity: 0.55; }
+.act.side .vill { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; } .vill canvas { width: 46px; height: 46px; border-radius: 50%; border: 2px solid #e0463c; } .vill b { display: block; font: 16px var(--big); color: #fff; letter-spacing: 0.5px; } .vill span { font-size: 12px; font-weight: 700; color: #ff9a8a; }
+.unl { display: flex; flex-wrap: wrap; gap: 4px; } .unl i { font-style: normal; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 3px; background: #2fd6c4; color: #08262c; } .unl span { color: #a8a0c0; font-size: 13px; }
+.crewfoot { display: flex; justify-content: flex-end; align-items: center; gap: 14px; font-size: 14px; font-weight: 700; color: #bdb2dc; letter-spacing: 1px; } .crewfoot button { background: rgba(14, 12, 28, 0.85); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 8px; padding: 8px 18px; font-size: 16px; font-weight: 700; }
+#garage { background: rgba(10, 6, 24, 0.7); }
+#garageList .item { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.1); } #garageList small { color: #bdb2dc; } #garageList button { padding: 6px 14px; font-size: 14px; }
+.pips i { display: inline-block; width: 14px; height: 8px; margin-left: 3px; background: rgba(255, 255, 255, 0.2); transform: skewX(-18deg); } .pips i.on { background: #ffb35a; } .maxed { color: #4fe08a; font-weight: 800; letter-spacing: 1px; }
+.swatches { display: flex; gap: 6px; } #garageList .swatches button { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid #fff; }
+.sub .lowtide { font-size: 22px; letter-spacing: 4px; color: #2fd6c4; margin-right: 10px; text-shadow: 2px 2px 0 #08262c; }
+
+/* ---- TIDE CHART card system (tokens in hud.css): menus, Crew & Chapters, garage, shop, pause and map ---- */
+.panel, .mapframe, .ccard, .act, .ccturf { background: var(--tc-glass) !important; border: 2px solid rgba(244, 232, 204, 0.85) !important; border-radius: 10px !important; box-shadow: inset 6px 0 0 var(--tc-coral), 0 6px 0 rgba(4, 24, 30, 0.45); color: var(--tc-cream); }
+#pause, #controls, #settings, #shop, #dead, #garage { background: rgba(3, 30, 38, 0.66); }
+#cityMap { background: radial-gradient(ellipse at 30% 20%, #0f5a64, #032028); }
+#crew { background: linear-gradient(180deg, rgba(4, 40, 48, 0.7), rgba(4, 30, 38, 0.45) 45%, rgba(3, 22, 30, 0.8)); }
+.menu button, .panel button { background: var(--tc-glass); border: 2px solid rgba(244, 232, 204, 0.7); border-radius: 10px; color: var(--tc-cream); }
+.menu button:hover, .panel button:hover, #title .menu button:first-child, .slotbtns button:hover:not(:disabled) { background: linear-gradient(90deg, var(--tc-coral), #ffa84a); color: var(--tc-ink); border-color: var(--tc-cream); }
+.chrow.done i { background: var(--tc-mint); } .chrow.cur { background: linear-gradient(90deg, rgba(255, 111, 89, 0.3), transparent); }
+.ccturf em { background: linear-gradient(90deg, var(--tc-gold), var(--tc-coral)); }
+#title { background: linear-gradient(90deg, rgba(3, 40, 48, 0.82) 0%, rgba(3, 40, 48, 0.45) 40%, transparent 70%); }
+#title h1.logo .l1 { background-image: linear-gradient(180deg, #fff6d8 0%, #ffd06a 40%, #ff8a4a 70%, #ff6f59 100%); filter: drop-shadow(5px 6px 0 #0a4a54) drop-shadow(10px 12px 0 #032028); }
+#title h1.logo .l2 { background-image: linear-gradient(180deg, #f0fffa 0%, #7dffe0 40%, #2fd6c4 70%, #138a96 100%); filter: drop-shadow(5px 6px 0 #ff6f59) drop-shadow(10px 12px 0 #032028); }
+#cityMap, #pause, #crew, #garage, #shop, #settings, #controls { z-index: 5; } /* menu screens sit above the HUD */
+.menu button, .panel button { border-left: 2px solid rgba(244, 232, 204, 0.7) !important; box-shadow: inset 6px 0 0 var(--tc-coral); }
+/* Crew & Chapters, legible at thumbnail size: bigger headline, count, names and act titles; a lighter veil so the city shows */
+#crew { background: linear-gradient(180deg, rgba(4, 40, 48, 0.42), rgba(4, 30, 38, 0.12) 40%, rgba(3, 22, 30, 0.55)); }
+.cchead h2 { font-size: 62px; } .ccprog b { font-size: 52px; } .ccard .nm { font-size: 28px; } .ccard kbd { white-space: nowrap; } .act h4 { font-size: 23px; }
+/* Title logo, blaze edition: bigger, thicker teal-ink outline, gold/coral and mint inner gradients with a diagonal shine band and a warm glow */
+#title h1.logo { font-size: 146px; }
+#title h1.logo span { -webkit-text-stroke: 7px #032028; }
+#title h1.logo .l1 { background-image: linear-gradient(160deg, transparent 0 34%, rgba(255, 255, 255, 0.7) 40%, transparent 47%), linear-gradient(180deg, #fffbe6 0%, #ffe07a 30%, #ffae3a 55%, #ff7a48 78%, #e8484a 100%); filter: drop-shadow(0 3px 0 #ffd23c) drop-shadow(6px 7px 0 #0a4a54) drop-shadow(11px 13px 0 #021a20) drop-shadow(0 0 28px rgba(255, 160, 60, 0.75)); }
+#title h1.logo .l2 { font-size: 196px; background-image: linear-gradient(160deg, transparent 0 30%, rgba(255, 255, 255, 0.75) 37%, transparent 44%), linear-gradient(180deg, #f4fffb 0%, #9affe6 32%, #2fd6c4 62%, #138a96 100%); filter: drop-shadow(0 3px 0 #ffb347) drop-shadow(6px 7px 0 #ff6f59) drop-shadow(11px 13px 0 #021a20) drop-shadow(0 0 32px rgba(255, 120, 80, 0.7)); }
+/* Crew & Chapters, warm and lively at thumbnail size: a sunset veil instead of a dark one, lighter teal glass, a warm
+   sunlit band behind each portrait, gold-lit act headers; cream text keeps its contrast on the mid-teal glass */
+#crew { background: linear-gradient(180deg, rgba(255, 150, 80, 0.30), rgba(255, 190, 110, 0.10) 40%, rgba(255, 120, 80, 0.32)); }
+.ccard, .act, .ccturf { background: linear-gradient(180deg, rgba(255, 168, 96, 0.5) 0, rgba(255, 168, 96, 0) 128px), linear-gradient(165deg, rgba(18, 98, 106, 0.93), rgba(9, 58, 70, 0.92)) !important; }
+.act, .ccturf { background: linear-gradient(180deg, rgba(255, 168, 96, 0.38) 0, rgba(255, 168, 96, 0) 46px), linear-gradient(165deg, rgba(18, 98, 106, 0.93), rgba(9, 58, 70, 0.92)) !important; }
+.act h4 { color: #ffd27a; text-shadow: 2px 2px 0 rgba(6, 42, 50, 0.85); }
+.ccard .nm, .cchead h2 { text-shadow: 3px 3px 0 #ff6a4f, 0 0 18px rgba(255, 200, 120, 0.35); }
+.ccard .rl { color: #f4e8cc; } .chrow span { color: #e6f4f0; } .chrow.done b { color: #c8ffe0; }
+
+/* Wren's garage: the panel docks on the right so the car on the lift stays in view on the left */
+#garage { justify-content: flex-end; align-items: stretch; background: linear-gradient(90deg, rgba(3, 30, 38, 0) 0 46%, rgba(3, 30, 38, 0.55) 66%) !important; }
+#garage .panel.wide { min-width: 0; width: 420px; margin: 18px 22px; align-self: center; padding: 18px 22px; gap: 8px; justify-content: center; }
+#garage h2 { font-size: 18px; letter-spacing: 2px; } #garage .panel.wide { background: rgba(6, 40, 48, 0.95) !important; }
+#garageMoney { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; } #garageMoney .gcar { font: 800 26px/1 Impact, 'Arial Black', sans-serif; color: #ffd23c; letter-spacing: 1px; } #garageMoney b { color: #7cf0b4; font-size: 20px; }
+.gstat { display: grid; grid-template-columns: 118px 1fr; align-items: center; gap: 10px; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; padding: 3px 0; }
+.gstat i { position: relative; height: 12px; background: rgba(244, 232, 204, 0.16); transform: skewX(-16deg); } .gstat em, .gstat u { position: absolute; top: 0; bottom: 0; left: 0; } .gstat em { background: #2fd6c4; } .gstat u { background: linear-gradient(90deg, #ffd23c, #ff6a4f); }
+#garageList .item { padding: 6px 0; gap: 12px; } #garageList .item b { font-size: 15px; } #garageList small { font-size: 11px; }
+#garageList .swatches button { width: 26px; height: 26px; } #garageList .swatches button.on { outline: 3px solid #ffd23c; outline-offset: 2px; }
+body:has(#garage:not(.hidden)) #topRight, body:has(#garage:not(.hidden)) #rightCol { visibility: hidden; } /* the docked garage panel takes the right-hand column */
+/* ---- City map + career panel: the map on the left with a legend strip, the career column on the right, sized to fit 1280x800 ---- */
+#cityMap { gap: 14px; align-items: stretch; padding: 14px; box-sizing: border-box; }
+.mapframe { padding: 10px 12px 8px 18px; display: flex; flex-direction: column; } .maphead h2 { font-size: 20px; margin-bottom: 6px; }
+#mapLegend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 14px; font-weight: 700; color: var(--tc-cream); } #mapLegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; border: 1.5px solid #fff; }
+#mapSide { width: 452px; gap: 8px; overflow: hidden; } #mapSide .card { padding: 8px 12px 9px 18px; font-size: 13px; } #mapSide h3 { margin: 0 0 6px; font-size: 14px; letter-spacing: 2px; color: var(--tc-gold); }
+.chead { display: flex; gap: 14px; align-items: center; }
+.chead .ring { width: 104px; height: 104px; border-radius: 50%; flex: none; display: grid; place-items: center; background: conic-gradient(var(--tc-mint) var(--p), rgba(244, 232, 204, 0.18) 0); box-shadow: 0 0 18px rgba(125, 255, 196, 0.35); }
+.chead .ring > div { width: 80px; height: 80px; border-radius: 50%; background: #062a32; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.chead .ring b { font: 34px 'Anton', Impact, 'Arial Narrow', sans-serif; color: #fff; } .chead .ring span { font-size: 12px; font-weight: 800; letter-spacing: 3px; color: var(--tc-mint); margin-top: 3px; }
+.cwho { flex: 1; min-width: 0; } .cwho h3 { font-size: 15px !important; } .clv { display: flex; align-items: center; gap: 10px; } .clv b { font-size: 20px; color: #fff; white-space: nowrap; } .clv .bar { flex: 1; height: 10px; } .clv .bar i { background: linear-gradient(90deg, var(--tc-teal), var(--tc-mint)); }
+.cmeta { display: flex; gap: 12px; margin-top: 8px; font-size: 15px; font-weight: 800; color: var(--tc-cream); } .cmeta span:first-child { color: var(--tc-mint); } .cmeta span:last-child { color: #ffb35a; }
+.chgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; }
+.cprow { display: flex; gap: 7px; align-items: center; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; } .cprow span { overflow: hidden; text-overflow: ellipsis; }
+.cprow b { width: 19px; height: 19px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; background: rgba(244, 232, 204, 0.2); color: #cfc6b0; }
+.cprow.done b { background: var(--tc-mint); color: #062a32; } .cprow.next b { background: var(--tc-gold); color: #062a32; } .cprow.next span { color: var(--tc-gold); } .cprow.locked { opacity: 0.55; }
+.cgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cstat { background: rgba(2, 20, 26, 0.55); border-radius: 8px; padding: 5px 8px 4px; line-height: 1; } .cstat b { display: block; font: 27px 'Anton', Impact, 'Arial Narrow', sans-serif; color: #fff; white-space: nowrap; } .cstat b small { font-size: 15px; color: #bfe2dc; margin-left: 2px; }
+.cstat span { display: block; margin-top: 3px; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--tc-mint); }
+.cstars { display: inline-flex; gap: 1px; } .cstars i { width: 17px; height: 17px; margin-top: 5px; background: rgba(244, 232, 204, 0.25); clip-path: polygon(50% 0, 62% 36%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 36%); } .cstars i.on { background: var(--tc-gold); }
+#mapSide .turf { height: 12px; } .held { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; } .held i { font-style: normal; font-size: 12px; font-weight: 800; padding: 1px 8px; border-radius: 10px; color: #062a32; background: var(--c); } .held em { font-size: 12px; color: #bfe2dc; }
+.srow { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-top: 1px solid rgba(244, 232, 204, 0.12); font-size: 12px; } .srow:first-of-type { border-top: 0; }
+.srow b { width: 74px; flex: none; font-size: 12px; letter-spacing: 1px; color: var(--tc-gold); } .srow span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #bfe2dc; } .srow.used span { color: #fff; }
+.srow button { padding: 2px 10px; font-size: 12px; font-weight: 800; background: var(--tc-glass); color: var(--tc-cream); border: 1.5px solid rgba(244, 232, 204, 0.6); border-radius: 6px; } .srow button:disabled { opacity: 0.4; }
+.cstars i { display: block; } .cwho h3 { white-space: nowrap; font-size: 14px !important; } .cmeta { font-size: 14px; white-space: nowrap; gap: 10px; } #mapLegend { font-size: 13px; gap: 3px 11px; }
+.cstat .cstars { display: flex; margin: 0; }
+#cityMap { align-items: center; } #cityMap .mapframe { flex: 1; min-width: 0; } #mapCanvas { flex: none; width: 100%; height: auto; }

@@ -4,15 +4,17 @@ import { N, S, HALF, LANE, lineCoord, CAR_COLORS, wrapAngle } from '../core/conf
 import { rnd } from '../core/random.js';
 import { randomRoadPoint } from '../world/cityLayout.js';
 import { lightState } from '../world/roadNetwork.js';
-import { CIVIL_TYPES } from './vehicleModels.js';
-import { createCar, removeCar, stepCar } from './carPhysics.js';
+import { CIVIL_TYPES, CAR_TYPES } from './vehicleModels.js';
+import { createCar, removeCar } from './carPhysics.js';
+import { streetBudget, pickCivilType } from './trafficDensity.js';
+import { assignBusRoute, busStopSpeed } from './busRoutes.js';
 
 const nextIndex = (a, dir) => dir > 0 ? Math.floor((a + HALF) / S + 1e-6) + 1 : Math.ceil((a + HALF) / S - 1e-6) - 1;
 const laneCross = (axis, line, dir) => axis === 'x' ? lineCoord(line) + dir * LANE : lineCoord(line) - dir * LANE;
 export function placeTraffic(axis, line, a, dir, key, kind = 'traffic', tint) {
   const cross = laneCross(axis, line, dir), x = axis === 'x' ? a : cross, z = axis === 'x' ? cross : a;
-  const car = createCar(key || rnd.pick(CIVIL_TYPES), x, z, axis === 'x' ? dir * Math.PI / 2 : dir > 0 ? 0 : Math.PI, kind, tint ?? rnd.pick(CAR_COLORS));
-  car.nav = { axis, line, dir, nextK: nextIndex(a, dir), spd: 0, cruise: rnd.range(10, 15) }; car.driver = 'ai'; return car;
+  const car = createCar(key || pickCivilType(x, z), x, z, axis === 'x' ? dir * Math.PI / 2 : dir > 0 ? 0 : Math.PI, kind, tint ?? rnd.pick(CAR_COLORS));
+  car.nav = { axis, line, dir, nextK: nextIndex(a, dir), spd: 0, cruise: rnd.range(10, 15) }; car.driver = 'ai'; if (car.type === CAR_TYPES.tidebus && kind === 'traffic') assignBusRoute(car); return car;
 }
 export function spawnTrafficNear(cx, cz, rMin, rMax) {
   const pt = randomRoadPoint(rnd, cx, cz, rMin, rMax), a = pt.axis === 'x' ? pt.x : pt.z, dir = rnd() < 0.5 ? 1 : -1;
@@ -50,6 +52,7 @@ export function updateTraffic(dt) {
     if (!flee && d >= 12 && ax && lightState(ax) === 'red') want = Math.min(want, Math.sqrt(Math.max(0, 2 * 5 * (d - 12))));
     const fx = Math.sin(c.heading), fz = Math.cos(c.heading);
     for (const o of G.cars) { if (o === c) continue; const rx = o.x - c.x, rz = o.z - c.z, f = rx * fx + rz * fz; if (f > 0.5 && f < 16 && Math.abs(rx * fz - rz * fx) < 2.3) want = Math.min(want, Math.max(0, (f - 5.2) * 1.4)); }
+    if (c.bus) want = Math.min(want, busStopSpeed(c, dt));
     n.spd += Math.max(-14 * dt, Math.min(7 * dt, want - n.spd));
     const step = n.spd * dt;
     if (ax === 'x') c.x += n.dir * step; else c.z += n.dir * step;
@@ -62,6 +65,6 @@ export function updateTraffic(dt) {
     if (c.kind === 'traffic' && Math.hypot(c.x - p.x, c.z - p.z) > 240) removeCar(c);
   }
   const count = G.cars.filter((c) => c.kind === 'traffic').length;
-  if (count < 20 && G.mode === 'play') for (let k = 0; k < 2; k++) spawnTrafficNear(p.x, p.z, 70, 190);
+  if (count < streetBudget(p.x, p.z).cars && G.mode === 'play') for (let k = 0; k < 2; k++) spawnTrafficNear(p.x, p.z, 70, 190);
 }
 export function releaseTrafficCar(car) { car.kind = 'parked'; car.driver = null; }

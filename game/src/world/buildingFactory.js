@@ -18,8 +18,10 @@ export const lots = [];
 export function buildCity(scene, tex, rng) {
   const B = newBuf(), T = newBuf(), D = newBuf(), SL = newBuf(), GR = newBuf(); lots.length = 0; const tanks = [], walks = [];
   for (const b of blocks) {
+    if (b.type === 'lagoon') continue; // water, stilts and stalls come from world/landmarks.js
     pushBox(SL, b.cx, 0, b.cz, 50, 0.25, 50, 0xd6ccbc); walks.push({ x: b.cx, z: b.cz });
     for (const [dx, dz, w, d] of [[-24.8, 0, 0.45, 50], [24.8, 0, 0.45, 50], [0, -24.8, 50, 0.45], [0, 24.8, 50, 0.45]]) pushBox(SL, b.cx + dx, 0, b.cz + dz, w, 0.3, d, 0xf3efe6); // kerbs
+    if (b.type === 'tower') continue; // Crown Tower and its podium come from world/landmarks.js
     if (b.type === 'park') { pushBox(GR, b.cx, 0.25, b.cz, 44, 0.08, 44, 0x6fae5a); pushBox(GR, b.cx + 8, 0.33, b.cz - 6, 14, 0.05, 11, 0x4a9fc0); continue; }
     if (b.type === 'plaza') { pushBox(SL, b.cx, 0.25, b.cz, 36, 0.1, 36, 0xeadcc4); pushBox(SL, b.cx, 0.35, b.cz, 9, 0.7, 9, 0xb9d6e2); pushBox(GR, b.cx, 1.05, b.cz, 7, 0.1, 7, 0x4ab6d8); continue; }
     if (b.type === 'yard') {

@@ -1,10 +1,10 @@
 // SBPD response: spawns patrol cars that pursue and ram, roadblocks at 3+ stars, officers on foot, and busting.
-import { G, notify } from '../core/gameState.js';
-import { clamp, wrapAngle, HALF, lineCoord } from '../core/config.js';
+import { G } from '../core/gameState.js';
+import { clamp, wrapAngle, HALF, lineCoord, SEA_X } from '../core/config.js';
 import { rnd } from '../core/random.js';
 import { randomRoadPoint, nearestLine } from '../world/cityLayout.js';
 import { blockedAt } from '../world/collision.js';
-import { createCar, removeCar, stepCar } from '../vehicles/carPhysics.js';
+import { createCar, removeCar } from '../vehicles/carPhysics.js';
 import { createActor, removeActor } from '../characters/pedestrianSystem.js';
 import { STYLES } from '../characters/characterModel.js';
 import { createSpikeStrip } from './spikeStrip.js';
@@ -27,7 +27,7 @@ function copInput(c, dt, tx, tz) {
   if (c.stuck > 1.2) { c.rev = 1.1; c.stuck = 0; } if (c.rev > 0) { c.rev -= dt; i.throttle = 0; i.brake = 1; i.steer = -i.steer; }
 }
 export function updatePolice(dt) {
-  const p = G.p, st = G.wanted.stars, tx = p.car ? p.car.x : p.x, tz = p.car ? p.car.z : p.z, cops = copCars();
+  const p = G.p, st = G.wanted.stars, tx = p.car ? (p.car.isBoat ? Math.min(p.car.x, SEA_X - 12) : p.car.x) : p.x, tz = p.car ? p.car.z : p.z, cops = copCars();
   let minD = 999;
   for (const c of cops) {
     const d = Math.hypot(c.x - tx, c.z - tz); minD = Math.min(minD, d);
@@ -41,8 +41,9 @@ export function updatePolice(dt) {
   const want = st === 0 ? 0 : Math.min(6, st + 1);
   spawnT -= dt;
   if (spawnT <= 0 && cops.length < want && G.mode === 'play') {
-    spawnT = 2.2; const pt = randomRoadPoint(rnd, tx, tz, 110, 170), a = pt.axis === 'x' ? pt.x : pt.z;
-    if ((a + HALF) % 64 > 16 && (a + HALF) % 64 < 48) { const dir = rnd() < .5 ? 1 : -1; spawnCop(pt.axis === 'x' ? a : lineCoord(pt.line) - dir * 3.5, pt.axis === 'x' ? lineCoord(pt.line) + dir * 3.5 : a, pt.axis === 'x' ? dir * Math.PI / 2 : dir > 0 ? 0 : Math.PI); }
+    // a spawn point at a junction is rejected: retry shortly instead of waiting out the whole interval
+    spawnT = 0.4; const pt = randomRoadPoint(rnd, tx, tz, 110, 170), a = pt.axis === 'x' ? pt.x : pt.z;
+    if ((a + HALF) % 64 > 16 && (a + HALF) % 64 < 48) { spawnT = 2.2; const dir = rnd() < .5 ? 1 : -1; spawnCop(pt.axis === 'x' ? a : lineCoord(pt.line) - dir * 3.5, pt.axis === 'x' ? lineCoord(pt.line) + dir * 3.5 : a, pt.axis === 'x' ? dir * Math.PI / 2 : dir > 0 ? 0 : Math.PI); }
   }
   blockT -= dt;
   if (st >= 3 && blockT <= 0 && G.mode === 'play') {
@@ -55,6 +56,7 @@ export function updatePolice(dt) {
   // busting
   const w = G.wanted; let near = false;
   if (st > 0) for (const a of G.actors) if (a.kind === 'cop' && !a.dead && Math.hypot(a.x - p.x, a.z - p.z) < 2.4 && (!p.car || Math.abs(p.car.speed) < 3)) near = true;
+  if (G.resumeGrace > 0) near = false; // just back from a menu: the arrest hold has to start over
   w.bust = near ? w.bust + dt : Math.max(0, w.bust - dt); if (w.bust > 2.2) { w.bust = 0; G.hooks.playerDown('CUFFED'); }
   return minD;
 }

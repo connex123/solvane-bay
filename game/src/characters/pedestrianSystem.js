@@ -1,12 +1,14 @@
 // All on-foot non-player characters ("actors"): civilians on sidewalks, plus the dispatcher for cops and gang members.
 import * as THREE from 'three';
-import { G, notify } from '../core/gameState.js';
+import { G } from '../core/gameState.js';
 import { HALF, lineCoord } from '../core/config.js';
 import { rnd } from '../core/random.js';
 import { buildCharacter, animateWalk, setGun, STYLES, randomStyle } from './characterModel.js';
 import { circlePushCar } from '../vehicles/carPhysics.js';
 import { updateHostile } from './hostileAI.js';
 import { randomRoadPoint } from '../world/cityLayout.js';
+import { streetBudget } from '../vehicles/trafficDensity.js';
+import { recordStat } from '../core/careerStats.js';
 
 export function createActor(kind, x, z, style, extra = {}) {
   const mesh = buildCharacter(style); mesh.position.set(x, 0, z); G.scene.add(mesh);
@@ -30,7 +32,7 @@ export function hitActor(a, dmg, byPlayer) {
   if (a.kind === 'cop' && byPlayer) G.hooks.crime('hitcop');
   if (a.hp <= 0) {
     a.dead = true; a.mesh.rotation.x = -Math.PI / 2; a.mesh.position.y = 0.2; a.mesh.userData.gun.visible = false;
-    if (byPlayer) { G.hooks.crime(a.kind === 'ped' ? 'killped' : a.kind === 'cop' ? 'killcop' : 'killgang'); if (a.kind === 'gang') { G.money += 40; } }
+    if (byPlayer) { G.hooks.crime(a.kind === 'ped' ? 'killped' : a.kind === 'cop' ? 'killcop' : 'killgang'); if (a.kind === 'gang') { G.money += 40; recordStat('gangDown'); } }
   }
 }
 export function updateActors(dt) {
@@ -48,17 +50,19 @@ export function updateActors(dt) {
   }
 }
 function pedAI(a, dt) {
-  const n = a.nav; if (!n) return;
+  if (Math.hypot(a.x - G.p.x, a.z - G.p.z) > 190) { removeActor(a); return; }
+  const n = a.nav; if (!n || ((a.loiter || a.rider) && a.scared <= 0)) return; // loiterers (characters/streetCrowds.js) and bus riders (vehicles/busRoutes.js) are moved by their own systems until something scares them
+  a.loiter = null; a.rider = null;
   if (a.scared > 0) { a.scared -= dt; if (a.threat) { const ta = n.axis === 'x' ? a.threat.x - a.x : a.threat.z - a.z; if (Math.abs(ta) > 0.5) n.dir = ta > 0 ? -1 : 1; } }
-  const sp = a.scared > 0 ? 6.2 : 1.5, v = n.dir * sp * dt;
+  const sp = a.scared > 0 ? 6.2 : a.pace || 1.5, v = n.dir * sp * dt;
   if (n.axis === 'x') { a.x += v; if (Math.abs(a.x) > HALF) n.dir = -n.dir; } else { a.z += v; if (Math.abs(a.z) > HALF) n.dir = -n.dir; }
   a.yaw = n.axis === 'x' ? n.dir * Math.PI / 2 : n.dir > 0 ? 0 : Math.PI;
-  a.phase += dt * sp * 3; animateWalk(a.mesh, a.phase, a.scared > 0 ? 0.9 : 0.5, false);
+  a.phase += dt * sp * 3; animateWalk(a.mesh, a.phase, a.scared > 0 ? 0.9 : a.pace > 2.5 ? 0.85 : 0.5, false);
   if (a.scared <= 0 && Math.random() < dt * 0.05) n.dir = -n.dir;
-  if (Math.hypot(a.x - G.p.x, a.z - G.p.z) > 190) removeActor(a);
 }
 export function maintainPeds() {
-  const c = G.actors.filter((a) => a.kind === 'ped' && !a.dead).length;
-  if (c < 26 && G.mode === 'play') for (let k = 0; k < 2; k++) spawnPedsNear(G.p.x, G.p.z, 30, 130);
+  const c = G.actors.filter((a) => a.kind === 'ped' && !a.dead && !a.loiter && !a.rider).length;
+  const want = streetBudget(G.p.x, G.p.z).peds;
+  if (c < want && G.mode === 'play') for (let k = 0; k < Math.min(4, want - c); k++) spawnPedsNear(G.p.x, G.p.z, 30, 130);
 }
 export { STYLES, setGun, animateWalk };

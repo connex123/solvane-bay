@@ -18,13 +18,15 @@ export function buildLayout(rng) {
     if (district === 'hills') type = rng() < 0.7 ? 'park' : 'buildings';
     else if (district === 'docks') type = 'yard';
     else if (i === 4 && j === 4) type = 'plaza';
+    else if (i === 5 && j === 3) type = 'tower'; // Crown Tower (world/landmarks.js)
+    else if (i === 0 && j === 7) type = 'lagoon'; // Old Town lagoon market (world/landmarks.js)
     blocks.push({ i, j, cx: lineCoord(i) + S / 2, cz: lineCoord(j) + S / 2, district, type });
   }
   return blocks;
 }
 export function districtAt(x, z) {
   if (x > HALF + 52) return 'Open Sea';
-  if (x > HALF + 8) return 'Palmetto Beach';
+  if (x > HALF + 8) return 'The Strand';
   const i = clamp(Math.floor((x + HALF) / S), 0, N - 1), j = clamp(Math.floor((z + HALF) / S), 0, N - 1);
   return DISTRICTS[districtOfBlock(i, j)].name;
 }

@@ -13,6 +13,8 @@ export const CAR_TYPES = {
   hawke: { name: 'Hawke SUV', len: 4.9, wid: 2.0, cab: [0.62, 0.62, -0.1], roof: 1.78, max: 42, acc: 16, grip: 7.5, steer: 0.55, hp: 1300, tint: 0x222831 },
   rumble: { name: 'Rumble 69 Convertible', len: 4.8, wid: 1.95, cab: [0.42, 0.42, -0.25], roof: 1.15, max: 52, acc: 22, grip: 6, steer: 0.6, hp: 1000, tint: 0xff8a3d },
   pico: { name: 'Pico Compact', len: 3.8, wid: 1.75, cab: [0.5, 0.5, -0.1], roof: 1.5, max: 38, acc: 16, grip: 8, steer: 0.66, hp: 800, tint: 0x8fd3c8 },
+  calder: { name: 'Calder Box Truck', len: 6.3, wid: 2.2, cab: [0.3, 0.3, 0.7], roof: 2.95, max: 30, acc: 10, grip: 7, steer: 0.5, hp: 1700, tint: 0xf4f0e6 },
+  tidebus: { name: 'Tide Bus', len: 6.6, wid: 2.2, cab: [0.3, 0.3, 0.6], roof: 2.45, max: 30, acc: 10, grip: 7, steer: 0.5, hp: 1600, tint: 0xf6c21c },
   interceptor: { name: 'SBPD Interceptor', len: 4.8, wid: 1.95, cab: [0.46, 0.46, -0.15], roof: 1.44, max: 52, acc: 20, grip: 8, steer: 0.62, hp: 900, tint: 0xf7f8fa, police: true },
 };
 // Side profiles (z: rear -> front is -L/2 -> +L/2, y: height). top = front-to-rear outline of the painted body;
@@ -25,6 +27,10 @@ const PROFILES = {
   rumble: { top: [[2.4, 0.48], [2.35, 0.86], [0.75, 0.94], [-1.0, 0.94], [-2.35, 0.97], [-2.4, 0.55]], cab: null, hy: 0.68, ty: 0.82, r: 0.37 },
   pico: { top: [[1.9, 0.5], [1.85, 0.84], [1.15, 0.95], [0.85, 0.98], [-1.75, 1.0], [-1.9, 0.6]], cab: [[0.85, 0.97], [0.15, 1.5], [-1.45, 1.48], [-1.78, 1.0]], hy: 0.66, ty: 0.85, r: 0.32 },
 };
+// the yellow city minibus: tall flat nose, long window band
+PROFILES.tidebus = { top: [[3.3, 0.55], [3.26, 1.05], [3.05, 1.3], [2.85, 2.4], [-3.25, 2.45], [-3.3, 0.62]], cab: [[2.95, 1.32], [2.8, 2.25], [-3.15, 2.25], [-3.2, 1.32]], hy: 0.7, ty: 1.1, r: 0.42 };
+// the delivery box truck: short cab-over nose and a tall cargo box
+PROFILES.calder = { top: [[3.15, 0.6], [3.1, 1.2], [2.75, 1.35], [2.55, 2.15], [1.75, 2.25], [1.7, 2.95], [-3.15, 2.95], [-3.15, 0.7]], cab: [[2.7, 1.38], [2.5, 2.08], [1.85, 2.12], [1.82, 1.38]], hy: 0.75, ty: 1.0, r: 0.44 };
 PROFILES.marlin = PROFILES.tupelo = PROFILES.interceptor = PROFILES.sedan;
 
 let envTex = null;
@@ -140,6 +146,7 @@ function livery() {
 }
 const taxiTex = () => canvasTex(256, 64, (g) => { g.fillStyle = '#fff6c8'; g.fillRect(0, 0, 256, 64); g.fillStyle = '#1a1a1a'; g.font = 'bold 34px Arial Black, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('BAY CAB', 128, 34); }, false);
 
+const busTex = () => canvasTex(512, 64, (g) => { g.fillStyle = '#16707a'; g.fillRect(0, 0, 512, 64); g.fillStyle = '#e8604c'; g.fillRect(0, 0, 512, 8); g.fillStyle = '#fff6e0'; g.font = 'bold 40px Arial Black, Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('TIDE BUS  ·  STRAND LOOP', 256, 37); }, false);
 const matCache = {};
 const shared = {};
 function sharedMats() {
@@ -166,14 +173,49 @@ function sportRear(grp, key) {
     grp.add(f);
   }
 }
+// TIDE BUS minibus detail: a band of side windows with cream pillars, lit amber TIDE BUS destination boards front and
+// rear, and a teal waistline stripe.
+let busWinTex = null, busBoardTex = null;
+function busDetail(grp, t) {
+  busWinTex ||= canvasTex(512, 64, (g) => { g.fillStyle = '#f6ead2'; g.fillRect(0, 0, 512, 64); for (let k = 0; k < 6; k++) { const gr = g.createLinearGradient(0, 4, 0, 60); gr.addColorStop(0, '#2c6f80'); gr.addColorStop(1, '#0f3440'); g.fillStyle = gr; g.fillRect(8 + k * 84, 6, 74, 52); g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(14 + k * 84, 10, 20, 44); } });
+  busBoardTex ||= canvasTex(256, 56, (g) => { g.fillStyle = '#141414'; g.fillRect(0, 0, 256, 56); g.fillStyle = '#ffb21c'; g.font = 'bold 40px Arial Black, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('TIDE BUS', 128, 30); });
+  const win = new THREE.MeshBasicMaterial({ map: busWinTex }), board = new THREE.MeshBasicMaterial({ map: busBoardTex, toneMapped: false }), stripe = new THREE.MeshLambertMaterial({ color: 0x1fa8a0 });
+  for (const sd of [-1, 1]) {
+    const w = new THREE.Mesh(new THREE.PlaneGeometry(5.3, 0.72), win); w.position.set(sd * (t.wid / 2 + 0.025), 1.78, -0.35); w.rotation.y = sd * Math.PI / 2; grp.add(w);
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(6.3, 0.2), stripe); s.position.set(sd * (t.wid / 2 + 0.025), 0.62, 0); s.rotation.y = sd * Math.PI / 2; grp.add(s);
+  }
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.33), board); f.position.set(0, 2.2, 2.93); f.rotation.x = -0.18; grp.add(f);
+  const r = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.3), board); r.position.set(0, 2.1, -3.27); r.rotation.y = Math.PI; grp.add(r);
+}
+// Contact shadow: a soft dark footprint under the body with denser patches under the four tyres, so every car sits on
+// whatever it stands on (road, ramp, Wren's lift) even where the sun's shadow map cannot reach (under roofs, at range).
+let contactMat = null; const contactGeo = {};
+function contactShadow(key, t) {
+  contactMat = contactMat || new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthWrite: false, opacity: 0.62, polygonOffset: true, polygonOffsetFactor: -4, map: canvasTex(64, 128, (g) => {
+    g.clearRect(0, 0, 64, 128); g.filter = 'blur(6px)'; g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.roundRect(10, 10, 44, 108, 14); g.fill();
+    g.filter = 'blur(3px)'; g.fillStyle = 'rgba(255,255,255,0.95)'; for (const y of [26, 102]) for (const x of [9, 55]) { g.beginPath(); g.ellipse(x, y, 6, 11, 0, 0, 7); g.fill(); } }, false) });
+  const geo = contactGeo[key] || (contactGeo[key] = new THREE.PlaneGeometry(t.wid + 0.25, t.len * 1.07).rotateX(-Math.PI / 2).translate(0, 0.025, 0));
+  const m = new THREE.Mesh(geo, contactMat); m.renderOrder = 1; return m;
+}
+// Box-truck cargo sides: one of the city's delivery firms painted on each side of the box.
+const FIRMS = [['SOLVANE FRESH', 'produce \u00b7 daily', '#2fb89a', '#f4f0e6'], ['CORAL CAFE', 'cold brew delivered', '#ff6f59', '#fff4e6'], ['TIDELINE MOVERS', 'bay to bay', '#1d6f9a', '#ffc93c'], ['PALMETTO ICE', 'keep it cold', '#3fd8ff', '#0a3e56']];
+const cargoTex = {};
+function cargoLivery(grp, t, tint) {
+  const f = FIRMS[Math.abs(tint | 0) % FIRMS.length], key = f[0];
+  const tex = cargoTex[key] ||= canvasTex(512, 192, (g) => { g.fillStyle = f[3]; g.fillRect(0, 0, 512, 192); g.fillStyle = f[2]; g.fillRect(0, 128, 512, 64); g.beginPath(); g.arc(452, 64, 44, 0, 7); g.fill();
+    g.fillStyle = f[2]; g.font = 'bold 54px Arial Black, Arial, sans-serif'; g.textBaseline = 'middle'; g.fillText(f[0], 18, 62, 380); g.fillStyle = f[3]; g.font = 'bold 34px Arial, sans-serif'; g.fillText(f[1].toUpperCase(), 18, 160, 470); }, false);
+  const m = new THREE.MeshLambertMaterial({ map: tex });
+  for (const sd of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 1.5), m); b.position.set(sd * (t.wid / 2 + 0.03), 1.95, -0.75); b.rotation.y = sd * Math.PI / 2; b.scale.x = 1; grp.add(b); }
+}
 export function buildCarMesh(key, tint) {
   const g = geoCache[key] || (geoCache[key] = build(key)); const t = CAR_TYPES[key], m = sharedMats();
-  const c = t.police ? t.tint : key === 'tupelo' ? t.tint : tint ?? t.tint;
+  const c = t.police ? t.tint : key === 'tupelo' || key === 'tidebus' || key === 'calder' ? t.tint : tint ?? t.tint;
   const mk = `${key}${c}`;
   const paint = matCache[mk] || (matCache[mk] = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, envMap: env(), envMapIntensity: 0.45 }));
   const grp = new THREE.Group(), a = new THREE.Mesh(g.paint, paint), gl = new THREE.Mesh(g.glass, m.glass), tr = new THREE.Mesh(g.trim, m.trim), li = new THREE.Mesh(g.lights, m.lights);
   a.castShadow = gl.castShadow = tr.castShadow = true; grp.add(a, gl, tr, li); grp.userData.bodyMesh = a; grp.userData.lightsMesh = li; grp.userData.glassMesh = gl;
   grp.userData.fw = g.front.map((f) => { const w = new THREE.Mesh(f.geo, m.trim); w.position.set(f.x, f.y, f.z); w.castShadow = true; grp.add(w); return w; });
+  grp.add(grp.userData.contact = contactShadow(key, t));
   if (pr_sport(key)) sportRear(grp, key);
   if (t.police) {
     const lv = livery();
@@ -185,8 +227,11 @@ export function buildCarMesh(key, tint) {
     const bar = (col, x) => { const mm = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.16, 0.3), new THREE.MeshBasicMaterial({ color: col, toneMapped: false })); mm.position.set(x, t.roof + 0.12, -0.45); grp.add(mm); return mm; };
     grp.userData.bar = { r: bar(0xff3040, -0.38), b: bar(0x4080ff, 0.38) };
   }
+  if (key === 'tidebus') { const bm = new THREE.MeshBasicMaterial({ map: busTex() }); for (const sd of [-1, 1]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 0.5), bm); b.position.set(sd * (t.wid / 2 + 0.02), 1.0, -0.3); b.rotation.y = sd * Math.PI / 2; grp.add(b); } }
+  if (key === 'tidebus') busDetail(grp, t);
+  if (key === 'calder') cargoLivery(grp, t, tint);
   if (key === 'tupelo') { const s = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.3), new THREE.MeshBasicMaterial({ map: taxiTex() })); s.position.set(0, t.roof + 0.18, -0.3); grp.add(s); }
   return grp;
 }
-export const CIVIL_TYPES = ['marlin', 'marlin', 'tupelo', 'tupelo', 'cadia', 'hawke', 'rumble', 'pico', 'pico', 'veloce'];
+export const CIVIL_TYPES = ['tidebus', 'marlin', 'marlin', 'tupelo', 'tupelo', 'cadia', 'calder', 'hawke', 'rumble', 'pico', 'pico', 'veloce'];
 export const burntMat = new THREE.MeshLambertMaterial({ color: 0x2a2220 }), burntLampMat = new THREE.MeshLambertMaterial({ color: 0x141010 });

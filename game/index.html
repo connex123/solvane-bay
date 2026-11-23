@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SOLVANE BAY</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="./styles/base.css">
 <link rel="stylesheet" href="./styles/hud.css">
 <link rel="stylesheet" href="./styles/menus.css">
@@ -20,39 +21,47 @@
   <div id="topRight">
     <div id="moneyBox"><div id="money"></div><div id="moneyDelta"></div></div>
     <div id="wantedBox"><div id="wantedRow"><span class="wlab">WANTED</span><div id="stars"><i></i><i></i><i></i><i></i><i></i></div></div><span id="losTag" class="hidden"></span></div>
-    <div id="respectCard" class="card acc-purple"><div class="rlab"><span>RESPECT</span><b id="respLv"></b><span id="clock"></span></div><div class="bar resp"><i id="respBar"></i></div></div>
+    <div id="respectCard" class="card acc-purple"><div class="rlab"><span>REP</span><b id="respLv"></b><span id="clock"></span></div><div class="bar resp"><i id="respBar"></i></div></div>
+    <div id="turfCard" class="card"><div class="trow"><span class="tlab">WATERFRONT</span><span id="galaBadge"></span></div><div class="turf"><i id="turfCrown"></i><b id="turfTide"></b></div><div class="turflab"><span id="turfCrownT"></span><span id="turfTideT"></span></div></div>
     <div id="radioCard" class="card acc-pink"><div class="eq"><i></i><i></i><i></i><i></i></div><div><div class="rname" id="rName"></div><div class="rtrack" id="rTrack"></div></div></div>
   </div>
+  <div id="crewStack"></div>
   <div id="waypoint"><i></i><span id="wpDist"></span></div>
   <div id="bottomLeft">
-    <div id="mmCol"><div id="mapWrap"><canvas id="minimap" width="190" height="190"></canvas></div><div id="mmDistrict"></div></div>
-    <div id="vitals" class="card acc-green"><div id="district"></div><div class="vrow"><span>HEALTH</span><b id="hpNum"></b></div><div class="bar hp"><i id="hpBar"></i></div><div class="vrow"><span>ARMOR</span><b id="arNum"></b></div><div class="bar ar"><i id="arBar"></i></div></div>
+    <div id="mmCol"><div id="mapWrap"><canvas id="minimap" width="250" height="250"></canvas></div><div id="mmDistrict"></div></div>
+    <div id="sideStack">
+    <div id="vitals" class="card acc-green"><div id="district"></div><div class="vrow"><span>HEALTH</span><b id="hpNum"></b></div><div class="bar hp"><i id="hpBar"></i></div><div class="vrow"><span>ARMOR</span><b id="arNum"></b></div><div class="bar ar"><i id="arBar"></i></div></div></div>
   </div>
   <div id="rightCol">
     <div id="popups"></div>
-    <div id="weaponCard" class="card acc-yellow"><div id="wIcon"></div><div class="winfo"><div id="wName"></div><div id="wAmmo"></div></div><div id="weapons"></div></div>
-    <div id="speedo" class="card acc-cyan hidden"><div class="sv"><div id="carName"></div><b id="speedVal">0</b><small>KM/H <span class="gear" id="gear">D</span></small></div><div class="sinfo"><div class="vlab"><span>CONDITION</span><b id="condPct"></b></div><div class="bar dmg"><i id="carBar"></i></div><div class="vlab"><span>NITRO</span><b id="nitroKey">SHIFT</b></div><div class="bar nitro"><i id="nitroBar"></i></div></div></div>
+    <div id="wbar"></div>
+    <div id="weaponCard" class="card acc-yellow"><div id="wIcon"></div><div class="winfo"><div id="wName"></div><div id="wAmmo"></div></div></div>
+    <div id="speedo" class="card acc-cyan hidden"><div class="sv"><div id="carName"></div><b id="speedVal">0</b><small>KM/H <span class="gear" id="gear">D</span></small></div><div class="sinfo"><div class="vlab"><span>BODY</span><b id="condPct"></b></div><div class="bar dmg"><i id="carBar"></i></div><div class="vlab"><span>NITRO</span><b id="nitroKey">SHIFT</b></div><div class="bar nitro"><i id="nitroBar"></i></div></div></div>
   </div>
   <div id="dialog" class="card hidden"><canvas id="portrait" width="96" height="96"></canvas><div class="dbody"><div id="dName"></div><div id="dText"></div></div><span class="dhint">E ▸</span></div>
   <div id="prompt" class="hidden"></div>
   <div id="toasts"></div>
+  <div id="chapterCard" class="hidden"></div>
   <div id="crosshair" class="hidden"></div>
+  <div id="wheel" class="hidden"></div>
   <div id="vignette"></div>
 </div>
 
 <div id="title" class="screen hidden">
-  <div class="tbox"><div class="kicker">AN OPEN-WORLD CRIME STORY</div><h1 class="logo" aria-label="SOLVANE BAY"><span class="l1">SOLVANE</span><span class="l2">BAY</span></h1><div class="sub">Sun, neon, and sirens on the coast</div>
+  <div class="tbox"><div class="kicker">AN OPEN-WORLD CRIME STORY</div><h1 class="logo" aria-label="SOLVANE BAY"><span class="l1">SOLVANE</span><span class="l2">BAY</span></h1><div class="sub"><b class="lowtide">LOW TIDE</b> Seven days to take the waterfront back</div>
   <div class="menu"><button data-act="new">New Game</button><button data-act="continue" id="btnContinue">Continue</button><div id="contSub"></div><button data-act="controls">Controls</button><button data-act="settings">Settings</button></div></div>
-  <div class="tfoot">Nico Varela just got off the ferry. Dex owns Club Velvet. The SBPD owns the streets. · Desktop Chrome · keyboard + mouse</div>
+  <div class="tfoot">LOW TIDE · Nico Varela is home on the night ferry. Viktor Brandt owns his mother's diner. Seven days to the Causeway Gala. · Desktop Chrome · keyboard + mouse</div>
 </div>
-<div id="pause" class="screen hidden"><div class="panel"><h2>PAUSED</h2><div class="menu"><button data-act="resume">Resume</button><button data-act="map">City Map</button><button data-act="save">Save Game</button><button data-act="controls">Controls</button><button data-act="settings">Settings</button><button data-act="quit">Quit to Title</button></div></div></div>
+<div id="pause" class="screen hidden"><div class="panel"><h2>PAUSED</h2><div class="menu"><button data-act="resume">Resume</button><button data-act="crew">Crew &amp; Chapters</button><button data-act="map">City Map</button><button data-act="save">Save Game</button><button data-act="controls">Controls</button><button data-act="settings">Settings</button><button data-act="quit">Quit to Title</button></div></div></div>
 <div id="controls" class="screen hidden"><div class="panel wide"><h2>CONTROLS</h2><div class="keys" id="keysList"></div><button data-act="back">Back</button></div></div>
 <div id="settings" class="screen hidden"><div class="panel"><h2>SETTINGS</h2><label>Master volume <input id="setVol" type="range" min="0" max="1" step="0.05" value="0.7"></label><label>Mouse sensitivity <input id="setSens" type="range" min="0.3" max="2.5" step="0.1" value="1"></label><label>Graphics quality <select id="setFx"><option value="auto">Auto (holds the frame rate)</option><option value="high">High (bloom, shadows, sharp)</option><option value="medium">Medium</option><option value="low">Low (no shadows)</option></select></label><button data-act="back">Back</button></div></div>
 <div id="shop" class="screen hidden"><div class="panel wide"><h2>CALDER ARMS</h2><div id="shopMoney"></div><div id="shopList"></div><button data-act="closeShop">Leave</button></div></div>
 <div id="cityMap" class="screen hidden">
-  <div class="mapframe"><div class="maphead"><h2>CITY MAP · SOLVANE BAY</h2><span>M / Esc to close</span></div><canvas id="mapCanvas" width="880" height="716"></canvas></div>
+  <div class="mapframe"><div class="maphead"><h2>CITY MAP · SOLVANE BAY</h2><span>M / Esc to close</span></div><canvas id="mapCanvas" width="800" height="660"></canvas><div id="mapLegend"></div></div>
   <div id="mapSide"></div>
 </div>
+<div id="garage" class="screen hidden"><div class="panel wide"><h2>WREN'S GARAGE · POINT WREN</h2><div id="garageMoney"></div><div id="garageStats"></div><div id="garageList"></div><button data-act="closeShop">Leave</button></div></div>
+<div id="crew" class="screen hidden"><div class="crewpanel"><div id="crewBody"></div><div class="crewfoot"><span>J / Esc to close</span><button data-act="back">Back</button></div></div></div>
 <div id="dead" class="screen hidden"><div class="deadbox"><h1 id="deadTitle">FLATLINED</h1><div id="deadSub"></div></div></div>
 <script type="module" src="./src/main.js"></script>
 </body>
