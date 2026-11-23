@@ -1,40 +1,101 @@
-// Static building colliders in a spatial hash: circle push-out and ray marching for bullets and the camera.
-const CELL = 32; const grid = new Map(); export const boxes = [];
-const key = (cx, cz) => cx * 4096 + cz;
-export function clearBoxes() { boxes.length = 0; grid.clear(); }
+// Building colliders: axis-aligned footprints bucketed in a uniform spatial hash. Supports pushing circles out of
+// walls (people, cars) and marching rays (bullets, sight lines, the camera) until they enter a building.
+const CELL = 32; // metres per hash cell
+const buckets = new Map();
+export const boxes = [];
+
+const cellOf = (v) => Math.floor(v / CELL);
+const bucketKey = (cx, cz) => cx * 4096 + cz;
+
+export function clearBoxes() {
+  boxes.length = 0;
+  buckets.clear();
+}
+
+/** Register a box { x0, x1, z0, z1, h? } in every cell its footprint touches. */
 export function addBox(b) {
   boxes.push(b);
-  for (let cx = Math.floor(b.x0 / CELL); cx <= Math.floor(b.x1 / CELL); cx++) for (let cz = Math.floor(b.z0 / CELL); cz <= Math.floor(b.z1 / CELL); cz++) {
-    const k = key(cx, cz); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(b);
-  }
-}
-const out = { hit: false, dx: 0, dz: 0, nx: 0, nz: 0 };
-export function resolveCircle(x, z, r) {
-  out.hit = false; out.dx = 0; out.dz = 0; out.nx = 0; out.nz = 0;
-  const c0 = Math.floor((x - r) / CELL), c1 = Math.floor((x + r) / CELL), d0 = Math.floor((z - r) / CELL), d1 = Math.floor((z + r) / CELL);
-  for (let cx = c0; cx <= c1; cx++) for (let cz = d0; cz <= d1; cz++) {
-    const l = grid.get(key(cx, cz)); if (!l) continue;
-    for (const b of l) {
-      const px = Math.max(b.x0, Math.min(x, b.x1)), pz = Math.max(b.z0, Math.min(z, b.z1));
-      let dx = x - px, dz = z - pz; const d = Math.hypot(dx, dz);
-      if (d < r) {
-        if (d < 1e-4) { const l1 = x - b.x0, r1 = b.x1 - x, t1 = z - b.z0, b1 = b.z1 - z, m = Math.min(l1, r1, t1, b1); dx = m === l1 ? -1 : m === r1 ? 1 : 0; dz = m === t1 ? -1 : m === b1 ? 1 : 0; out.dx += dx * (m + r); out.dz += dz * (m + r); out.nx += dx; out.nz += dz; }
-        else { const pen = r - d; out.dx += dx / d * pen; out.dz += dz / d * pen; out.nx += dx / d; out.nz += dz / d; }
-        out.hit = true;
+  for (let cx = cellOf(b.x0); cx <= cellOf(b.x1); cx++) {
+    for (let cz = cellOf(b.z0); cz <= cellOf(b.z1); cz++) {
+      const key = bucketKey(cx, cz);
+      let list = buckets.get(key);
+      if (!list) {
+        list = [];
+        buckets.set(key, list);
       }
+      list.push(b);
     }
   }
-  if (out.hit) { const n = Math.hypot(out.nx, out.nz) || 1; out.nx /= n; out.nz /= n; }
-  return out;
 }
+
+// Shared result object (no allocation per call). dx/dz: total push-out; nx/nz: unit contact normal.
+const push = { hit: false, dx: 0, dz: 0, nx: 0, nz: 0 };
+
+// Centre inside the box: shove out through the nearest face.
+function escapeFromInside(b, x, z, r) {
+  const toLeft = x - b.x0, toRight = b.x1 - x, toNear = z - b.z0, toFar = b.z1 - z;
+  const nearest = Math.min(toLeft, toRight, toNear, toFar);
+  let sx = 0, sz = 0;
+  if (nearest === toLeft) sx = -1; else if (nearest === toRight) sx = 1;
+  if (nearest === toNear) sz = -1; else if (nearest === toFar) sz = 1;
+  push.dx += sx * (nearest + r);
+  push.dz += sz * (nearest + r);
+  push.nx += sx;
+  push.nz += sz;
+}
+
+function pushOutOf(b, x, z, r) {
+  const closestX = Math.min(Math.max(x, b.x0), b.x1);
+  const closestZ = Math.min(Math.max(z, b.z0), b.z1);
+  const ox = x - closestX, oz = z - closestZ;
+  const gap = Math.hypot(ox, oz);
+  if (gap >= r) return;
+  if (gap < 1e-4) {
+    escapeFromInside(b, x, z, r);
+  } else {
+    const depth = r - gap;
+    push.dx += (ox / gap) * depth;
+    push.dz += (oz / gap) * depth;
+    push.nx += ox / gap;
+    push.nz += oz / gap;
+  }
+  push.hit = true;
+}
+
+/** Overlap of a circle (x, z, r) with the buildings: returns the shared push result. */
+export function resolveCircle(x, z, r) {
+  push.hit = false;
+  push.dx = push.dz = push.nx = push.nz = 0;
+  for (let cx = cellOf(x - r); cx <= cellOf(x + r); cx++) {
+    for (let cz = cellOf(z - r); cz <= cellOf(z + r); cz++) {
+      const list = buckets.get(bucketKey(cx, cz));
+      if (list) for (const b of list) pushOutOf(b, x, z, r);
+    }
+  }
+  if (push.hit) {
+    const len = Math.hypot(push.nx, push.nz) || 1;
+    push.nx /= len;
+    push.nz /= len;
+  }
+  return push;
+}
+
 export const blockedAt = (x, z) => resolveCircle(x, z, 0.6).hit;
-// Distance along a ray (ox,oy,oz)+t*(dx,dy,dz) to the first building, or max.
+
+const RAY_START = 0.5;
+const RAY_STEP = 0.8;
+
+/** Distance along the ray (ox,oy,oz) + t(dx,dy,dz) to the ground or the first building, or max if clear. */
 export function rayBuildings(ox, oy, oz, dx, dy, dz, max) {
-  for (let t = 0.5; t < max; t += 0.8) {
-    const x = ox + dx * t, y = oy + dy * t, z = oz + dz * t;
-    if (y < 0) return t;
-    const l = grid.get(key(Math.floor(x / CELL), Math.floor(z / CELL)));
-    if (l) for (const b of l) if (x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1 && y < b.h) return t;
+  for (let t = RAY_START; t < max; t += RAY_STEP) {
+    const py = oy + dy * t;
+    if (py < 0) return t;
+    const px = ox + dx * t, pz = oz + dz * t;
+    const list = buckets.get(bucketKey(cellOf(px), cellOf(pz)));
+    if (!list) continue;
+    for (const b of list) {
+      if (px > b.x0 && px < b.x1 && pz > b.z0 && pz < b.z1 && py < b.h) return t;
+    }
   }
   return max;
 }
