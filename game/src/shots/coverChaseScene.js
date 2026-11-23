@@ -25,7 +25,7 @@ export function coverChase(api) {
   copAt(SB + 0.2, 160.5, NORTH - 0.04, { speed: 36, ai: 'PURSUIT' });
   copAt(SB + 1, 100, NORTH + 1.25, { ai: 'ROADBLOCK' }).rbT = 40; copAt(NB + 0.5, 101, NORTH - 1.3, { ai: 'ROADBLOCK' }).rbT = 40;
   // civilian traffic both ways up the Strand and on the cross street
-  trafficAt('z', N, 128, -1, 'tupelo', 0xf6c21c, 8); trafficAt('z', N, 112, -1, 'cadia', 0x2fb89a, 6); trafficAt('z', N, 70, -1, 'tidebus', undefined, 9);
+  trafficAt('z', N, 128, -1, 'tupelo', 0xf6c21c, 8); trafficAt('z', N, 112, -1, 'calder', 0x2fb89a, 6); trafficAt('z', N, 70, -1, 'tidebus', undefined, 9);
   trafficAt('z', N, 136, 1, 'pico', 0xff8a3d, 10); trafficAt('z', N, 120, 1, 'hawke', 0xf0f0f0, 10); trafficAt('z', N, 84, 1, 'marlin', 0x2f7fd8, 10); trafficAt('z', N, 50, 1, 'rumble', 0x8fd3c8, 10);
   stageMoto(0, 'z', N, 140, -1, LANE * 0.4, 0.8); stageMoto(1, 'z', N, 104, 1, LANE * 0.5, 2.1);
   // people on the city sidewalk, the beach promenade and the sand; a few near the chase turn and run

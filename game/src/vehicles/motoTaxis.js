@@ -1,13 +1,10 @@
 // Moto-taxis: small teal motorbikes with a helmeted rider (and often a passenger) weaving along the lanes near the
-// player, faster than the cars. Ambient street life: they ride straight down an avenue and re-enter near the player.
-import * as THREE from 'three';
-import { G } from '../core/gameState.js';
-import { HALF, LANE, lineCoord } from '../core/config.js';
+// player, faster than the cars (movement shared with the delivery scooters in vehicles/laneRiders.js).
+import { LANE } from '../core/config.js';
 import { newBuf, pushBox, toGeometry } from '../core/geometryUtils.js';
-import { randomRoadPoint } from '../world/cityLayout.js';
-import { rnd } from '../core/random.js';
+import { createRiderFleet } from './laneRiders.js';
 
-const COUNT = 8, bikes = [];
+const COUNT = 12; let fleet = null;
 const HELMETS = [0xe8604c, 0xf6c21c, 0xfff4e0, 0x2fb8a8], SHIRTS = [0xf6e3b4, 0x3a8fd0, 0xe8604c, 0x8fd3c8, 0xffffff];
 function bikeGeometry(i) {
   const B = newBuf(), helmet = HELMETS[i % 4], shirt = SHIRTS[i % 5];
@@ -19,25 +16,7 @@ function bikeGeometry(i) {
   if (i % 3 !== 2) { pushBox(B, 0, 0.86, -0.32, 0.42, 0.56, 0.28, SHIRTS[(i + 2) % 5]); pushBox(B, 0, 1.4, -0.32, 0.28, 0.28, 0.3, HELMETS[(i + 1) % 4]); } // passenger
   return toGeometry(B);
 }
-function place(b, near) {
-  const pt = randomRoadPoint(rnd, near.x, near.z, 40, 150); b.axis = pt.axis; b.line = pt.line; b.t = pt.axis === 'x' ? pt.x : pt.z;
-  b.dir = rnd() < 0.5 ? 1 : -1; b.speed = 13 + rnd() * 6; b.phase = rnd() * 6; b.lane = LANE * (0.45 + rnd() * 0.9);
-}
-export function initMotoTaxis(scene) {
-  const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
-  for (let i = 0; i < COUNT; i++) { const m = new THREE.Mesh(bikeGeometry(i), mat); m.castShadow = true; scene.add(m); const b = { mesh: m }; place(b, { x: 0, z: 0 }); bikes.push(b); }
-  updateMotoTaxis(0);
-}
-export function updateMotoTaxis(dt) {
-  const p = G.p;
-  for (const b of bikes) {
-    b.t += b.dir * b.speed * dt; b.phase += dt * 1.3;
-    if (Math.abs(b.t) > HALF + 10 || (dt > 0 && Math.hypot((b.axis === 'x' ? b.t : lineCoord(b.line)) - p.x, (b.axis === 'x' ? lineCoord(b.line) : b.t) - p.z) > 220)) place(b, p);
-    // right-hand lanes, weaving between them
-    const weave = Math.sin(b.phase) * 1.1, cross = lineCoord(b.line) + (b.axis === 'x' ? b.dir : -b.dir) * (b.lane + weave);
-    const x = b.axis === 'x' ? b.t : cross, z = b.axis === 'x' ? cross : b.t, yaw = (b.axis === 'x' ? b.dir * Math.PI / 2 : b.dir > 0 ? 0 : Math.PI) - Math.cos(b.phase) * 0.18 * b.dir;
-    b.mesh.position.set(x, 0.3, z); b.mesh.rotation.set(0, yaw, Math.cos(b.phase) * 0.16 * (b.axis === 'x' ? 1 : -1));
-  }
-}
+export function initMotoTaxis(scene) { fleet = createRiderFleet(scene, COUNT, bikeGeometry, { speed: [13, 19] }); fleet.update(0); }
+export function updateMotoTaxis(dt) { fleet?.update(dt); }
 // Staged scenes put a bike at an exact spot on an avenue.
-export function stageMoto(i, axis, line, t, dir, lane = LANE, phase = 0) { const b = bikes[i]; Object.assign(b, { axis, line, t, dir, lane, phase }); updateMotoTaxis(0); }
+export function stageMoto(i, axis, line, t, dir, lane = LANE, phase = 0) { fleet.stage(i, axis, line, t, dir, lane, phase); }

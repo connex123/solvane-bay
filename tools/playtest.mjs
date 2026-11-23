@@ -1,46 +1,35 @@
-// Real play-test over the Chrome DevTools Protocol (Node standard library only; Node 24 global WebSocket).
-// Serves game/, opens index.html in headless Chrome, clicks New Game, walks, sprints, shoots, steers to a car and steals it,
-// drives, opens the map, pauses and resumes, and reads state back from the read-only window.__solvane hook.
-// Prints a report: console errors, fps, and whether each step worked. Usage: node tools/playtest.mjs
+// Real play-test in headless Chromium driven by Playwright (require('playwright'), browser at /opt/pw-browsers/chromium).
+// Serves game/, opens index.html, clicks New Game, walks, sprints, shoots, steers to a car and steals it, drives, opens
+// the map, pauses and resumes, and reads state back from the read-only window.__solvane hook. Prints a report: console
+// errors, fps, street density and whether each step worked. Usage: node tools/playtest.mjs
 import { createServer } from 'node:http';
-import { createReadStream, statSync, mkdtempSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import { createReadStream, statSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { extname, join, normalize, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
+const require = createRequire(import.meta.url);
+const playwright = require('playwright');
 const root = resolve(fileURLToPath(new URL('../game', import.meta.url)));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 const server = createServer((req, res) => {
   const path = new URL(req.url, 'http://x').pathname, p = normalize(join(root, decodeURIComponent(path === '/' ? '/index.html' : path)));
   try { if (!p.startsWith(root) || !statSync(p).isFile()) throw 0; res.writeHead(200, { 'content-type': MIME[extname(p)] || 'application/octet-stream' }); createReadStream(p).pipe(res); } catch { res.writeHead(404); res.end(); }
 });
-await new Promise((r) => server.listen(0, r)); const port = server.address().port, dport = 9300 + Math.floor(Math.random() * 500);
+await new Promise((r) => server.listen(0, r)); const port = server.address().port;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const chrome = spawn('google-chrome', ['--headless=new', '--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--remote-debugging-port=${dport}`, '--window-size=1280,800',
-  `--user-data-dir=${mkdtempSync(join(tmpdir(), 'solvane-pt-'))}`, '--autoplay-policy=no-user-gesture-required', 'about:blank'], { stdio: 'ignore' });
-const killAll = () => { try { chrome.kill('SIGKILL'); } catch { /* gone */ } server.close(); };
-const hardStop = setTimeout(() => { console.log('TIMEOUT: play-test exceeded 150 s'); killAll(); process.exit(2); }, 150000);
-
-let target; for (let i = 0; i < 60 && !target; i++) { await sleep(250); try { target = (await (await fetch(`http://127.0.0.1:${dport}/json/list`)).json()).find((t) => t.type === 'page'); } catch { /* not up yet */ } }
-if (!target) { console.log('could not reach Chrome DevTools'); killAll(); process.exit(1); }
-const ws = new WebSocket(target.webSocketDebuggerUrl); await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
-let seq = 0; const pending = new Map(), errors = [], warnings = [];
-ws.onmessage = (m) => {
-  const d = JSON.parse(m.data);
-  if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id); return; }
-  if (d.method === 'Runtime.exceptionThrown') errors.push('exception: ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text).split('\n')[0]);
-  if (d.method === 'Runtime.consoleAPICalled') { const t = d.params.args.map((a) => a.value ?? a.description).join(' '); if (d.params.type === 'error') errors.push(t); else if (d.params.type === 'warning') warnings.push(t); }
-  if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error' && !/favicon/.test(d.params.entry.url || '')) errors.push('log: ' + d.params.entry.text);
-};
-const send = (method, params = {}) => new Promise((r) => { const id = ++seq; pending.set(id, r); ws.send(JSON.stringify({ id, method, params })); });
-const evalJs = async (expr) => (await send('Runtime.evaluate', { expression: expr, returnByValue: true })).result?.result?.value;
+const browser = await playwright.chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const killAll = async () => { try { await browser.close(); } catch { /* gone */ } server.close(); };
+const hardStop = setTimeout(async () => { console.log('TIMEOUT: play-test exceeded 240 s'); await killAll(); process.exit(2); }, 240000);
+const errors = [], warnings = [];
+page.on('pageerror', (e) => errors.push('exception: ' + e.message.split('\n')[0]));
+page.on('console', (m) => { const t = m.text(); if (m.type() === 'error' && !/favicon/.test(t)) errors.push(t); else if (m.type() === 'warning' && !/GL Driver|GPU stall/.test(t)) warnings.push(t); });
+const evalJs = (expr) => page.evaluate(expr);
 const state = () => evalJs('window.__solvane && JSON.parse(JSON.stringify(window.__solvane))');
-const KEYS = { KeyW: ['w', 87], KeyA: ['a', 65], KeyD: ['d', 68], KeyS: ['s', 83], KeyF: ['f', 70], KeyM: ['m', 77], KeyE: ['e', 69], Escape: ['Escape', 27], ShiftLeft: ['Shift', 16], ArrowLeft: ['ArrowLeft', 37], ArrowRight: ['ArrowRight', 39], Space: [' ', 32] };
-const key = (code, type) => send('Input.dispatchKeyEvent', { type, code, key: KEYS[code][0], windowsVirtualKeyCode: KEYS[code][1], nativeVirtualKeyCode: KEYS[code][1] });
-const down = (c) => key(c, 'rawKeyDown'), up = (c) => key(c, 'keyUp');
+const down = (c) => page.keyboard.down(c), up = (c) => page.keyboard.up(c);
 const tap = async (c, ms = 120) => { await down(c); await sleep(ms); await up(c); };
-const click = async (x, y) => { await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 }); await sleep(40); await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 }); };
+const click = async (x, y) => { await page.mouse.move(x, y); await page.mouse.down(); await sleep(40); await page.mouse.up(); };
 const clickSel = async (sel) => { const r = await evalJs(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e || e.offsetParent === null) return null; const b = e.getBoundingClientRect(); return [b.x + b.width / 2, b.y + b.height / 2]; })()`); if (r) await click(r[0], r[1]); return !!r; };
 // Readiness: wait until the game has rendered at least two frames after an input (its global keys and simulation edges
 // are consumed once per frame), with a minimum wall time; at 1-5 fps a fixed sleep can read state before the key is handled.
@@ -49,8 +38,7 @@ const frameNo = async () => (await state())?.frame ?? 0;
 const report = []; const check = (name, ok, info = '') => { report.push(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`); return ok; };
 const t0 = Date.now();
 
-await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
-await send('Page.navigate', { url: `http://localhost:${port}/index.html` });
+await page.goto(`http://localhost:${port}/index.html`);
 let s; for (let i = 0; i < 120; i++) { await sleep(500); s = await state(); if (s?.screen === 'title') break; }
 check('boots to the title screen', s?.screen === 'title', `${((Date.now() - t0) / 1000).toFixed(1)} s`);
 
@@ -102,6 +90,9 @@ if (!s.onFoot) {
   await down('KeyS'); await sleep(1500); await up('KeyS');
 }
 
+// Street life around the player after a minute of play: civilian traffic, walkers, loitering groups, two-wheelers.
+s = await state(); check('streets are busy', s.traffic >= 12 && s.walkers >= 15, `${s.traffic} civilian cars, ${s.walkers} walking, ${s.loitering} in groups, ${s.riders} riding buses`);
+
 // City map and pause menu; Resume by click must not fire.
 let f0 = await frameNo(); await tap('KeyM'); s = await settle(f0, 700); check('M opens the city map', s.screen === 'cityMap', `screen=${s.screen}`);
 f0 = await frameNo(); await tap('KeyM'); s = await settle(f0, 700); check('M closes the map', s.mode === 'play' && !s.screen, `mode=${s.mode}`);
@@ -117,5 +108,5 @@ console.log(`fps samples (1.5 s windows): ${s.fpsHistory.join(', ')}  ·  Auto q
 console.log(`console errors: ${errors.length}${errors.length ? '\n  ' + [...new Set(errors)].slice(0, 10).join('\n  ') : ''}`);
 if (warnings.length) console.log(`console warnings: ${[...new Set(warnings)].slice(0, 5).join(' | ')}`);
 console.log(`total ${((Date.now() - t0) / 1000).toFixed(0)} s`);
-clearTimeout(hardStop); ws.close(); killAll();
+clearTimeout(hardStop); await killAll();
 process.exit(report.some((l) => l.startsWith('FAIL')) || errors.length ? 1 : 0);

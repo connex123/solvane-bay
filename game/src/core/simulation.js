@@ -21,6 +21,8 @@ import { animateSea } from '../world/beachAndSea.js';
 import { respawn } from './gameFlow.js';
 import { updateCrew } from '../crew/crewAbilities.js';
 import { updateMotoTaxis } from '../vehicles/motoTaxis.js';
+import { updateDeliveryScooters } from '../vehicles/deliveryScooters.js';
+import { updateStreetCrowds } from '../characters/streetCrowds.js';
 import { updateMolotovs } from '../combat/molotov.js';
 import { updateBoats } from '../vehicles/boats.js';
 import { updateBoatGunfight } from '../combat/boatGunfight.js';
@@ -32,8 +34,8 @@ export function stepGame(dt) {
   const p = G.p; G.time += dt;
   if (G.mode === 'play') { G.clock = (G.clock + dt / 60) % 24; if (G.resumeGrace > 0) G.resumeGrace -= dt; updatePlayer(dt); updateDialogue(dt); }
   if (G.mode === 'play' || G.mode === 'title' || G.mode === 'dead') {
-    updateTraffic(dt); updateMotoTaxis(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateBoats(dt); updateBoatGunfight(dt); updateActors(dt); updateMarina();
-    pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); }
+    updateTraffic(dt); updateMotoTaxis(dt); updateDeliveryScooters(dt); for (const c of G.cars.slice()) if (c.kind !== 'traffic' && c.kind !== 'target') stepCar(c, dt); carCollisions(); updateBoats(dt); updateBoatGunfight(dt); updateActors(dt); updateMarina();
+    pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); } updateStreetCrowds(dt);
   }
   if (G.mode === 'play') {
     const cd = updatePolice(dt); updateWanted(dt, cd, updateLineOfSight(dt)); tickPopups(dt); updateHeli(dt); updateSpikes(dt); updateMarkers(dt); updateMission(dt); updateSide(dt); updateCrew(dt); updateMolotovs(dt); updateGasBottles(dt);
