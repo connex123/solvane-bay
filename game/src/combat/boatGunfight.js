@@ -1,6 +1,6 @@
-// Gunfights on the water: SBPD harbour launches put a bow gunner on the player's boat (bursts with tracers, bullet
-// splashes in the sea, light hull damage) and Nico fires back over the stern at the nearest launch while the fire
-// button is held with a gun out. Enough hits sink a launch (boats.js: sinkBoat -> fireball).
+// Shooting on the water. SBPD harbour launches carry a bow gunner who fires bursts at the player's boat
+// (tracers, splashes in the sea, light hull damage); with a gun out and fire held, Nico shoots back over
+// the stern at the nearest launch. Enough hits sink a launch (boats.js: damageBoat -> sinkBoat).
 import { G } from '../core/gameState.js';
 import { input } from '../core/input.js';
 import { WEAPONS } from './weapons.js';
@@ -9,36 +9,86 @@ import { damageBoat } from '../vehicles/boats.js';
 import { sfx } from '../audio/soundEngine.js';
 
 export const GUNFIGHT = { range: 55, burst: 0.8, pause: 1.5, rate: 0.12, spread: 3.2, hitR: 1.3, dmg: 1.5, returnRange: 60 };
-const R = Math.random;
 
-// one round from (ax, ay, az) at boat t: a hit sparks off the hull, a miss throws a plume of white water
+const BOW_REACH = 3.6; // gunner position ahead of a launch's centre
+
+/**
+ * One round from (ax, ay, az) aimed at boat t. The round lands somewhere in a square of half-size `spread`
+ * around the boat: inside the hit radius it sparks off the hull and deals dmg, otherwise it raises a splash.
+ */
 export function boatShot(ax, ay, az, t, spread, dmg) {
-  const ox = (R() - 0.5) * spread * 2, oz = (R() - 0.5) * spread * 2, hit = Math.hypot(ox, oz) < GUNFIGHT.hitR;
-  const hx = t.x + ox, hz = t.z + oz, hy = hit ? 1.2 : 0.1; muzzleFlash(ax, ay, az); tracer(ax, ay, az, hx, hy, hz);
-  if (hit) { sparks(hx, hy, hz, 4); damageBoat(t, dmg); } else splash(hx, hz);
-  return hit;
+  const offX = (Math.random() - 0.5) * spread * 2;
+  const offZ = (Math.random() - 0.5) * spread * 2;
+  const struck = Math.hypot(offX, offZ) < GUNFIGHT.hitR;
+  const px = t.x + offX, pz = t.z + offZ, py = struck ? 1.2 : 0.1;
+  muzzleFlash(ax, ay, az);
+  tracer(ax, ay, az, px, py, pz);
+  if (struck) {
+    sparks(px, py, pz, 4);
+    damageBoat(t, dmg);
+  } else {
+    splash(px, pz);
+  }
+  return struck;
 }
-function launchGunners(dt, me) {
-  for (const b of G.boats) {
-    if (b.dead || b.driver !== 'ai' || !b.type.police) continue;
-    const d = Math.hypot(me.x - b.x, me.z - b.z); b.gunT = (b.gunT ?? R() * GUNFIGHT.pause) - dt;
-    if (d > GUNFIGHT.range) continue;
-    if (b.gunT < -GUNFIGHT.burst) b.gunT = GUNFIGHT.pause; // burst over: reload
-    if (b.gunT > 0) continue;
-    b.shotT = (b.shotT || 0) - dt; if (b.shotT > 0) continue; b.shotT = GUNFIGHT.rate;
-    const sn = Math.sin(b.heading), cs = Math.cos(b.heading);
-    boatShot(b.x + sn * 3.6, 1.9, b.z + cs * 3.6, me, GUNFIGHT.spread * (0.5 + d / GUNFIGHT.range), GUNFIGHT.dmg); if (R() < 0.3) sfx.shot('smg');
+
+function isPoliceLaunch(boat) {
+  return !boat.dead && boat.driver === 'ai' && boat.type.police;
+}
+
+// gunT counts down the pause between bursts and then on into the burst (negative values).
+function launchesOpenFire(dt, target) {
+  for (const boat of G.boats) {
+    if (!isPoliceLaunch(boat)) continue;
+    const range = Math.hypot(target.x - boat.x, target.z - boat.z);
+    boat.gunT = (boat.gunT ?? Math.random() * GUNFIGHT.pause) - dt;
+    if (range > GUNFIGHT.range) continue;
+    if (boat.gunT < -GUNFIGHT.burst) boat.gunT = GUNFIGHT.pause; // burst finished: reload
+    if (boat.gunT > 0) continue;
+    boat.shotT = (boat.shotT || 0) - dt;
+    if (boat.shotT > 0) continue;
+    boat.shotT = GUNFIGHT.rate;
+    const bowX = boat.x + Math.sin(boat.heading) * BOW_REACH;
+    const bowZ = boat.z + Math.cos(boat.heading) * BOW_REACH;
+    const spread = GUNFIGHT.spread * (0.5 + range / GUNFIGHT.range);
+    boatShot(bowX, 1.9, bowZ, target, spread, GUNFIGHT.dmg);
+    if (Math.random() < 0.3) sfx.shot('smg');
   }
 }
-function returnFire(dt, me) {
-  const p = G.p, w = WEAPONS[p.weapon]; p.boatShotT = (p.boatShotT || 0) - dt;
-  if (!input.left || !w || w.thrown || !w.pellets || !(p.ammo[w.id] > 0) || p.boatShotT > 0) return;
-  let best = null, bd = GUNFIGHT.returnRange; for (const b of G.boats) if (!b.dead && b.driver === 'ai') { const d = Math.hypot(b.x - me.x, b.z - me.z); if (d < bd) { bd = d; best = b; } }
-  if (!best) return; p.ammo[w.id]--; p.boatShotT = w.rate; sfx.shot(w.id);
-  const dx = (best.x - me.x) / bd, dz = (best.z - me.z) / bd;
-  for (let k = 0; k < w.pellets; k++) boatShot(me.x + dx * 1.2, 1.7, me.z + dz * 1.2, best, 1 + bd * w.spread * 3, w.dmg * 1.2);
+
+function nearestHostileBoat(from) {
+  let pick = null;
+  let pickRange = GUNFIGHT.returnRange;
+  for (const boat of G.boats) {
+    if (boat.dead || boat.driver !== 'ai') continue;
+    const range = Math.hypot(boat.x - from.x, boat.z - from.z);
+    if (range < pickRange) { pick = boat; pickRange = range; }
+  }
+  return pick ? { boat: pick, range: pickRange } : null;
 }
+
+function playerReturnsFire(dt, ownBoat) {
+  const player = G.p;
+  const weapon = WEAPONS[player.weapon];
+  player.boatShotT = (player.boatShotT || 0) - dt;
+  if (!input.left || !weapon || weapon.thrown || !weapon.pellets) return;
+  if (!(player.ammo[weapon.id] > 0) || player.boatShotT > 0) return;
+  const found = nearestHostileBoat(ownBoat);
+  if (!found) return;
+  const { boat, range } = found;
+  player.ammo[weapon.id]--;
+  player.boatShotT = weapon.rate;
+  sfx.shot(weapon.id);
+  const ux = (boat.x - ownBoat.x) / range, uz = (boat.z - ownBoat.z) / range;
+  const spread = 1 + range * weapon.spread * 3;
+  for (let i = 0; i < weapon.pellets; i++) {
+    boatShot(ownBoat.x + ux * 1.2, 1.7, ownBoat.z + uz * 1.2, boat, spread, weapon.dmg * 1.2);
+  }
+}
+
 export function updateBoatGunfight(dt) {
-  const me = G.p.car; if (!me || !me.isBoat || me.dead || G.mode !== 'play') return;
-  launchGunners(dt, me); returnFire(dt, me);
+  const ownBoat = G.p.car;
+  if (!ownBoat || !ownBoat.isBoat || ownBoat.dead || G.mode !== 'play') return;
+  launchesOpenFire(dt, ownBoat);
+  playerReturnsFire(dt, ownBoat);
 }

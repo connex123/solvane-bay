@@ -1,5 +1,6 @@
-// The MOLOTOV: a thrown bottle on a ballistic arc that bursts into a burning pool where it lands. The pool burns
-// people standing in it and sets cars alight; a burning car keeps losing health until it explodes.
+// Molotov cocktails. A thrown bottle follows a ballistic lob and bursts into a pool of fire where it lands
+// (ground, wall or car). The pool scorches anyone standing in it and sets cars alight; a burning car keeps
+// losing health until it blows.
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
 import { blockedAt } from '../world/collision.js';
@@ -8,49 +9,155 @@ import { fire, smoke, particle } from './effects.js';
 import { sfx } from '../audio/soundEngine.js';
 
 export const MOLOTOV = { speed: 17, lift: 5.5, gravity: 18, poolR: 3.6, poolTime: 7, carBurn: 8, burnDps: 85, poolCarDps: 140 };
-const bottles = [], pools = [];
-let geo = null, mat = null, glow = null;
-function bottleMesh() {
-  geo ||= new THREE.CylinderGeometry(0.07, 0.09, 0.32, 8); mat ||= new THREE.MeshStandardMaterial({ color: 0x6a8a3a, roughness: 0.3, emissive: 0xff6a20, emissiveIntensity: 0.25 });
-  const m = new THREE.Mesh(geo, mat); G.scene.add(m); return m;
+
+const MAX_FLIGHT = 4; // seconds before a bottle bursts wherever it is
+const POOL_TICK = 0.25; // seconds between pool damage ticks on people
+const MAX_CARRIED = 10;
+
+const inFlight = [];
+const pools = [];
+let bottleLook = null;
+let glow = null; // a single warm light parked over the newest pool
+
+function spawnBottleMesh() {
+  if (!bottleLook) {
+    bottleLook = {
+      geometry: new THREE.CylinderGeometry(0.07, 0.09, 0.32, 8),
+      material: new THREE.MeshStandardMaterial({ color: 0x6a8a3a, roughness: 0.3, emissive: 0xff6a20, emissiveIntensity: 0.25 }),
+    };
+  }
+  const mesh = new THREE.Mesh(bottleLook.geometry, bottleLook.material);
+  G.scene.add(mesh);
+  return mesh;
 }
-// Throws from Nico's hand along the camera's aim, with an upward lob.
+
+/** Lob a bottle from Nico's hand along the camera's aim. */
 export function throwMolotov(p) {
-  const d = new THREE.Vector3(); G.camera.getWorldDirection(d); const h = Math.hypot(d.x, d.z) || 1;
-  const b = { x: p.x + Math.sin(p.yaw) * 0.6, y: 1.7, z: p.z + Math.cos(p.yaw) * 0.6, vx: (d.x / h) * MOLOTOV.speed, vy: MOLOTOV.lift + d.y * 10, vz: (d.z / h) * MOLOTOV.speed, mesh: bottleMesh(), t: 0 };
-  bottles.push(b); sfx.punch(); return b;
+  const aim = new THREE.Vector3();
+  G.camera.getWorldDirection(aim);
+  const flat = Math.hypot(aim.x, aim.z) || 1;
+  const bottle = {
+    x: p.x + Math.sin(p.yaw) * 0.6, y: 1.7, z: p.z + Math.cos(p.yaw) * 0.6,
+    vx: (aim.x / flat) * MOLOTOV.speed,
+    vy: MOLOTOV.lift + aim.y * 10,
+    vz: (aim.z / flat) * MOLOTOV.speed,
+    mesh: spawnBottleMesh(),
+    t: 0,
+  };
+  inFlight.push(bottle);
+  sfx.punch();
+  return bottle;
 }
+
+const scatter = (span) => (Math.random() - 0.5) * span;
+
 function ignite(x, z) {
-  pools.push({ x, z, t: MOLOTOV.poolTime, tick: 0 }); sfx.shot('shotgun'); G.shake = Math.max(G.shake, 0.2);
-  for (let k = 0; k < 10; k++) fire(x + (Math.random() - 0.5) * 3, 0.3, z + (Math.random() - 0.5) * 3);
+  pools.push({ x, z, t: MOLOTOV.poolTime, tick: 0 });
+  sfx.shot('shotgun');
+  G.shake = Math.max(G.shake, 0.2);
+  for (let i = 0; i < 10; i++) fire(x + scatter(3), 0.3, z + scatter(3));
   particle({ x, y: 0.6, z, life: 0.4, size: 5, color: 0xffa040, add: true, hdr: 2 });
   G.hooks.crime('shootcar');
 }
+
 export const activeFirePools = () => pools.length;
-export function updateMolotovs(dt) {
-  for (let i = bottles.length - 1; i >= 0; i--) {
-    const b = bottles[i]; b.t += dt; b.vy -= MOLOTOV.gravity * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
-    b.mesh.position.set(b.x, b.y, b.z); b.mesh.rotation.x += dt * 12; b.mesh.rotation.z += dt * 7; if (Math.random() < 0.5) fire(b.x, b.y + 0.2, b.z);
-    const car = G.cars.find((c) => !c.dead && c !== G.p.car && Math.hypot(c.x - b.x, c.z - b.z) < c.type.wid && b.y < 1.6);
-    if (b.y <= 0.05 || car || blockedAt(b.x, b.z) || b.t > 4) { if (car) car.burnT = MOLOTOV.carBurn; ignite(b.x, b.z); b.mesh.removeFromParent(); bottles.splice(i, 1); }
-  }
-  for (let i = pools.length - 1; i >= 0; i--) {
-    const q = pools[i]; q.t -= dt; q.tick -= dt; const r = MOLOTOV.poolR * Math.min(1, q.t / 1.5 + 0.3);
-    if (Math.random() < dt * 40) { const a = Math.random() * 6.283, d = Math.sqrt(Math.random()) * r; fire(q.x + Math.cos(a) * d, 0.15, q.z + Math.sin(a) * d); }
-    if (Math.random() < dt * 4) smoke(q.x, 1.5, q.z, 0x2a2420);
-    for (const c of G.cars) if (!c.dead && Math.hypot(c.x - q.x, c.z - q.z) < r + c.type.wid * 0.6) { c.burnT = MOLOTOV.carBurn; damageCar(c, MOLOTOV.poolCarDps * dt); }
-    if (q.tick <= 0) {
-      q.tick = 0.25; for (const a of G.actors) if (!a.dead && Math.hypot(a.x - q.x, a.z - q.z) < r) G.hooks.hitActor(a, 12, true);
-      const p = G.p; if (!p.car && Math.hypot(p.x - q.x, p.z - q.z) < r) G.hooks.hurtPlayer(5);
-    }
-    if (q.t <= 0) pools.splice(i, 1);
-  }
-  for (const c of G.cars) if (c.burnT > 0) { if (c.dead) { c.burnT = 0; continue; } c.burnT -= dt; damageCar(c, MOLOTOV.burnDps * dt); if (Math.random() < dt * 25) fire(c.x + (Math.random() - 0.5) * 1.6, 1.1, c.z + (Math.random() - 0.5) * 1.6); }
-  // one shared warm light over the newest fire
-  if (!glow) return;
-  const last = pools[pools.length - 1]; glow.intensity = last ? 30 + Math.random() * 12 : 0; if (last) glow.position.set(last.x, 1.6, last.z);
+
+function carStruckBy(bottle) {
+  if (bottle.y >= 1.6) return undefined;
+  return G.cars.find((car) => !car.dead && car !== G.p.car && Math.hypot(car.x - bottle.x, car.z - bottle.z) < car.type.wid);
 }
-// Chapter 3's reward: three bottles from the Coral Kings' stash and the slot to throw them from.
-// The fire glow light exists from boot: adding a light mid-game changes every shader's light count and forces a full recompile.
-export function initMolotovGlow(scene) { glow = new THREE.PointLight(0xff7a30, 0, 16, 1.8); glow.position.set(0, -50, 0); scene.add(glow); }
-export function grantMolotovs(n = 3) { const p = G.p; p.owned[4] = true; p.ammo.molotov = Math.min(10, (p.ammo.molotov || 0) + n); }
+
+function flyBottles(dt) {
+  for (let i = inFlight.length - 1; i >= 0; i--) {
+    const bottle = inFlight[i];
+    bottle.t += dt;
+    bottle.vy -= MOLOTOV.gravity * dt;
+    bottle.x += bottle.vx * dt;
+    bottle.y += bottle.vy * dt;
+    bottle.z += bottle.vz * dt;
+    bottle.mesh.position.set(bottle.x, bottle.y, bottle.z);
+    bottle.mesh.rotation.x += dt * 12;
+    bottle.mesh.rotation.z += dt * 7;
+    if (Math.random() < 0.5) fire(bottle.x, bottle.y + 0.2, bottle.z); // the lit rag
+
+    const car = carStruckBy(bottle);
+    const landed = bottle.y <= 0.05 || car || blockedAt(bottle.x, bottle.z) || bottle.t > MAX_FLIGHT;
+    if (!landed) continue;
+    if (car) car.burnT = MOLOTOV.carBurn;
+    ignite(bottle.x, bottle.z);
+    bottle.mesh.removeFromParent();
+    inFlight.splice(i, 1);
+  }
+}
+
+function burnPools(dt) {
+  for (let i = pools.length - 1; i >= 0; i--) {
+    const pool = pools[i];
+    pool.t -= dt;
+    pool.tick -= dt;
+    const radius = MOLOTOV.poolR * Math.min(1, pool.t / 1.5 + 0.3); // shrinks as it dies down
+    if (Math.random() < dt * 40) {
+      const angle = Math.random() * 6.283;
+      const reach = Math.sqrt(Math.random()) * radius;
+      fire(pool.x + Math.cos(angle) * reach, 0.15, pool.z + Math.sin(angle) * reach);
+    }
+    if (Math.random() < dt * 4) smoke(pool.x, 1.5, pool.z, 0x2a2420);
+
+    for (const car of G.cars) {
+      if (car.dead) continue;
+      if (Math.hypot(car.x - pool.x, car.z - pool.z) >= radius + car.type.wid * 0.6) continue;
+      car.burnT = MOLOTOV.carBurn;
+      damageCar(car, MOLOTOV.poolCarDps * dt);
+    }
+
+    if (pool.tick <= 0) {
+      pool.tick = POOL_TICK;
+      for (const actor of G.actors) {
+        if (!actor.dead && Math.hypot(actor.x - pool.x, actor.z - pool.z) < radius) G.hooks.hitActor(actor, 12, true);
+      }
+      const me = G.p;
+      if (!me.car && Math.hypot(me.x - pool.x, me.z - pool.z) < radius) G.hooks.hurtPlayer(5);
+    }
+    if (pool.t <= 0) pools.splice(i, 1);
+  }
+}
+
+function burnCars(dt) {
+  for (const car of G.cars) {
+    if (!(car.burnT > 0)) continue;
+    if (car.dead) { car.burnT = 0; continue; }
+    car.burnT -= dt;
+    damageCar(car, MOLOTOV.burnDps * dt);
+    if (Math.random() < dt * 25) fire(car.x + scatter(1.6), 1.1, car.z + scatter(1.6));
+  }
+}
+
+function placeGlow() {
+  if (!glow) return;
+  const newest = pools[pools.length - 1];
+  if (!newest) { glow.intensity = 0; return; }
+  glow.intensity = 30 + Math.random() * 12;
+  glow.position.set(newest.x, 1.6, newest.z);
+}
+
+export function updateMolotovs(dt) {
+  flyBottles(dt);
+  burnPools(dt);
+  burnCars(dt);
+  placeGlow();
+}
+
+// The glow light is created at boot and parked underground: adding a light mid-game would change every
+// shader's light count and force a full recompile.
+export function initMolotovGlow(scene) {
+  glow = new THREE.PointLight(0xff7a30, 0, 16, 1.8);
+  glow.position.set(0, -50, 0);
+  scene.add(glow);
+}
+
+/** Chapter 3's reward: bottles from the Coral Kings' stash and the slot to throw them from. */
+export function grantMolotovs(n = 3) {
+  const p = G.p;
+  p.owned[4] = true;
+  p.ammo.molotov = Math.min(MAX_CARRIED, (p.ammo.molotov || 0) + n);
+}
