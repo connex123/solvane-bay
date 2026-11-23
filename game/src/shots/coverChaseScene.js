@@ -23,6 +23,7 @@ export function coverChase(api) {
   copAt(SB + 1.0, 149.5, NORTH - 0.16, { speed: 38, ai: 'RAMMING', steer: -0.25 });
   copAt(NB + 0.9, 155, NORTH + 0.08, { speed: 37, ai: 'PURSUIT', steer: 0.15 });
   copAt(SB + 0.2, 160.5, NORTH - 0.04, { speed: 36, ai: 'PURSUIT' });
+  copAt(SB + 0.5, 128, SOUTH + 0.1, { speed: 24, ai: 'PURSUIT', steer: 0.2 }); // a unit coming head-on down the southbound lane to cut Nico off
   copAt(SB + 1, 100, NORTH + 1.25, { ai: 'ROADBLOCK' }).rbT = 40; copAt(NB + 0.5, 101, NORTH - 1.3, { ai: 'ROADBLOCK' }).rbT = 40;
   // civilian traffic both ways up the Strand and on the cross street
   trafficAt('z', N, 128, -1, 'tupelo', 0xf6c21c, 8); trafficAt('z', N, 112, -1, 'calder', 0x2fb89a, 6); trafficAt('z', N, 70, -1, 'tidebus', undefined, 9);
