@@ -29,6 +29,7 @@ import { updateBoatGunfight } from '../combat/boatGunfight.js';
 import { updateMarina } from '../world/marina.js';
 import { updateGasBottles } from '../combat/gasBottles.js';
 import { trackMovement } from './careerStats.js';
+import { updateDistanceCulling } from '../render/distanceCulling.js';
 
 let pedT = 0;
 export function stepGame(dt) {
@@ -46,5 +47,5 @@ export function stepGame(dt) {
     updateRadio();
   } else sfx.engine(false, 0, 0);
   if (G.mode === 'dead') { G.deadT += dt; if (G.deadT > 3.6) respawn(); }
-  updateEffects(dt); updateSirens(G.time); animateSea(G.time);
+  updateEffects(dt); updateSirens(G.time); animateSea(G.time); updateDistanceCulling(dt);
 }

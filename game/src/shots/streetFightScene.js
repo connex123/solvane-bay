@@ -27,8 +27,8 @@ export function streetFight(api) {
   });
   G.mission.enemies = gang;
   // the sedan they shot up burns in the middle of the street
-  const burner = carAt('marlin', JX - 9, JZ + 4.6, WEST + 0.6, { tint: 0x2f7fd8 }); wreck(burner);
-  for (let i = 0; i < 130; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i > 90 && i % 4 === 0) fire(burner.x + (i % 3 - 1) * 0.6, 1.1, burner.z); } // two seconds on: the fireball has burned down to a roaring car fire
+  const burner = carAt('marlin', JX - 7.5, JZ + 4.4, WEST + 0.7, { tint: 0x2f7fd8 }); wreck(burner);
+  for (let i = 0; i < 130; i++) { G.time += 1 / 60; updateEffects(1 / 60); if (i > 84 && i % 3 === 0) fire(burner.x + (i % 3 - 1) * 0.7, 1.1 + (i % 2) * 0.4, burner.z + ((i >> 2) % 3 - 1) * 0.5); } // two seconds on: the fireball has burned down to a roaring car fire
   // Nico at the corner, SMG up, firing down the street
   p.x = F.nico[0]; p.z = F.nico[1]; p.yaw = Math.atan2(gang[0].x - p.x, gang[0].z - p.z) + 0.05; p.aim = true; p.mesh.visible = true; p.mesh.position.set(p.x, 0, p.z); p.mesh.rotation.y = p.yaw; setGun(p.mesh, 'smg'); animateWalk(p.mesh, 0, 0, true);
   const muzzle = (a, yaw) => ({ x: a.x + Math.sin(yaw) * 0.9 + Math.cos(yaw) * 0.2, y: 1.35, z: a.z + Math.cos(yaw) * 0.9 - Math.sin(yaw) * 0.2 });
@@ -38,7 +38,7 @@ export function streetFight(api) {
   burst(p, p.yaw, gang[2], WEAPONS[2], 'player'); // the round leaving the muzzle now
   // SBPD rolling in: one from the far junction, one braking out of the cross street, an officer out with a pistol
   copAt(JX - 38, JZ + 3.5, EAST, { speed: 12, ai: 'ARRIVING' });
-  copAt(JX - 5.5, JZ - 10.5, SOUTH + 0.7, { speed: 8, ai: 'PURSUIT', steer: 0.4 });
+  copAt(JX - 10.5, JZ - 6.5, SOUTH + 1.05, { speed: 8, ai: 'PURSUIT', steer: 0.45 });
   personAt('cop', JX - 7.5, JZ - 11.5, Math.atan2(-2, 1), { style: STYLES.cop, gun: 'pistol', aim: true, stride: 0 });
   // traffic stopped dead around the junction
   trafficAt('x', 6, JX - 46, 1, 'tupelo', undefined, 0); trafficAt('x', 6, JX - 58, -1, 'calder', 0x8e5ad8, 0); trafficAt('x', 6, JX - 70, 1, 'pico', 0xff8a3d, 0);
@@ -48,7 +48,7 @@ export function streetFight(api) {
   const run = (x, z, yaw, i) => personAt('ped', x, z, yaw, { run: true, phase: i * 1.9 });
   [[JX - 16, JZ + 9.3], [JX - 10, JZ + 8.6], [JX - 5, JZ + 9.6], [JX - 19, JZ + 8.8]].forEach(([x, z], i) => run(x, z, EAST + 0.15, i));
   [[JX - 15, JZ - 9.1], [JX - 9, JZ - 8.7], [JX - 22, JZ - 9.4]].forEach(([x, z], i) => run(x, z, EAST - 0.2, i + 4));
-  [[JX - 3, JZ - 6], [JX - 1, JZ + 11.5]].forEach(([x, z], i) => run(x, z, i ? SOUTH : NORTH + 0.4, i + 8));
+  [[JX - 3, JZ - 6], [JX - 1, JZ + 11.5], [JX - 4, JZ + 9.6], [JX - 2.2, JZ + 8.4]].forEach(([x, z], i) => run(x, z, i === 0 ? NORTH + 0.4 : i === 1 ? SOUTH : EAST + 0.5, i + 8));
   strollers(JX - 34, JZ + 9.2, JX - 70, JZ + 9.2, 6); strollers(JX - 34, JZ - 9.2, JX - 70, JZ - 9.2, 5); strollers(JX + 9.2, JZ - 14, JX + 9.2, JZ - 50, 5);
   setStars(3); G.wanted.heat = 3.4; updateSirens(0.1); updateLineOfSight(1);
   G.exposure = 1.14; if (G.post) Object.assign(G.post.params, { bloom: 0.16, threshold: 1.6, vignette: 0.12 });
