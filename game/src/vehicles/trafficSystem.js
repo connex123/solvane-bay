@@ -5,7 +5,7 @@ import { rnd } from '../core/random.js';
 import { randomRoadPoint } from '../world/cityLayout.js';
 import { lightState } from '../world/roadNetwork.js';
 import { CIVIL_TYPES, CAR_TYPES } from './vehicleModels.js';
-import { createCar, removeCar, stepCar } from './carPhysics.js';
+import { createCar, removeCar } from './carPhysics.js';
 import { streetBudget, pickCivilType } from './trafficDensity.js';
 import { assignBusRoute, busStopSpeed } from './busRoutes.js';
 

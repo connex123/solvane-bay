@@ -11,10 +11,10 @@ import { MARINA_GATE } from '../world/marina.js';
 import { updateSirens, particle, skidMark } from '../combat/effects.js';
 import { updateLineOfSight } from '../police/lineOfSight.js';
 import { stageMoto } from '../vehicles/motoTaxis.js';
-import { setScene, setMission, carAt, copAt, trafficAt, strollers, personAt, heliAt, frame, lamp, renderShot, clearPalmsNear, thinPalms } from './sceneStaging.js';
+import { setScene, setMission, carAt, copAt, trafficAt, strollers, personAt, heliAt, frame, lamp, renderShot, clearPalmsNear } from './sceneStaging.js';
 
 const NB = HALF + LANE, SB = HALF - LANE, NORTH = Math.PI, SOUTH = 0; // the Strand's northbound and southbound lanes
-export const COVER = { clock: 14.8, car: [NB - 0.4, 146], cam: [HALF + 3.2, 10.5, 171], look: [HALF - 1.2, 0, 128], fov: 54, roll: 0 };
+export const COVER = { clock: 14.8, car: [NB - 0.4, 146], cam: [HALF + 3.2, 10.5, 171], look: [HALF - 1.2, 0, 128], fov: 47, roll: 0 };
 export function coverChase(api) {
   const p = G.p, C = COVER;
   setScene({ clock: C.clock, money: 48250, xp: 760, completed: ['m1', 'm2', 'm3', 'm4', 'm5', 'm6'], hp: 86, armor: 60, weapon: 2, magic: 0.4, blaze: 0.35, crew: { cd: { sol: 22 }, swaps: 1 } });
@@ -33,7 +33,7 @@ export function coverChase(api) {
   strollers(HALF + 16, 165, HALF + 22, 90, 8, { jitter: 6 });
   personAt('ped', HALF + 8.6, 148, 1.6, { run: true }); personAt('ped', HALF + 9.8, 144, 1.4, { run: true });
   // AIR-1 low over the boulevard ahead-left, searchlight on the Veloce
-  heliAt(HALF - 6, 17, 132, 0.5, [car.x, car.z]).cone.material.opacity = 0.09; // daylight: a faint beam, the pool on the road does the work
+  heliAt(HALF + 0.5, 12.8, 141, 2.3, [car.x, car.z]).cone.material.opacity = 0.09; // daylight: a faint beam, the pool on the road does the work
   { const { x, z } = MARINA_GATE; addMarker({ x, z, kind: 'obj', label: 'Marina gate', color: 0xffd23c, auto: false }); }
   setStars(4); G.wanted.heat = 4.3; setMission(6, 1); updateSirens(0.1); updateLineOfSight(1);
   // skid marks from the swerve through traffic and a thin nitro flame

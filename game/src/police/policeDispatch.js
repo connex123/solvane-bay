@@ -1,10 +1,10 @@
 // SBPD response: spawns patrol cars that pursue and ram, roadblocks at 3+ stars, officers on foot, and busting.
-import { G, notify } from '../core/gameState.js';
+import { G } from '../core/gameState.js';
 import { clamp, wrapAngle, HALF, lineCoord, SEA_X } from '../core/config.js';
 import { rnd } from '../core/random.js';
 import { randomRoadPoint, nearestLine } from '../world/cityLayout.js';
 import { blockedAt } from '../world/collision.js';
-import { createCar, removeCar, stepCar } from '../vehicles/carPhysics.js';
+import { createCar, removeCar } from '../vehicles/carPhysics.js';
 import { createActor, removeActor } from '../characters/pedestrianSystem.js';
 import { STYLES } from '../characters/characterModel.js';
 import { createSpikeStrip } from './spikeStrip.js';

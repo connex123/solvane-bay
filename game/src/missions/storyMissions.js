@@ -1,6 +1,6 @@
 // The eight chapters of SOLVANE BAY: LOW TIDE as data: givers, dialogue, objective stages, rewards.
 // A stage may carry `stars` to put the SBPD on Nico when it starts (on top of the escape stage type).
-import { lineCoord, HALF } from '../core/config.js';
+import { lineCoord } from '../core/config.js';
 import { MARINA_GATE, GANGWAY, YACHT, GUARD_SPOTS, SAFE, DROP } from '../world/marina.js';
 import { boardSpeedboat, boatEscape } from './ledgerHeist.js';
 import { roadblockStage, RAMP_FOOT } from './causewayRoadblock.js';

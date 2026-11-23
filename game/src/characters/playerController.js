@@ -31,13 +31,13 @@ export function nearestCar(p, r = 4.5) {
   let best = null, bd = r; for (const c of G.cars) { if (c.dead || c === p.car) continue; const d = Math.hypot(c.x - p.x, c.z - p.z); if (d < bd) { bd = d; best = c; } } return best;
 }
 export function enterCar(car) {
-  const p = G.p;
+  const p = G.p, was = car.kind;
   if (car.driver === 'ai') {
     const o = createActor('ped', car.x + Math.cos(car.heading) * 2.3, car.z - Math.sin(car.heading) * 2.3, randomStyle(rnd)); o.nav = { axis: 'x', line: 0, side: 1, dir: rnd() < 0.5 ? 1 : -1 }; o.scared = 9; o.threat = { x: car.x, z: car.z - 5 };
-    if (car.kind === 'traffic' || car.kind === 'parked' || car.kind === 'cop') recordStat('carsStolen'); G.radioShowT = 5;
     if (car.kind === 'traffic' || car.kind === 'cop') G.hooks.crime('steal'); if (car.kind === 'cop') G.hooks.crime('hitcop');
     releaseTrafficCar(car);
   }
+  if (was === 'traffic' || was === 'parked' || was === 'cop') recordStat('carsStolen'); G.radioShowT = 5; // a theft for the career record; the radio card shows the station
   car.kind = 'player'; car.driver = 'player'; car.nav = null; p.car = car; p.hidden = true; p.mesh.visible = false; car.hitT = 0; sfx.click();
   if (car.mission) car.mission = true; if (G.hooks.onEnterCar) G.hooks.onEnterCar(car);
 }

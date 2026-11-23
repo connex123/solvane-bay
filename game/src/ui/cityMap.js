@@ -3,7 +3,7 @@
 import { G } from '../core/gameState.js';
 import { MAP_BOUNDS as B, DISTRICTS, HALF, SEA_X, N, RW, lineCoord } from '../core/config.js';
 import { blocks } from '../world/cityLayout.js';
-import { hex, drawBlips, gpsRoute } from './minimap.js';
+import { drawBlips, gpsRoute } from './minimap.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
 import { CAUSEWAY, LIGHTHOUSE, CROWN_TOWER, LAGOON } from '../world/landmarks.js';
 import { LIFEGUARD_TOWERS } from '../world/beachLife.js';
@@ -128,7 +128,7 @@ function drawRoute(g, pts) {
   g.setLineDash([2, 14]); g.lineDashOffset = -(G.time || 0) * 30; path(); g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2.5; g.stroke(); g.restore();
   for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], n = Math.ceil(Math.hypot(bx - ax, by - ay) / 18); for (let j = 0; j <= n; j++) { const t = j / Math.max(1, n); occ.push([ax + (bx - ax) * t - 6, ay + (by - ay) * t - 6, 12, 12]); } }
 }
-import { HOLDERS, holderOf, shares } from '../story/territoryControl.js';
+import { HOLDERS, holderOf } from '../story/territoryControl.js';
 import { fillCareerPanel } from './careerPanel.js';
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));

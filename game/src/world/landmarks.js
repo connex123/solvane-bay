@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { SEA_X, lineCoord, S } from '../core/config.js';
 import { newBuf, pushBox, toGeometry } from '../core/geometryUtils.js';
-import { G } from '../core/gameState.js';
+
 import { addBox } from './collision.js';
 import { buildGasBottles } from '../combat/gasBottles.js';
 

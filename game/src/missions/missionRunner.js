@@ -13,7 +13,7 @@ import { setStars } from '../police/wantedSystem.js';
 import { saveGame, AUTOSAVE } from '../save/saveGame.js';
 import { sfx } from '../audio/soundEngine.js';
 import { nearestLine } from '../world/cityLayout.js';
-import { HALF, lineCoord } from '../core/config.js';
+
 import { ARC, galaLabel } from '../story/chapterArc.js';
 import { applyChapterFlips } from '../story/territoryControl.js';
 import { showChapterCard } from '../ui/chapterCompleteCard.js';

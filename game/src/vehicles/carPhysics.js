@@ -1,6 +1,6 @@
 // Arcade car physics: acceleration, braking, steering, drift, building and car-to-car collisions, damage and wrecks.
-import { G, notify } from '../core/gameState.js';
-import { clamp, wrapAngle } from '../core/config.js';
+import { G } from '../core/gameState.js';
+import { clamp } from '../core/config.js';
 import { CAR_TYPES, buildCarMesh, burntMat, burntLampMat } from './vehicleModels.js';
 import { resolveCircle } from '../world/collision.js';
 import { popup } from './driftScoring.js';

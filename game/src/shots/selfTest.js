@@ -25,7 +25,7 @@ import { WREN_GARAGE } from '../shop/garageShop.js';
 import { BAY } from '../world/wrenGarage.js';
 import { blockedAt } from '../world/collision.js';
 import { createCar } from '../vehicles/carPhysics.js';
-import { enterCar } from '../characters/playerController.js';
+import { enterCar, exitCar } from '../characters/playerController.js';
 import { createActor } from '../characters/pedestrianSystem.js';
 import { STYLES } from '../characters/characterModel.js';
 
@@ -40,6 +40,7 @@ async function storyDepthChecks(api) {
   if (MISSIONS.length !== 8 || ACTS.length !== 3) fail('arc size');
   if (galaLabel(1) !== 'GALA IN 6 DAYS') fail('gala countdown');
   // PATCH UP
+  if (p.car) exitCar(true); // on foot beside a parked car, whatever the earlier checks left the player in
   const car = G.cars.find((c) => c.kind === 'parked' && !c.dead); p.x = car.x + 2; p.z = car.z; input.edge.add('KeyF'); api.stepGame(0.016); input.edge.clear();
   if (!p.car) fail('no car for patch up'); p.car.hp = p.car.maxHp * 0.3; input.edge.add('KeyC'); api.stepGame(0.016); input.edge.clear();
   if (p.car.hp !== p.car.maxHp || !(cooldownLeft('wren') > 0)) fail('PATCH UP');

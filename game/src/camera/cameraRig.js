@@ -1,8 +1,8 @@
 // Camera: chase cam behind cars (speed-based FOV), over-the-shoulder on foot, aerial orbit for the title, screen shake.
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
-import { input } from '../core/input.js';
-import { clamp, wrapAngle } from '../core/config.js';
+
+import { wrapAngle } from '../core/config.js';
 import { rayBuildings } from '../world/collision.js';
 
 export const rig = { yaw: Math.PI, pos: new THREE.Vector3(), look: new THREE.Vector3(), aerial: { x: 0, y: 150, z: 0, tx: 0, ty: 0, tz: 0 }, mode: 'auto', fov: 60 };

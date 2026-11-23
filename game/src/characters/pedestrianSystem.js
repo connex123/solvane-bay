@@ -1,6 +1,6 @@
 // All on-foot non-player characters ("actors"): civilians on sidewalks, plus the dispatcher for cops and gang members.
 import * as THREE from 'three';
-import { G, notify } from '../core/gameState.js';
+import { G } from '../core/gameState.js';
 import { HALF, lineCoord } from '../core/config.js';
 import { rnd } from '../core/random.js';
 import { buildCharacter, animateWalk, setGun, STYLES, randomStyle } from './characterModel.js';

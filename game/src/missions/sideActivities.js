@@ -1,8 +1,8 @@
 // Side content: taxi fares, a street race, hidden packages, health/armor pickups, Calder Arms weapon shop and Glow Coat Respray.
-import { G, notify, levelFromXp } from '../core/gameState.js';
+import { G, notify } from '../core/gameState.js';
 import { rnd } from '../core/random.js';
 import { lineCoord, CAR_COLORS } from '../core/config.js';
-import { addMarker, removeMarker } from './markers.js';
+import { addMarker } from './markers.js';
 import { startMission } from './missionRunner.js';
 import { corner } from './storyMissions.js';
 import { setStars } from '../police/wantedSystem.js';

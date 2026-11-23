@@ -194,3 +194,6 @@
 #hud:not(.compact) #wAmmo { font-size: 34px; }
 #radioCard.idle { display: none; }
 #galaBadge { white-space: nowrap; font-size: 15px; } .vlab b { white-space: nowrap; } #carName { white-space: nowrap; } .sinfo { min-width: 0; }
+/* Full layout crew chips: just the portrait in its cooldown ring with the hotkey, so the left edge of the world stays visible */
+#hud:not(.compact) .crewc { width: auto; padding: 3px 6px 3px 3px; gap: 4px; border-radius: 28px 8px 8px 28px; } #hud:not(.compact) .crewc .cinfo { display: none; }
+#hud:not(.compact) .crewc .ring, #hud:not(.compact) .crewc canvas { width: 44px; height: 44px; } #hud:not(.compact) #crewStack { gap: 6px; bottom: 288px; }

@@ -9,7 +9,6 @@ import { animateWalk, randomStyle, setGun } from '../characters/characterModel.j
 import { spawnCop } from '../police/policeDispatch.js';
 import { createHeli, placeCone } from '../police/helicopterUnit.js';
 import { MISSIONS } from '../missions/storyMissions.js';
-import { dlg } from '../story/dialogue.js';
 import { rnd } from '../core/random.js';
 
 // Empty the streets of the boot-time traffic and pedestrians so every scene starts from a known state.
@@ -64,19 +63,11 @@ export function heliAt(x, y, z, yaw, target, { pitch = 0.08, bank = 0.06 } = {})
 export function frame(pos, look, fov, roll = 0) { G.shotCam = { pos, look, fov, roll }; }
 // A warm or cool point light to lift a subject out of shadow.
 export function lamp(color, intensity, dist, x, y, z) { const l = new THREE.PointLight(color, intensity, dist, 1.4); l.position.set(x, y, z); G.scene.add(l); return l; }
-// Finish a dialogue line instantly (no typewriter mid-word in a still frame).
-export function lineTyped() { dlg.t = 99; }
 // Render the final frames with the HUD (the last one is what the screenshot captures).
 export function renderShot(api, frames = 2) {
   const gl = G.renderer.getContext();
   for (let i = 0; i < frames; i++) { G.hudRate = 1; api.updateHud(0.016); api.renderFrame(true); gl.finish(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4)); }
   if (location.search.includes('nohud')) document.getElementById('hud').style.display = 'none';
-}
-// Hide the palms inside a bearing window seen from (cx, cz) so they frame a landmark instead of covering it.
-export function thinPalms(cx, cz, b0, b1, minD) {
-  const pp = G.palmProps; if (!pp) return; const m = new THREE.Matrix4().makeScale(0, 0, 0);
-  pp.list.forEach((it, i) => { const dx = it.x - cx, dz = it.z - cz, b = Math.atan2(dx, -dz) * 180 / Math.PI; if (b > b0 && b < b1 && Math.hypot(dx, dz) > minD) pp.mesh.setMatrixAt(i, m); });
-  pp.mesh.instanceMatrix.needsUpdate = true;
 }
 // Hide the palms within r metres of the camera so no frond fills the lens.
 export function clearPalmsNear(cx, cz, r) {

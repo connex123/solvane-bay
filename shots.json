@@ -1,6 +1,6 @@
 [
-  { "name": "1-chase.jpg", "query": "?shot=1-chase&seed=1" },
-  { "name": "2-boat.jpg", "query": "?shot=2-boat&seed=1" },
-  { "name": "3-market.jpg", "query": "?shot=3-market&seed=1" },
-  { "name": "4-garage.jpg", "query": "?shot=4-garage&seed=1" }
+  { "name": "1-cover-strand-chase.jpg", "query": "?shot=1-cover&seed=1" },
+  { "name": "2-street-firefight.jpg", "query": "?shot=2-fight&seed=1" },
+  { "name": "3-map-career.jpg", "query": "?shot=3-map&seed=1" },
+  { "name": "4-marina-boat-chase.jpg", "query": "?shot=4-marina&seed=1" }
 ]
