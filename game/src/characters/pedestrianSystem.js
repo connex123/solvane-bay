@@ -8,6 +8,7 @@ import { circlePushCar } from '../vehicles/carPhysics.js';
 import { updateHostile } from './hostileAI.js';
 import { randomRoadPoint } from '../world/cityLayout.js';
 import { streetBudget } from '../vehicles/trafficDensity.js';
+import { recordStat } from '../core/careerStats.js';
 
 export function createActor(kind, x, z, style, extra = {}) {
   const mesh = buildCharacter(style); mesh.position.set(x, 0, z); G.scene.add(mesh);
@@ -31,7 +32,7 @@ export function hitActor(a, dmg, byPlayer) {
   if (a.kind === 'cop' && byPlayer) G.hooks.crime('hitcop');
   if (a.hp <= 0) {
     a.dead = true; a.mesh.rotation.x = -Math.PI / 2; a.mesh.position.y = 0.2; a.mesh.userData.gun.visible = false;
-    if (byPlayer) { G.hooks.crime(a.kind === 'ped' ? 'killped' : a.kind === 'cop' ? 'killcop' : 'killgang'); if (a.kind === 'gang') { G.money += 40; } }
+    if (byPlayer) { G.hooks.crime(a.kind === 'ped' ? 'killped' : a.kind === 'cop' ? 'killcop' : 'killgang'); if (a.kind === 'gang') { G.money += 40; recordStat('gangDown'); } }
   }
 }
 export function updateActors(dt) {

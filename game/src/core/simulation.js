@@ -28,6 +28,7 @@ import { updateBoats } from '../vehicles/boats.js';
 import { updateBoatGunfight } from '../combat/boatGunfight.js';
 import { updateMarina } from '../world/marina.js';
 import { updateGasBottles } from '../combat/gasBottles.js';
+import { trackMovement } from './careerStats.js';
 
 let pedT = 0;
 export function stepGame(dt) {
@@ -38,7 +39,7 @@ export function stepGame(dt) {
     pedT -= dt; if (pedT < 0) { pedT = 1; maintainPeds(); } updateStreetCrowds(dt);
   }
   if (G.mode === 'play') {
-    const cd = updatePolice(dt); updateWanted(dt, cd, updateLineOfSight(dt)); tickPopups(dt); updateHeli(dt); updateSpikes(dt); updateMarkers(dt); updateMission(dt); updateSide(dt); updateCrew(dt); updateMolotovs(dt); updateGasBottles(dt);
+    const cd = updatePolice(dt); updateWanted(dt, cd, updateLineOfSight(dt)); tickPopups(dt); updateHeli(dt); updateSpikes(dt); updateMarkers(dt); updateMission(dt); updateSide(dt); updateCrew(dt); updateMolotovs(dt); updateGasBottles(dt); trackMovement();
     if (p.hp <= 0) G.hooks.playerDown('FLATLINED');
     const c = p.car; sfx.engine(!!c && !c.dead, c ? c.speed : 0, c ? c.input.throttle : 0);
     let near = 999; for (const k of G.cars) if (k.kind === 'cop' && !k.dead) near = Math.min(near, Math.hypot(k.x - p.x, k.z - p.z)); sfx.siren(G.wanted.stars > 0 ? Math.max(0, 1 - near / 120) : 0);

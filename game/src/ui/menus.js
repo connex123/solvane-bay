@@ -2,7 +2,7 @@
 import { G, notify } from '../core/gameState.js';
 import { WEAPONS, maxAmmo } from '../combat/weapons.js';
 import { levelFromXp } from '../core/gameState.js';
-import { readSave } from '../save/saveGame.js';
+import { latestSave } from '../save/saveGame.js';
 import { MISSIONS } from '../missions/storyMissions.js';
 const titleCase = (t) => t.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase());
 export function saveLine(sv) { const done = (sv.completed || []).length, m = MISSIONS[Math.min(done, MISSIONS.length - 1)]; const pct = Math.round(100 * (0.8 * done / MISSIONS.length + 0.2 * (sv.packages || []).length / 12)); return `CH ${m.chapter} \u00b7 ${titleCase(m.title)} \u00b7 ${pct}%`; }
@@ -21,7 +21,7 @@ export function initMenus(handlers) {
   $('setFx').addEventListener('change', (e) => setQuality(e.target.value));
 }
 export function showScreen(id) {
-  ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = readSave(); $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop(); if (id === 'crew') fillCrewChapters(); if (id === 'garage') fillGarage();
+  ALL.forEach((s) => $(s).classList.toggle('hidden', s !== id)); if (id === 'title') { const sv = latestSave()?.s; $('btnContinue').disabled = !sv; $('contSub').textContent = sv ? saveLine(sv) : ''; } if (id === 'cityMap') drawCityMap(); if (id === 'shop') fillShop(); if (id === 'crew') fillCrewChapters(); if (id === 'garage') fillGarage();
 }
 export const hideScreens = () => ALL.forEach((s) => $(s).classList.add('hidden'));
 export function showDead(title, sub) { showScreen('dead'); $('deadTitle').textContent = title; $('deadTitle').style.color = title === 'CUFFED' ? '#5a8aff' : '#ff3a55'; $('deadSub').textContent = sub; }

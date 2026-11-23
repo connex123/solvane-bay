@@ -1,13 +1,15 @@
-// Full-screen city map: districts, roads, mission markers, legend, story list, respect level and save slot panel.
-import { G, levelFromXp } from '../core/gameState.js';
-import { MAP_BOUNDS as B, DISTRICTS, HALF, SEA_X, N, RW, RESPECT_XP, lineCoord } from '../core/config.js';
+// Full-screen city map: districts and their holders, roads with names, landmarks, mission, shop and activity badges,
+// the GPS route to the next chapter, a legend strip, and the career panel (ui/careerPanel.js) beside it.
+import { G } from '../core/gameState.js';
+import { MAP_BOUNDS as B, DISTRICTS, HALF, SEA_X, N, RW, lineCoord } from '../core/config.js';
 import { blocks } from '../world/cityLayout.js';
 import { hex, drawBlips, gpsRoute } from './minimap.js';
 import { MISSIONS, corner } from '../missions/storyMissions.js';
-import { slotSummary } from '../save/saveGame.js';
 import { CAUSEWAY, LIGHTHOUSE, CROWN_TOWER, LAGOON } from '../world/landmarks.js';
 import { LIFEGUARD_TOWERS } from '../world/beachLife.js';
-import { packagePositions, SHOP, GARAGE, TAXI, RACE } from '../missions/sideActivities.js';
+import { packagePositions, SHOP, GARAGE, TAXI, RACE, RESPAWN } from '../missions/sideActivities.js';
+import { WREN_GARAGE } from '../shop/garageShop.js';
+import { SPEEDBOAT_BERTH } from '../world/marina.js';
 
 const V_NAMES = ['Harbor Rd', 'Coral Ave', 'Marlin St', 'Crown Blvd', 'Velvet Ave', 'Alder Way', 'Tupelo St', 'Cadia Ave', 'Hawke St', 'Palmetto Dr'];
 const H_NAMES = ['North Quay', 'Dockside Ave', 'Neon Row', 'Sunset Blvd', 'Central Ave', 'Casa Vieja St', 'Ferry Rd', 'Rumble St', 'Bayview Ave', 'South Quay'];
@@ -127,27 +129,23 @@ function drawRoute(g, pts) {
   for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], n = Math.ceil(Math.hypot(bx - ax, by - ay) / 18); for (let j = 0; j <= n; j++) { const t = j / Math.max(1, n); occ.push([ax + (bx - ax) * t - 6, ay + (by - ay) * t - 6, 12, 12]); } }
 }
 import { HOLDERS, holderOf, shares } from '../story/territoryControl.js';
-import { galaLabel } from '../story/chapterArc.js';
+import { fillCareerPanel } from './careerPanel.js';
 export function drawCityMap() {
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), p = G.p, k = Math.min(cv.width / (B.x1 - B.x0), cv.height / (B.z1 - B.z0));
   const X = (x) => (x - B.x0) * k, Z = (z) => (z - B.z0) * k; occ = []; g.setLineDash([]); g.shadowBlur = 0; baseMap(g, X, Z, k); chartLayer(g, X, Z, k);
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 14px Segoe UI, Arial'; g.shadowColor = '#000'; g.shadowBlur = 7;
   const seen = {}; for (const b of blocks) (seen[b.district] ||= []).push(b);
   g.font = 'italic 800 16px Segoe UI, Arial'; g.fillStyle = '#d6f3ff'; g.fillText('SOLVANE SEA', X(HALF + 112), Z(0)); g.font = '700 11px Segoe UI, Arial'; g.fillStyle = '#6a5426'; g.shadowBlur = 0; g.save(); g.translate(X(HALF + 29), Z(195)); g.rotate(-Math.PI / 2); g.fillText('THE STRAND', 0, 0); g.restore();
-  for (const k2 of packagePositions()) if (!k2.got) { g.fillStyle = '#ffe14a'; g.fillRect(X(k2.x) - 2, Z(k2.z) - 2, 4, 4); }
+  for (const k2 of packagePositions()) if (!k2.got) { g.save(); g.shadowBlur = 0; g.translate(X(k2.x), Z(k2.z)); g.rotate(Math.PI / 4); g.fillStyle = '#1a1406'; g.fillRect(-6, -6, 12, 12); g.fillStyle = '#ffe14a'; g.fillRect(-4.5, -4.5, 9, 9); g.restore(); } // hidden packages still out there
   drawBlips(g, (x, z) => [X(x), Z(z)], 1.3, 0);
   const next1 = MISSIONS.find((m) => !G.completed.includes(m.id));
-  badge(g, X(SHOP.x), Z(SHOP.z), '#2f86e8', '$', 'Calder Arms'); badge(g, X(GARAGE.x), Z(GARAGE.z), '#25a96f', 'R', 'Glow Coat'); badge(g, X(TAXI.x), Z(TAXI.z), '#e0a81c', 'T'); badge(g, X(RACE.x), Z(RACE.z), '#d93cb8', 'F');
+  badge(g, X(SHOP.x), Z(SHOP.z), '#2f86e8', '$', 'Calder Arms'); badge(g, X(WREN_GARAGE.x), Z(WREN_GARAGE.z), '#ff8a3d', 'W', "Wren's Garage"); badge(g, X(RESPAWN.hospital.x), Z(RESPAWN.hospital.z), '#ff4f6a', '+'); badge(g, X(RESPAWN.police.x), Z(RESPAWN.police.z), '#3a6ad8', 'P', 'SBPD HQ'); badge(g, X(SPEEDBOAT_BERTH.x), Z(SPEEDBOAT_BERTH.z), '#1fa8c9', 'B'); badge(g, X(GARAGE.x), Z(GARAGE.z), '#25a96f', 'R', 'Glow Coat'); badge(g, X(TAXI.x), Z(TAXI.z), '#e0a81c', 'T'); badge(g, X(RACE.x), Z(RACE.z), '#d93cb8', 'F');
   badge(g, X(lineCoord(1) + 90), Z(lineCoord(0) + 20), '#6a7a98', 'C', 'Port Cranes'); badge(g, X(SEA_X - 8), Z(lineCoord(0) + 104), '#1fa8c9', 'M', 'Marina Piers'); badge(g, X(corner(2, 6, 1, -1).x), Z(corner(2, 6, 1, -1).z), '#a43cd9', 'V', 'Club Velvet');
   if (next1) drawRoute(g, gpsRoute(p, next1.start).map(([x, z]) => [X(x), Z(z)]));
   if (next1) { const s0 = next1.start; badge(g, X(s0.x), Z(s0.z), '#f0b81c', '\u2605'); infoCard(g, X(s0.x), Z(s0.z), next1, cv.width, cv.height); }
   g.save(); g.translate(X(p.x), Z(p.z)); g.rotate(Math.PI - (p.car ? p.car.heading : p.yaw)); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -11); g.lineTo(8, 9); g.lineTo(0, 4); g.lineTo(-8, 9); g.closePath(); g.fill(); g.stroke(); g.restore();
   occ.push([X(p.x) - 14, Z(p.z) - 14, 28, 28]); districtLabels(g, X, Z, cv.width, cv.height);
   g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; g.strokeRect(1, 1, cv.width - 2, cv.height - 2);
-  const lv = levelFromXp(G.xp), next = RESPECT_XP[lv] ?? null, side = document.getElementById('mapSide');
-  const rows = MISSIONS.map((m) => { const done = G.completed.includes(m.id), nx = m === next1; return `<div class="mrow ${done ? 'done' : nx ? 'next' : 'locked'}"><span class="st">${done ? '✓' : nx ? '!' : '🔒'}</span><span>CH ${m.chapter} · ${m.title}</span></div>`; }).join('');
-  const leg = [['#e0463c', 'Crown turf'], ['#2fd6c4', 'Low Tide turf'], ['#ff6f59', 'The Causeway'], ['#ffffff', 'Point Wren Light'], ['#ffc93c', 'Crown Tower'], ['#2fd0c4', 'Lagoon Market'], ['#ffd23c', 'Story mission'], ['#4fa8ff', 'Calder Arms shop'], ['#4fe0a0', 'Glow Coat Respray'], ['#f2c230', 'Taxi fares'], ['#ff4fd8', 'Street race'], ['#ffe14a', 'Hidden package'], ['#ff2a40', 'Police unit'], ['#ff3a5c', 'Target']].map(([c, t]) => `<div><i style="background:${c}"></i>${t}</div>`).join('');
-  const sl = slotSummary();
-  const sh = shares(); side.innerHTML = `<div class="card"><h3>WATERFRONT · ${galaLabel(G.completed.length)}</h3><div class="turf"><i style="width:${sh.crown}%"></i><b style="width:${sh.tide}%"></b></div><div class="turflab"><span>Crown ${sh.crown}%</span><span>Low Tide ${sh.tide}%</span></div></div><div class="card"><h3>STORY · NICO VARELA</h3>${rows}</div><div class="card"><h3>REP LEVEL ${lv}</h3><div class="bar"><i style="width:${next ? Math.min(100, (G.xp - RESPECT_XP[lv - 1]) / (next - RESPECT_XP[lv - 1]) * 100) : 100}%"></i></div><div style="margin-top:6px;color:#bdb8d4">${G.xp} XP · ${lv >= 2 ? 'SMG ' : ''}${lv >= 3 ? 'Shotgun ' : ''}unlocked · Packages ${G.packages.length}/16</div></div><div class="card"><h3>LEGEND</h3><div class="leg">${leg}</div></div><div class="card"><h3>SAVE SLOT</h3><div class="slot${sl.used ? ' used' : ''}">${sl.text}</div><div class="slotbtns"><button data-slot="save">Save</button><button data-slot="load"${sl.used ? '' : ' disabled'}>Load</button></div></div>`;
-  side.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => window.dispatchEvent(new CustomEvent('slot', { detail: b.dataset.slot }))));
+  const leg = [['#2fd6c4', 'Low Tide turf'], ['#e0463c', 'Crown turf'], ['#f0b81c', 'Story mission'], ['#2f86e8', 'Calder Arms'], ['#25a96f', 'Respray'], ['#e0a81c', 'Taxi fares'], ['#d93cb8', 'Street race'], ['#ffe14a', 'Hidden package'], ['#ff8a3d', 'Upgrades'], ['#ff4f6a', 'Hospital'], ['#ff2a40', 'Police']].map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join('');
+  document.getElementById('mapLegend').innerHTML = leg; fillCareerPanel(document.getElementById('mapSide'));
 }

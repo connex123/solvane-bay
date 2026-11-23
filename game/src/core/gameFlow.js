@@ -17,11 +17,12 @@ import { rig } from '../camera/cameraRig.js';
 import { showScreen, hideScreens, showDead } from '../ui/menus.js';
 import { initAudio, sfx } from '../audio/soundEngine.js';
 import { cycleRadio } from '../audio/radioStations.js';
-import { saveGame, readSave, applySave } from '../save/saveGame.js';
+import { saveGame, readSave, applySave, latestSave } from '../save/saveGame.js';
 import { spawnTrafficNear } from '../vehicles/trafficSystem.js';
 import { spawnPedsNear } from '../characters/pedestrianSystem.js';
 import { renderFrame } from '../render/frameRenderer.js';
 import { showHud, updateHud } from '../ui/hud.js';
+import { resetCareer } from './careerStats.js';
 
 const hidden = (id) => document.getElementById(id).classList.contains('hidden');
 function hurtPlayer(d) { const p = G.p; if (G.resumeGrace > 0) return; if (p.car) { damageCar(p.car, d * 3); return; } const a = Math.min(p.armor, d * 0.7); p.armor -= a; p.hp -= d - a; G.shake = Math.max(G.shake, 0.25); }
@@ -39,7 +40,7 @@ export function respawn() {
 G.hooks = { hitActor, crime, hurtPlayer, playerDown, openShop: () => { G.mode = 'pause'; releaseLock(); showScreen('shop'); }, onEnterCar: (car) => applyGarage(car), openGarage: () => { G.mode = 'pause'; releaseLock(); showScreen('garage'); }, onChapter: (id) => { if (id === 'm3') grantMolotovs(3); } };
 
 function resetWorld() {
-  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; G.territory = null; G.crew = null; G.garage = null; p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0, molotov: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
+  const p = G.p; G.money = 500; G.xp = 0; G.completed = []; G.packages = []; G.mission = null; G.territory = null; G.crew = null; G.garage = null; resetCareer(); p.owned = { 0: true, 1: true }; p.ammo = { pistol: 60, smg: 0, shotgun: 0, molotov: 0 }; p.hp = 100; p.armor = 0; p.weapon = 1;
   setStars(0); G.clock = 17.6; if (p.car) exitCar(true); p.x = HOME.x; p.z = HOME.z; p.yaw = Math.PI / 2; G.cam.yaw = Math.PI / 2; G.cam.pitch = 0.2; p.mesh.visible = true; p.hidden = false; clearDialogue();
 }
 // Swallow the click that pressed a menu button so it never reaches the gun.
@@ -50,8 +51,8 @@ function primeFirstFrame() {
   const p = G.p; for (let k = 0; k < 6; k++) { spawnTrafficNear(p.x, p.z, 70, 190); spawnPedsNear(p.x, p.z, 30, 130); }
   renderFrame(true); updateHud(0.016); const gl = G.renderer.getContext(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
 }
-export function startGame(load) {
-  initAudio(); resetWorld(); if (load) { const s = readSave(); if (s) applySave(s); }
+export function startGame(load, slot) {
+  initAudio(); resetWorld(); if (load) { const s = slot ? readSave(slot) : latestSave()?.s; if (s) applySave(s); }
   G.mode = 'play'; rig.mode = 'auto'; hideScreens(); showHud(true); swallowClick(); requestLock(); refreshStartMarker(); primeFirstFrame(); G.holdFrames = 3;
   say(load ? [{ who: 'sol', text: `${galaLabel(G.completed.length)}, Nico. Follow the gold marker; the Low Tide is not getting any younger.` }]
     : [{ who: 'nico', text: 'Five years away and the night ferry still smells like diesel and fried fish. Home.' }, { who: 'brandt', text: 'Welcome back, Mr Varela. Your mother\'s diner belongs to the Crown now. Enjoy the Causeway Gala in seven days.' }, { who: 'dex', text: 'Nico! Gold marker outside Club Velvet. We talk before Brandt\'s people find you.' }]);
@@ -66,7 +67,7 @@ export const handlers = {
   back: () => showScreen(G.mode === 'title' ? 'title' : 'pause'), resume: () => pause(false), map: () => showScreen('cityMap'), crew: () => showScreen('crew'), save: () => { saveGame(); notify('GAME SAVED', 'good'); pause(false); },
   quit: () => toTitle(), closeShop: () => { G.mode = 'play'; G.resumeGrace = RESUME_GRACE; G.garageCam = null; hideScreens(); swallowClick(); requestLock(); },
 };
-window.addEventListener('slot', (e) => { if (e.detail === 'save') { saveGame(); notify('GAME SAVED', 'good'); drawCityMap(); } else if (e.detail === 'load' && readSave()) startGame(true); });
+window.addEventListener('slot', (e) => { const [act, n] = String(e.detail).split(':'), slot = +n || 1; if (act === 'save') { saveGame(slot); notify(`GAME SAVED · SLOT ${slot}`, 'good'); drawCityMap(); } else if (act === 'load' && readSave(slot)) startGame(true, slot); });
 input.onUnlock = () => { if (G.mode === 'play') { pause(true); G.unlockPauseAt = performance.now(); } };
 
 // Global hotkeys, read once per rendered frame.

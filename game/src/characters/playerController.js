@@ -1,4 +1,5 @@
 // Nico Varela: on-foot movement, shooting, entering/stealing/exiting cars, and driving input.
+import { recordStat } from '../core/careerStats.js';
 import { updateNitro } from '../vehicles/nitroBoost.js';
 import { updateDriftScore } from '../vehicles/driftScoring.js';
 import { G, notify } from '../core/gameState.js';
@@ -33,6 +34,7 @@ export function enterCar(car) {
   const p = G.p;
   if (car.driver === 'ai') {
     const o = createActor('ped', car.x + Math.cos(car.heading) * 2.3, car.z - Math.sin(car.heading) * 2.3, randomStyle(rnd)); o.nav = { axis: 'x', line: 0, side: 1, dir: rnd() < 0.5 ? 1 : -1 }; o.scared = 9; o.threat = { x: car.x, z: car.z - 5 };
+    if (car.kind === 'traffic' || car.kind === 'parked' || car.kind === 'cop') recordStat('carsStolen'); G.radioShowT = 5;
     if (car.kind === 'traffic' || car.kind === 'cop') G.hooks.crime('steal'); if (car.kind === 'cop') G.hooks.crime('hitcop');
     releaseTrafficCar(car);
   }

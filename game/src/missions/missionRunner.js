@@ -1,4 +1,5 @@
 // Runs a mission definition stage by stage: steal, goto/deliver, chase, kill, collect, escape; timers, rewards, failure.
+import { recordStat } from '../core/careerStats.js';
 import { G, notify, levelFromXp } from '../core/gameState.js';
 import { rnd } from '../core/random.js';
 import { MISSIONS } from './storyMissions.js';
@@ -9,7 +10,7 @@ import { placeTraffic } from '../vehicles/trafficSystem.js';
 import { createActor } from '../characters/pedestrianSystem.js';
 import { STYLES } from '../characters/characterModel.js';
 import { setStars } from '../police/wantedSystem.js';
-import { saveGame } from '../save/saveGame.js';
+import { saveGame, AUTOSAVE } from '../save/saveGame.js';
 import { sfx } from '../audio/soundEngine.js';
 import { nearestLine } from '../world/cityLayout.js';
 import { HALF, lineCoord } from '../core/config.js';
@@ -49,10 +50,11 @@ export const failMission = fail;
 function complete() {
   const M = G.mission, d = M.def; clearObj(); G.mission = null; G.money += d.reward.money; const lv = levelFromXp(G.xp); G.xp += d.reward.xp; sfx.pickup();
   if (levelFromXp(G.xp) > lv) notify(`REP LEVEL ${levelFromXp(G.xp)}: new gear at Calder Arms`, 'good');
+  recordStat('cashEarned', d.reward.money); if (d.side) recordStat(d.title === 'STREET RACE' ? 'racesWon' : 'taxiFares');
   if (d.side) { notify(`JOB DONE  +$${d.reward.money}  +${d.reward.xp} REP`, 'good'); refreshStartMarker(); return; }
   G.completed.push(d.id); const flips = applyChapterFlips(d.id); G.hooks.onChapter?.(d.id);
   showChapterCard({ def: d, arc: ARC[d.id], flips, days: galaLabel(G.completed.length) });
-  if (d.outro) say(d.outro); saveGame(); refreshStartMarker();
+  if (d.outro) say(d.outro); saveGame(AUTOSAVE); refreshStartMarker();
   if (G.completed.length === MISSIONS.length) notify('THE BAY IS FREE: keep driving', 'good');
 }
 export function updateMission(dt) {
