@@ -15,8 +15,8 @@ export function trackMovement() {
   last = { x, z };
 }
 // Bay completion: story 60 %, hidden packages 15 %, side jobs 10 % (ten to max), Low Tide territory 15 %.
-export function completionPercent({ chapters, totalChapters, packages, totalPackages, tideShare }) {
-  const s = careerStats(), jobs = Math.min(10, s.taxiFares + s.racesWon) / 10;
+export function completionPercent({ chapters, totalChapters, packages, totalPackages, tideShare, stats }) {
+  const s = { ...careerStats(), ...stats }, jobs = Math.min(10, s.taxiFares + s.racesWon) / 10;
   return Math.round(60 * chapters / totalChapters + 15 * packages / Math.max(1, totalPackages) + 10 * jobs + 15 * tideShare / 100);
 }
 export const resetCareer = () => { G.stats = { ...DEFAULTS }; last = null; };

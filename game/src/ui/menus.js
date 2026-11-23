@@ -4,8 +4,16 @@ import { WEAPONS, maxAmmo } from '../combat/weapons.js';
 import { levelFromXp } from '../core/gameState.js';
 import { latestSave } from '../save/saveGame.js';
 import { MISSIONS } from '../missions/storyMissions.js';
+import { completionPercent } from '../core/careerStats.js';
+import { territoryFromChapters } from '../story/territoryControl.js';
+import { blocks } from '../world/cityLayout.js';
+import { packageCount } from '../missions/sideActivities.js';
 const titleCase = (t) => t.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase());
-export function saveLine(sv) { const done = (sv.completed || []).length, m = MISSIONS[Math.min(done, MISSIONS.length - 1)]; const pct = Math.round(100 * (0.8 * done / MISSIONS.length + 0.2 * (sv.packages || []).length / 12)); return `CH ${m.chapter} \u00b7 ${titleCase(m.title)} \u00b7 ${pct}%`; }
+// The Continue line on the title: chapter, its title and the save's Bay completion (same formula as the career panel).
+export function saveLine(sv) {
+  const done = (sv.completed || []).length, m = MISSIONS[Math.min(done, MISSIONS.length - 1)], t = sv.territory || territoryFromChapters(sv.completed || []);
+  const tideShare = Math.round(100 * blocks.filter((b) => t[b.district] === 'tide').length / Math.max(1, blocks.length));
+  const pct = completionPercent({ chapters: done, totalChapters: MISSIONS.length, packages: (sv.packages || []).length, totalPackages: packageCount(), tideShare, stats: sv.stats || { taxiFares: 0, racesWon: 0 } }); return `CH ${m.chapter} \u00b7 ${titleCase(m.title)} \u00b7 ${pct}%`; }
 import { setVolume, sfx } from '../audio/soundEngine.js';
 import { drawCityMap } from './cityMap.js';
 import { fillCrewChapters } from './crewChaptersScreen.js';
