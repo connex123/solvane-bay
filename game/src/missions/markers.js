@@ -1,25 +1,77 @@
-// World markers (mission starts, objectives, shops, pickups): glowing beacons, minimap blips and interaction prompts.
+// World markers for mission starts, objectives, shops and pickups: a tall glowing column with a spinning ring,
+// a blip on the minimap, and either an automatic trigger on entry or an "E" interaction prompt.
 import * as THREE from 'three';
 import { G } from '../core/gameState.js';
 import { pressed } from '../core/input.js';
 
-const cols = {}; const geo = new THREE.CylinderGeometry(2.4, 2.4, 34, 14, 1, true); geo.translate(0, 17, 0); const ring = new THREE.TorusGeometry(2.6, 0.18, 6, 24); ring.rotateX(Math.PI / 2);
-const mats = (c) => cols[c] || (cols[c] = [new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }), new THREE.MeshBasicMaterial({ color: c })]);
-export function addMarker(o) {
-  const m = { r: 4, color: 0xffd23c, kind: 'obj', label: '', auto: true, ...o }; const [a, b] = mats(m.color);
-  const g = new THREE.Group(); g.add(new THREE.Mesh(geo, a), new THREE.Mesh(ring, b)); g.position.set(m.x, 0.3, m.z); G.scene.add(g); m.mesh = g; G.markers.push(m); return m;
+const COLUMN_HEIGHT = 34;
+const column = new THREE.CylinderGeometry(2.4, 2.4, COLUMN_HEIGHT, 14, 1, true);
+column.translate(0, COLUMN_HEIGHT / 2, 0); // stand it on the ground
+const halo = new THREE.TorusGeometry(2.6, 0.18, 6, 24);
+halo.rotateX(Math.PI / 2);
+
+const paintCache = new Map();
+function paintsFor(color) {
+  if (!paintCache.has(color)) {
+    const glow = new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    });
+    paintCache.set(color, { glow, solid: new THREE.MeshBasicMaterial({ color }) });
+  }
+  return paintCache.get(color);
 }
-export function removeMarker(m) { if (!m) return; m.mesh.removeFromParent(); const i = G.markers.indexOf(m); if (i >= 0) G.markers.splice(i, 1); }
+
+const DEFAULTS = { r: 4, color: 0xffd23c, kind: 'obj', label: '', auto: true };
+
+/** Add a marker. Options override DEFAULTS; x/z place it, follow makes it track an object. */
+export function addMarker(o) {
+  const marker = Object.assign({}, DEFAULTS, o);
+  const { glow, solid } = paintsFor(marker.color);
+  const group = new THREE.Group();
+  group.add(new THREE.Mesh(column, glow), new THREE.Mesh(halo, solid));
+  group.position.set(marker.x, 0.3, marker.z);
+  G.scene.add(group);
+  marker.mesh = group;
+  G.markers.push(marker);
+  return marker;
+}
+
+export function removeMarker(m) {
+  if (!m) return;
+  m.mesh.removeFromParent();
+  const at = G.markers.indexOf(m);
+  if (at !== -1) G.markers.splice(at, 1);
+}
+
+function playerQualifies(marker, player) {
+  if (marker.needCar && !player.car) return false;
+  if (marker.needFoot && player.car) return false;
+  return true;
+}
+
 export function updateMarkers(dt) {
-  const p = G.p; G.prompt = '';
-  for (const m of G.markers.slice()) {
-    if (m.follow) { m.x = m.follow.x; m.z = m.follow.z; }
-    m.mesh.position.set(m.x, 0.3, m.z); m.mesh.rotation.y += dt;
-    if (m.hidden) { m.mesh.visible = false; continue; } m.mesh.visible = true;
-    const d = Math.hypot(m.x - p.x, m.z - p.z); m.cool = Math.max(0, (m.cool || 0) - dt);
-    if (d < m.r && (!m.needCar || p.car) && (!m.needFoot || !p.car)) {
-      if (m.auto) { if (m.cool <= 0) { m.cool = m.cooldown || 2; m.onEnter?.(m); } }
-      else { G.prompt = m.prompt || m.label; if (pressed('KeyE')) m.onInteract?.(m); }
+  const player = G.p;
+  G.prompt = '';
+  for (const marker of [...G.markers]) {
+    if (marker.follow) {
+      marker.x = marker.follow.x;
+      marker.z = marker.follow.z;
+    }
+    marker.mesh.position.set(marker.x, 0.3, marker.z);
+    marker.mesh.rotation.y += dt;
+    marker.mesh.visible = !marker.hidden;
+    if (marker.hidden) continue;
+
+    marker.cool = Math.max(0, (marker.cool || 0) - dt);
+    const inside = Math.hypot(marker.x - player.x, marker.z - player.z) < marker.r;
+    if (!inside || !playerQualifies(marker, player)) continue;
+
+    if (!marker.auto) {
+      G.prompt = marker.prompt || marker.label;
+      if (pressed('KeyE') && marker.onInteract) marker.onInteract(marker);
+    } else if (marker.cool <= 0) {
+      marker.cool = marker.cooldown || 2;
+      if (marker.onEnter) marker.onEnter(marker);
     }
   }
 }
