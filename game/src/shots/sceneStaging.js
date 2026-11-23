@@ -65,7 +65,7 @@ export function frame(pos, look, fov, roll = 0) { G.shotCam = { pos, look, fov, 
 export function lamp(color, intensity, dist, x, y, z) { const l = new THREE.PointLight(color, intensity, dist, 1.4); l.position.set(x, y, z); G.scene.add(l); return l; }
 // Render the final frames with the HUD (the last one is what the screenshot captures).
 export function renderShot(api, frames = 2) {
-  const gl = G.renderer.getContext();
+  const gl = G.renderer.getContext(); G.radioShowT = 0; // the radio card only flashes up on a station change or a new car
   for (let i = 0; i < frames; i++) { G.hudRate = 1; api.updateHud(0.016); api.renderFrame(true); gl.finish(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4)); }
   if (location.search.includes('nohud')) document.getElementById('hud').style.display = 'none';
 }

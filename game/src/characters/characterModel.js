@@ -15,10 +15,14 @@ export const STYLES = {
 const SHIRTS = [0xf2c230, 0xe8613c, 0x4aa3df, 0x7bc67b, 0xf4f0e6, 0xb06ad8, 0xff8fa8, 0x40c8c0], PANTS = [0x3b4a6b, 0x6b5a45, 0xd9d0b8, 0x2a2a30, 0x8a9bb0];
 const SKINS = [0xf0c8a0, 0xd9a577, 0xb07a52, 0x7a5236, 0xe8b890, 0x5c3a24], HAIRS = [0x111111, 0x3a2414, 0xc9a050, 0x7a2a1a, 0x9a9a9a];
 const JACKETS = [null, null, null, 0xf4f0e6, 0x2f6fb0, 0xd8b48a, 0x2a2a30], SHOES = [0xf2f2f2, 0x111111, 0xd94a3a, 0x6b4a2a];
+const HATS = [0xf2e2b0, 0xd8c08a, 0xf4f0e6, 0x2f6fb0], CAPS = [0xe8613c, 0x2fb8a8, 0x222831, 0xf2c230], BAGS = [0x6b4a2a, 0x2a2a30, 0xe8613c, 0x2fb8a8, 0xf4f0e6];
+// A beach-city passer-by: outfit colours plus the odd sun hat or cap, sunglasses, shorts or a dress, a backpack or tote, and a height.
 export const randomStyle = (rng) => {
-  const jacket = rng.pick(JACKETS);
+  const jacket = rng.pick(JACKETS), dress = !jacket && rng() < 0.16, head = rng();
   return { shirt: rng.pick(SHIRTS), pants: rng.pick(PANTS), skin: rng.pick(SKINS), hair: rng.pick(HAIRS), hairStyle: rng.pick(['short', 'long', 'bun', 'buzz', 'afro', 'short']),
-    jacket, trim: jacket ? rng.pick([0x222222, 0xf4f0e6]) : null, sleeves: jacket ? 'long' : rng.pick(['short', 'short', 'long']), shoes: rng.pick(SHOES) };
+    jacket, trim: jacket ? rng.pick([0x222222, 0xf4f0e6]) : null, sleeves: jacket ? 'long' : rng.pick(['short', 'short', 'long']), shoes: rng.pick(SHOES),
+    shorts: !jacket && !dress && rng() < 0.4, dress: dress ? rng.pick(SHIRTS) : null, sunhat: head < 0.12 ? rng.pick(HATS) : null, ballcap: head >= 0.12 && head < 0.24 ? rng.pick(CAPS) : null,
+    shades: rng() < 0.3, bag: rng() < 0.22 ? rng.pick(BAGS) : null, tote: rng() < 0.5, size: 0.92 + rng() * 0.16 };
 };
 
 // Merge primitives into one vertex-coloured, non-indexed geometry.
@@ -79,6 +83,11 @@ function parts(st) {
   }
   B.push([bx(0.05, 0.01, 0.01, 0, 1.625, 0.112), 0x6a2e24]); // mouth
   if (st.beard) B.push([sph(0.088, 0, 1.612, 0.036, 0.95, 0.62, 0.95), 0x3a2a20]);
+  if (st.shades) B.push([bx(0.07, 0.035, 0.015, -0.045, 1.712, 0.122), 0x111418], [bx(0.07, 0.035, 0.015, 0.045, 1.712, 0.122), 0x111418], [bx(0.24, 0.012, 0.012, 0, 1.725, 0.118), 0x111418]);
+  if (st.dress) B.push([cyl(0.2, 0.31, 0.42, 0, 0.74, 0, 0.75), st.dress]); // a skirt flaring from the waist
+  if (st.bag) B.push(st.tote ? [bx(0.06, 0.3, 0.26, 0.27, 1.0, 0.02), st.bag] : [bx(0.28, 0.34, 0.14, 0, 1.22, -0.2), st.bag]); // tote on the hip or a backpack
+  if (st.sunhat) B.push([cyl(0.27, 0.27, 0.02, 0, 1.8, -0.01, 1, 20), st.sunhat], [cyl(0.13, 0.145, 0.12, 0, 1.86, -0.01, 1, 16), st.sunhat], [cyl(0.148, 0.148, 0.03, 0, 1.82, -0.01, 1, 16), 0xe8613c]);
+  if (st.ballcap) B.push([sph(0.145, 0, 1.75, -0.005, 1, 0.55, 1.02), st.ballcap], [cyl(0.11, 0.11, 0.015, 0, 1.765, 0.12, 0.7, 14), st.ballcap]);
   if (st.cap) B.push([cyl(0.142, 0.14, 0.09, 0, 1.79, -0.005, 1, 16), st.cap], [sph(0.142, 0, 1.83, -0.005, 1, 0.35, 1), st.cap], [cyl(0.13, 0.13, 0.012, 0, 1.765, 0.1, 0.6, 16), 0x0a0a0a],
     [sph(0.024, 0, 1.8, 0.138, 1, 1.2, 0.4), 0xe8c040], [cyl(0.145, 0.145, 0.018, 0, 1.755, -0.005, 1, 16), 0xe8c040], [sph(0.12, 0, 1.69, -0.06, 1.1, 0.8, 0.9), st.hair]);
   else hair(B, st);
@@ -89,7 +98,8 @@ function parts(st) {
   if (st.sleeves !== 'short') A.push([cyl(0.058, 0.058, 0.05, 0, -0.6, 0), tr]);
   A.push([sph(0.052, 0, -0.68, 0.01, 0.85, 1.35, 1.05), st.skin], [sph(0.022, 0.03, -0.66, 0.045, 1, 1.6, 1), st.skin]);
   // Leg (pivot at hip): thigh, shin, rounded shoe with a sole.
-  limb(L, st.pants, 0.105, 0.08, 0.38, -0.05); limb(L, st.pants, 0.078, 0.06, 0.34, -0.43);
+  const shin = st.shorts || st.dress ? st.skin : st.pants; // shorts and dresses show bare legs below the knee
+  limb(L, st.dress ? st.skin : st.pants, 0.105, 0.08, 0.38, -0.05); limb(L, shin, 0.078, 0.06, 0.34, -0.43);
   L.push([sph(0.07, 0, -0.8, 0.05, 1.0, 0.65, 1.75), shoes], [cyl(0.072, 0.072, 0.03, 0, -0.835, 0.05, 1.75), st.sole ?? (shoes === 0xf2f2f2 || shoes === 0xf6f6f6 ? 0xd8d8d8 : 0xe8e4dc)]);
   return (cache[k] = { body: merge(B), arm: merge(A), leg: merge(L) });
 }
@@ -102,6 +112,7 @@ export function buildCharacter(style) {
   const g = parts(style), root = new THREE.Group(), mk = (geo, x, y) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, 0); m.castShadow = true; root.add(m); return m; };
   const body = mk(g.body, 0, 0), armL = mk(g.arm, -0.3, 1.45), armR = mk(g.arm, 0.3, 1.45), legL = mk(g.leg, -0.11, 0.85), legR = mk(g.leg, 0.11, 0.85);
   const gun = buildGun(); gun.position.set(0, 1.38, 0.62); gun.visible = false; root.add(gun);
+  if (style.size) root.scale.setScalar(style.size); // people come in different heights
   root.userData = { body, armL, armR, legL, legR, gun }; return root;
 }
 export function animateWalk(ch, phase, amt, aim) {

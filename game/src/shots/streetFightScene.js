@@ -47,7 +47,7 @@ export function streetFight(api) {
   // people running from the gunfire down both sidewalks and across the street, more frozen further back
   const run = (x, z, yaw, i) => personAt('ped', x, z, yaw, { run: true, phase: i * 1.9 });
   [[JX - 16, JZ + 9.3], [JX - 10, JZ + 8.6], [JX - 5, JZ + 9.6], [JX - 19, JZ + 8.8]].forEach(([x, z], i) => run(x, z, EAST + 0.15, i));
-  [[JX - 15, JZ - 9.1], [JX - 9, JZ - 8.7], [JX - 22, JZ - 9.4]].forEach(([x, z], i) => run(x, z, EAST - 0.2, i + 4));
+  [[JX - 19, JZ - 9.1], [JX - 4.5, JZ - 8.7], [JX - 24, JZ - 9.4]].forEach(([x, z], i) => run(x, z, EAST - 0.2, i + 4));
   [[JX - 3, JZ - 6], [JX - 1, JZ + 11.5], [JX - 4, JZ + 9.6], [JX - 2.2, JZ + 8.4]].forEach(([x, z], i) => run(x, z, i === 0 ? NORTH + 0.4 : i === 1 ? SOUTH : EAST + 0.5, i + 8));
   strollers(JX - 34, JZ + 9.2, JX - 70, JZ + 9.2, 6); strollers(JX - 34, JZ - 9.2, JX - 70, JZ - 9.2, 5); strollers(JX + 9.2, JZ - 14, JX + 9.2, JZ - 50, 5);
   setStars(3); G.wanted.heat = 3.4; updateSirens(0.1); updateLineOfSight(1);
